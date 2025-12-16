@@ -11,6 +11,8 @@
 - `password` (hashed)
 - `status` (enum: requested, confirmed - extensible for future)
 - `nickname` (unique, visible to other users, indexed)
+- `home_location` (string, nullable - user-entered home location, displayed in Regional Partner leaderboard)
+- `short_bio` (text, nullable - user-entered short biography/description)
 - `consent_to_newsletter` (boolean, default false)
 - `created_at` (timestamp)
 - `updated_at` (timestamp, auto-updated)
@@ -47,7 +49,7 @@
    - Requires current password verification
 
 4. **Change Other Fields**
-   - Authenticated user can change: nickname, consent_to_newsletter
+   - Authenticated user can change: nickname, consent_to_newsletter, home_location, short_bio
    - Email change: requires verification (new email verification token created)
    - Updates `updated_at` automatically
 
@@ -234,7 +236,7 @@
 ### 6. roles
 *Status: Finalized - uses "Crowdsourced" pattern*
 
-**Purpose:** Store volunteer roles (e.g., Referee, Judge, Organizer). Roles are program-specific. Users can propose new roles for admin approval.
+**Purpose:** Store volunteer roles (e.g., Referee, Judge, Organizer, Regional Partner, Coach). Roles are program-specific. Users can propose new roles for admin approval.
 
 **Fields:**
 - `id` (primary key, auto-increment)
@@ -242,6 +244,7 @@
 - `description` (text, nullable - helps users select and admins approve)
 - `sort_order` (integer, manual entry, for UI display ordering)
 - `first_program_id` (foreign key to first_programs.id, not null)
+- `role_category` (enum: 'volunteer', 'regional_partner', 'coach', nullable - categorizes role for counting/leaderboard logic)
 - `status` (enum: pending, approved, rejected - extensible, TBD)
 - `proposed_by_user_id` (foreign key to users.id, nullable - user who proposed this entry)
 - `created_at` (timestamp)
@@ -249,13 +252,14 @@
 
 **Indexes:**
 - Primary: `id`
-- Index: `first_program_id`, `status`, `sort_order`, `proposed_by_user_id`
+- Index: `first_program_id`, `status`, `sort_order`, `proposed_by_user_id`, `role_category`
 - Composite unique: (`first_program_id`, `name`) - name unique per program
 
 **Constraints:**
 - Name: not null, unique per program (via composite unique)
 - Sort_order: not null, integer
 - First_program_id: not null, foreign key
+- Role_category: nullable (default NULL, treated as 'volunteer' for backward compatibility)
 - Status: not null
 - Proposed_by_user_id: nullable, foreign key
 
@@ -286,6 +290,12 @@
 - Uses Crowdsourced pattern
 - Roles are program-specific (same role name can exist in different programs)
 - Description field assists both selection and approval decisions
+- Role categories:
+  - `NULL` or `'volunteer'`: Standard volunteer roles (counted by total engagements)
+  - `'regional_partner'`: Regional Partner role (counted by distinct seasons)
+  - `'coach'`: Coach role (counted by distinct seasons)
+- Any combination of roles allowed per user (even in same season)
+- No validation needed - trust users
 
 ---
 
@@ -732,6 +742,31 @@
 - One row per user per badge (composite unique)
 - "Tick the box": earned_at set once, current_threshold_id remains null
 - "Grow": earned_at set at first threshold, current_threshold_id updated as user progresses
+
+---
+
+## Special Roles: Regional Partner & Coach
+
+### Overview
+Two special role categories with different counting logic and separate leaderboards.
+
+### Role Categories
+- **Volunteer** (`role_category = NULL` or `'volunteer'`): Standard roles, counted by total engagements
+- **Regional Partner** (`role_category = 'regional_partner'`): Counted by distinct seasons
+- **Coach** (`role_category = 'coach'`): Counted by distinct seasons
+
+### Key Features
+1. **Any combination allowed**: Users can have multiple role categories (even in same season)
+2. **Separate leaderboards**: Three leaderboards (Volunteers, Regional Partners, Coaches)
+3. **Different counting**: Volunteers = total engagements, Special roles = distinct seasons
+4. **Home location**: Regional Partners can enter home location in user profile (displayed in leaderboard)
+5. **No validation**: Trust users, no database constraints on role combinations
+
+### Database Changes
+- `roles.role_category`: Categorizes roles for counting/leaderboard logic
+- `users.home_location`: User-entered text field for Regional Partners
+
+See `SPECIAL_ROLES_DESIGN.md` for detailed design.
 
 ---
 

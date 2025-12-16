@@ -186,22 +186,29 @@ Admin can add entries directly via CRUD (not through crowdsourcing).
 ## Flow 5: UI Leaderboard on Engagement
 
 ### Description
-Leaderboard showing engagement counts per user, with filters and badge displays.
+Leaderboard showing engagement counts per user, with filters and badge displays. Top-level UI with switch/tabs between 3 categories.
 
 ### UI Structure
+
+**Top Level: Category Switch/Tabs**
+- **Volunteer Leaderboard** (default)
+- **Regional Partner Leaderboard**
+- **Coach Leaderboard**
+
+**Each Leaderboard Has:**
+
+#### Volunteer Leaderboard
 **Table Columns:**
 1. Rank (1, 2, 3, ...)
 2. Nickname (from users.nickname)
-3. Total count of engagements (count of recognized engagements)
+3. Total count of engagements (count of recognized volunteer engagements)
 4. List of all season badges (tick_box badges where badge.season_id IS NOT NULL)
 5. List of all program badges (tick_box badges where badge.first_program_id IS NOT NULL)
 6. List of all level badges (tick_box badges where badge.level_id IS NOT NULL)
 7. List of all country badges (tick_box badges where badge.country_id IS NOT NULL)
 
-**Display Logic:**
-- Shows top 10 users by engagement count
-- Always shows current user's row (even if not in top 10)
-- If current user is in top 10, only show 10 rows total
+**Counting Logic:**
+- Count: Total recognized engagements where `role_category = 'volunteer' OR role_category IS NULL`
 
 **Filters (Above Table):**
 - Season (all entries OR specific season)
@@ -210,32 +217,76 @@ Leaderboard showing engagement counts per user, with filters and badge displays.
 - Country (all entries OR specific country)
 - Filters work as logical AND (all must match)
 
+#### Regional Partner Leaderboard
+**Table Columns:**
+1. Rank (1, 2, 3, ...)
+2. Home Location (from users.home_location, or nickname if not set)
+3. Season count (COUNT(DISTINCT events.season_id) for Regional Partner engagements)
+4. List of all season badges (tick_box badges where badge.season_id IS NOT NULL)
+
+**Counting Logic:**
+- Count: Distinct seasons where `role_category = 'regional_partner'`
+
+**Filters (Above Table):**
+- Season (all entries OR specific season)
+- Program (all entries OR specific program)
+- Level (all entries OR specific level)
+- Country filter not applicable (Regional Partners don't travel)
+
+#### Coach Leaderboard
+**Table Columns:**
+1. Rank (1, 2, 3, ...)
+2. Nickname (from users.nickname)
+3. Season count (COUNT(DISTINCT events.season_id) for Coach engagements)
+4. List of all season badges (tick_box badges where badge.season_id IS NOT NULL)
+
+**Counting Logic:**
+- Count: Distinct seasons where `role_category = 'coach'`
+
+**Filters (Above Table):**
+- Season (all entries OR specific season)
+- Program (all entries OR specific program)
+- Level (all entries OR specific level)
+- Country (all entries OR specific country)
+- Filters work as logical AND (all must match)
+
+**Common Display Logic (All Leaderboards):**
+- Shows top 10 users by count
+- Always shows current user's row (even if not in top 10)
+- If current user is in top 10, only show 10 rows total
+
 ### Database Support Check
 
 **✅ Supported:**
-- Count engagements: `engagements` table with `is_recognized=true`
+- Volunteer leaderboard: Count total engagements where `role_category = 'volunteer' OR role_category IS NULL`
+- Regional Partner leaderboard: Count distinct seasons where `role_category = 'regional_partner'`
+- Coach leaderboard: Count distinct seasons where `role_category = 'coach'`
 - Filter by season: `engagements.event_id` → `events.season_id`
 - Filter by program: `engagements.event_id` → `events.first_program_id`
 - Filter by level: `engagements.event_id` → `events.level_id`
 - Filter by country: `engagements.event_id` → `events.location_id` → `locations.country_id`
 - Get user nickname: `users.nickname`
+- Get home location: `users.home_location` (for Regional Partner leaderboard)
 - Get season badges: `earned_badges` JOIN `badges` WHERE `badges.type='tick_box'` AND `badges.season_id IS NOT NULL`
 - Get program badges: `earned_badges` JOIN `badges` WHERE `badges.type='tick_box'` AND `badges.first_program_id IS NOT NULL`
 - Get level badges: `earned_badges` JOIN `badges` WHERE `badges.type='tick_box'` AND `badges.level_id IS NOT NULL`
 - Get country badges: `earned_badges` JOIN `badges` WHERE `badges.type='tick_box'` AND `badges.country_id IS NOT NULL`
 
-**Query Logic:**
+**Query Examples:**
+
 ```sql
--- Count recognized engagements per user with filters
+-- Volunteer Leaderboard (total engagements)
 SELECT 
   users.id,
   users.nickname,
   COUNT(engagements.id) as engagement_count
 FROM users
 JOIN engagements ON engagements.user_id = users.id
+JOIN roles ON engagements.role_id = roles.id
 JOIN events ON engagements.event_id = events.id
 JOIN locations ON events.location_id = locations.id
 WHERE engagements.is_recognized = true
+  AND (roles.role_category = 'volunteer' OR roles.role_category IS NULL)
   AND (season_filter = 'all' OR events.season_id = season_filter)
   AND (program_filter = 'all' OR events.first_program_id = program_filter)
   AND (level_filter = 'all' OR events.level_id = level_filter)
@@ -243,57 +294,142 @@ WHERE engagements.is_recognized = true
 GROUP BY users.id, users.nickname
 ORDER BY engagement_count DESC
 LIMIT 10
+
+-- Regional Partner Leaderboard (distinct seasons)
+SELECT 
+  users.id,
+  COALESCE(users.home_location, users.nickname) as display_name,
+  COUNT(DISTINCT events.season_id) as season_count
+FROM users
+JOIN engagements ON engagements.user_id = users.id
+JOIN roles ON engagements.role_id = roles.id
+JOIN events ON engagements.event_id = events.id
+WHERE engagements.is_recognized = true
+  AND roles.role_category = 'regional_partner'
+  AND (season_filter = 'all' OR events.season_id = season_filter)
+  AND (program_filter = 'all' OR events.first_program_id = program_filter)
+  AND (level_filter = 'all' OR events.level_id = level_filter)
+GROUP BY users.id, users.nickname, users.home_location
+ORDER BY season_count DESC
+LIMIT 10
+
+-- Coach Leaderboard (distinct seasons)
+SELECT 
+  users.id,
+  users.nickname,
+  COUNT(DISTINCT events.season_id) as season_count
+FROM users
+JOIN engagements ON engagements.user_id = users.id
+JOIN roles ON engagements.role_id = roles.id
+JOIN events ON engagements.event_id = events.id
+JOIN locations ON events.location_id = locations.id
+WHERE engagements.is_recognized = true
+  AND roles.role_category = 'coach'
+  AND (season_filter = 'all' OR events.season_id = season_filter)
+  AND (program_filter = 'all' OR events.first_program_id = program_filter)
+  AND (level_filter = 'all' OR events.level_id = level_filter)
+  AND (country_filter = 'all' OR locations.country_id = country_filter)
+GROUP BY users.id, users.nickname
+ORDER BY season_count DESC
+LIMIT 10
 ```
 
 **Notes:**
 - Only count recognized engagements (`is_recognized = true`)
 - Badges shown are tick_box badges only (grow badges not shown in leaderboard)
 - Badges must have status='released' to be shown
-- Rank calculated based on engagement count (ties handled by application logic)
+- Rank calculated based on count (engagement count for volunteers, distinct season count for special roles)
+- Regional Partner leaderboard shows home_location instead of nickname (if set)
 
 ## Flow 6: UI User Profile
 
 ### Description
-Profile page showing user statistics, badges, and engagement history.
+Profile page showing user statistics, badges, and engagement history. Up to 3 sections shown (only those that apply).
 
-### Profile Content (All Users Can View)
-1. **Nickname** - from `users.nickname`
-2. **First engagement date** - earliest `engagements.created_at` for user
-3. **Last engagement date** - latest `engagements.created_at` for user
-4. **Rank in leaderboard** - computed from engagement count (same logic as Flow 5)
-5. **Badges Section:**
-   - **Season Badges** - tick_box badges where `badges.season_id IS NOT NULL`
-   - **Program Badges** - tick_box badges where `badges.first_program_id IS NOT NULL`
-   - **Level Badges** - tick_box badges where `badges.level_id IS NOT NULL`
-   - **Country Badges** - tick_box badges where `badges.country_id IS NOT NULL`
-   - **Role Badges** - grow badges where `badges.role_id` matches roles user has engaged with
-     - Show badge for each role the user has at least one recognized engagement
-     - Display current threshold level (from `earned_badges.current_threshold_id`)
-6. **Geo Heatmap** - See Flow 8 for details
-   - User profile version: Shows only that user's engagements
-   - Uses `locations.latitude` and `locations.longitude` from user's engagements
+### Profile Structure
 
-### Profile Content (Own Profile Only)
-1. **Engagement List** - grouped by status:
-   - **Acknowledged** - engagements where `is_recognized = true`
-   - **Pending** - engagements where `is_recognized = false`
-2. **Add New Engagement** - button/link to add engagement (Flow 1)
+**Up to 3 Sections (Only Show Those That Apply):**
+
+#### 1. Volunteer Section
+**Shown if:** User has engagements with `role_category = 'volunteer' OR role_category IS NULL`
+
+**Content:**
+- **First engagement date** - earliest `engagements.created_at` for volunteer engagements
+- **Last engagement date** - latest `engagements.created_at` for volunteer engagements
+- **Total engagement count** - count of recognized volunteer engagements
+- **Rank in volunteer leaderboard** - computed from volunteer engagement count
+- **Badges:**
+  - **Season Badges** - tick_box badges where `badges.season_id IS NOT NULL`
+  - **Program Badges** - tick_box badges where `badges.first_program_id IS NOT NULL`
+  - **Level Badges** - tick_box badges where `badges.level_id IS NOT NULL`
+  - **Country Badges** - tick_box badges where `badges.country_id IS NOT NULL`
+  - **Role Badges** - grow badges for volunteer roles user has engaged with
+- **Engagement List** (own profile only):
+  - **Acknowledged** - volunteer engagements where `is_recognized = true`
+  - **Pending** - volunteer engagements where `is_recognized = false`
+
+#### 2. Regional Partner Section
+**Shown if:** User has engagements with `role_category = 'regional_partner'`
+
+**Content:**
+- **Home Location** - from `users.home_location` (user-entered)
+- **First season** - earliest season user had Regional Partner engagement
+- **Last season** - latest season user had Regional Partner engagement
+- **Season count** - COUNT(DISTINCT events.season_id) for Regional Partner engagements
+- **Rank in Regional Partner leaderboard** - computed from distinct season count
+- **Season Badges** - badges earned for seasons as Regional Partner
+- **Engagement List** (own profile only):
+  - **Acknowledged** - Regional Partner engagements where `is_recognized = true`
+  - **Pending** - Regional Partner engagements where `is_recognized = false`
+
+#### 3. Coach Section
+**Shown if:** User has engagements with `role_category = 'coach'`
+
+**Content:**
+- **First season** - earliest season user had Coach engagement
+- **Last season** - latest season user had Coach engagement
+- **Season count** - COUNT(DISTINCT events.season_id) for Coach engagements
+- **Rank in Coach leaderboard** - computed from distinct season count
+- **Season Badges** - badges earned for seasons as Coach
+- **Engagement List** (own profile only):
+  - **Acknowledged** - Coach engagements where `is_recognized = true`
+  - **Pending** - Coach engagements where `is_recognized = false`
+
+### Common Profile Elements (All Users)
+- **Nickname** - from `users.nickname`
+- **Geo Heatmap** - See Flow 8 for details
+  - Shows all user's recognized engagements (all role categories combined)
+- **Add New Engagement** - button/link to add engagement (Flow 1) - own profile only
 
 ### Database Support Check
 
 **✅ Supported:**
-- Nickname: `users.nickname` ✅
-- First engagement date: `MIN(engagements.created_at) WHERE user_id = X` ✅
-- Last engagement date: `MAX(engagements.created_at) WHERE user_id = X` ✅
-- Rank: Computed from engagement count (same as Flow 5) ✅
-- Season/Program/Level/Country badges: `earned_badges` JOIN `badges` WHERE `badges.type='tick_box'` ✅
-- Role badges: 
-  - Get roles user engaged with: `SELECT DISTINCT role_id FROM engagements WHERE user_id = X AND is_recognized = true`
-  - Get grow badges for those roles: `earned_badges` JOIN `badges` WHERE `badges.type='grow'` AND `badges.role_id IN (roles)`
-  - Show current threshold from `earned_badges.current_threshold_id` ✅
-- Geo heatmap: `engagements` → `events` → `locations` (latitude, longitude) ✅
-- Engagement list: Filter `engagements` by `user_id` and `is_recognized` ✅
-- Add engagement: Already supported (Flow 1) ✅
+- **Volunteer Section:**
+  - First/last engagement dates: Filter by `role_category = 'volunteer' OR role_category IS NULL`
+  - Total engagement count: Count volunteer engagements
+  - Rank: Computed from volunteer engagement count
+  - Badges: Same as before (season/program/level/country/role badges)
+  - Engagement list: Filter volunteer engagements by `is_recognized`
+
+- **Regional Partner Section:**
+  - Home location: `users.home_location` ✅
+  - First/last season: MIN/MAX of distinct seasons for Regional Partner engagements
+  - Season count: COUNT(DISTINCT events.season_id) for Regional Partner engagements
+  - Rank: Computed from distinct season count
+  - Season badges: Badges earned for seasons as Regional Partner
+  - Engagement list: Filter Regional Partner engagements by `is_recognized`
+
+- **Coach Section:**
+  - First/last season: MIN/MAX of distinct seasons for Coach engagements
+  - Season count: COUNT(DISTINCT events.season_id) for Coach engagements
+  - Rank: Computed from distinct season count
+  - Season badges: Badges earned for seasons as Coach
+  - Engagement list: Filter Coach engagements by `is_recognized`
+
+- **Common Elements:**
+  - Nickname: `users.nickname` ✅
+  - Geo heatmap: `engagements` → `events` → `locations` (all role categories combined) ✅
+  - Add engagement: Already supported (Flow 1) ✅
 
 **Query Examples:**
 ```sql
