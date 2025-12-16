@@ -686,8 +686,14 @@
    - Update earned_badges.current_threshold_id when threshold reached
 
 **Notes:**
-- Thresholds are fixed values (number and values TBD)
-- Each threshold has its own icon (silver lining, gold border, etc.)
+- Thresholds are fixed values:
+  - "Grow" Role Badges: 1, 5, 20, 50 engagements (4 levels)
+  - Regional Partner & Coach: 5, 10, 15 seasons (TBD - pending confirmation)
+- Icon system for "Grow" badges:
+  - Icons are per role (one base icon per role badge)
+  - Borders added visually: None (level 1), Bronze (level 2), Silver (level 3), Gold (level 4)
+  - No level names - visual borders only
+  - Icon stored in `badge_thresholds.icon_path` (same icon for all levels, border applied in UI)
 - Thresholds must be in ascending order (sort_order)
 
 ---
