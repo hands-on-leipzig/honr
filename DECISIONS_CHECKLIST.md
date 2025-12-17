@@ -3,7 +3,7 @@
 ## Critical Decisions (Must Decide Before Starting)
 
 ### Infrastructure & Technology
-- [ ] **Database**: PostgreSQL / MySQL / SQL Server (Skipped - waiting for hosting decision)
+- [x] **Database**: MySQL/MariaDB ✓
 - [x] **Laravel Version**: Laravel 11 ✓
 - [x] **Vue Version**: Vue 3 ✓
 - [x] **UI Framework**: Tailwind CSS + Headless UI (same as FLOW project) ✓

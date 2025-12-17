@@ -147,7 +147,13 @@ User settings and account management.
 6. **Change Regional Partner Name**
    - ✅ Supported: `users.home_location`
 
-7. **Delete Account**
+7. **Contact / Support**
+   - Link to send email for help, feedback, and ideas
+   - Opens default mail client with pre-filled recipient (HoT mail server)
+   - Subject line: "HOTR - [Help/Feedback/Ideas]"
+   - ✅ Supported: `mailto:` link (no database required)
+
+8. **Delete Account**
    - Hard delete (Flow 1 use case #5)
    - ✅ Supported: Delete from `users` table (cascade deletes related records)
 
@@ -167,6 +173,7 @@ User settings and account management.
 - Change short bio: `users.short_bio` (text, nullable)
 - Change consent: `users.consent_to_newsletter`
 - Change home location: `users.home_location`
+- Contact/Support: `mailto:` link (no database required)
 - Delete account: Hard delete supported
 - Admin switch: `users.is_admin` field exists
 
