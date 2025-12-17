@@ -23,10 +23,14 @@
           @click="selectTable(table.name)"
           class="w-full px-4 py-3 text-left hover:bg-gray-50 flex items-center justify-between"
         >
-          <span class="font-medium">{{ table.label }}</span>
-          <span v-if="table.hasPending && showPendingOnly" class="text-xs bg-red-100 text-red-800 px-2 py-1 rounded">
-            Ausstehend
-          </span>
+          <div class="flex items-center space-x-2">
+            <span class="font-medium">{{ table.label }}</span>
+            <ExclamationCircleIcon
+              v-if="table.hasPending"
+              class="w-5 h-5 text-red-600"
+              title="Aktion erforderlich"
+            />
+          </div>
         </button>
       </div>
     </div>
@@ -52,8 +56,9 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import { ExclamationCircleIcon } from '@heroicons/vue/24/solid'
 
-const showPendingOnly = ref(false)
+const showPendingOnly = ref(true)
 const selectedTable = ref<string | null>(null)
 
 const tables = [
@@ -64,8 +69,10 @@ const tables = [
   { name: 'countries', label: 'Länder', hasPending: true },
   { name: 'locations', label: 'Standorte', hasPending: true },
   { name: 'events', label: 'Veranstaltungen', hasPending: true },
+  { name: 'engagements', label: 'Engagements', hasPending: false },
   { name: 'badges', label: 'Abzeichen', hasPending: false },
   { name: 'badge_thresholds', label: 'Abzeichen-Schwellenwerte', hasPending: false },
+  { name: 'earned_badges', label: 'Verdiente Abzeichen', hasPending: false },
   { name: 'users', label: 'Benutzer', hasPending: false },
 ]
 

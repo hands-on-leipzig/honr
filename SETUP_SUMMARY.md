@@ -100,3 +100,4 @@ VITE_API_URL=http://localhost:8000/api
 - API client is configured with token-based authentication
 - CORS is configured for local development
 
+

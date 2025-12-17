@@ -47,7 +47,7 @@ const navigationItems = [
   },
   {
     name: 'admin-back',
-    path: '/admin/back',
+    path: '/me',
     label: 'Zurück',
     iconOutline: UserIcon,
     iconSolid: UserIconSolid,

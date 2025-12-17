@@ -49,11 +49,6 @@ const router = createRouter({
           name: 'admin-statistics',
           component: () => import('../views/AdminStatisticsView.vue'),
         },
-        {
-          path: 'back',
-          name: 'admin-back',
-          component: () => import('../views/AdminBackToUserView.vue'),
-        },
       ],
     },
   ],
