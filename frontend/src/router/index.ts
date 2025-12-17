@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import MainLayout from '../components/MainLayout.vue'
+import AdminLayout from '../components/AdminLayout.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -31,6 +32,27 @@ const router = createRouter({
           path: 'settings',
           name: 'settings',
           component: () => import('../views/SettingsView.vue'),
+        },
+      ],
+    },
+    {
+      path: '/admin',
+      component: AdminLayout,
+      children: [
+        {
+          path: 'tables',
+          name: 'admin-tables',
+          component: () => import('../views/AdminTablesView.vue'),
+        },
+        {
+          path: 'statistics',
+          name: 'admin-statistics',
+          component: () => import('../views/AdminStatisticsView.vue'),
+        },
+        {
+          path: 'back',
+          name: 'admin-back',
+          component: () => import('../views/AdminBackToUserView.vue'),
         },
       ],
     },
