@@ -22,7 +22,9 @@ class EngagementController extends Controller
                     'event.level:id,name',
                     'event.location:id,name,city',
                 ])
-                ->orderBy('created_at', 'desc')
+                ->join('events', 'engagements.event_id', '=', 'events.id')
+                ->orderBy('events.date', 'desc')
+                ->select('engagements.*')
                 ->get()
         );
     }

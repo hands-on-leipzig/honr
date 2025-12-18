@@ -7,11 +7,49 @@
       </button>
     </div>
 
-    <!-- Placeholder Content -->
-    <div class="bg-white rounded-lg shadow p-6">
+    <!-- Loading -->
+    <div v-if="loading" class="bg-white rounded-lg shadow p-6">
+      <p class="text-gray-600 text-center py-8">Laden...</p>
+    </div>
+
+    <!-- Empty State -->
+    <div v-else-if="engagements.length === 0" class="bg-white rounded-lg shadow p-6">
       <p class="text-gray-600 text-center py-8">
         Du hast noch keine Einsätze hinzugefügt.
       </p>
+    </div>
+
+    <!-- Engagements List -->
+    <div v-else class="bg-white rounded-lg shadow divide-y divide-gray-200">
+      <div v-for="item in engagements" :key="item.id" class="p-4">
+        <div class="flex items-start justify-between">
+          <div class="flex-1 grid grid-cols-2 gap-4">
+            <!-- Role Column -->
+            <div>
+              <div class="text-xs text-gray-500 uppercase tracking-wide mb-1">Rolle</div>
+              <div class="font-medium">{{ item.role?.name }}</div>
+              <div class="text-xs text-gray-500">{{ item.role?.first_program?.name }}</div>
+            </div>
+            <!-- Event Column -->
+            <div>
+              <div class="text-xs text-gray-500 uppercase tracking-wide mb-1">Veranstaltung</div>
+              <div class="font-medium">{{ formatDate(item.event?.date) }}</div>
+              <div class="text-xs text-gray-500">{{ item.event?.season?.name }} · {{ item.event?.level?.name }}</div>
+              <div class="text-xs text-gray-500">{{ item.event?.location?.name }}<span v-if="item.event?.location?.city">, {{ item.event.location.city }}</span></div>
+            </div>
+          </div>
+          <!-- Delete Button -->
+          <button
+            @click="deleteEngagement(item.id)"
+            :disabled="deletingId === item.id"
+            class="ml-4 text-red-500 hover:text-red-700 disabled:opacity-50"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
+            </svg>
+          </button>
+        </div>
+      </div>
     </div>
 
     <!-- Add Engagement Modal -->
@@ -116,6 +154,8 @@ import { ref, computed, onMounted } from 'vue'
 import apiClient from '@/api/client'
 
 // State
+const engagements = ref<any[]>([])
+const loading = ref(true)
 const showAddModal = ref(false)
 const roles = ref<any[]>([])
 const events = ref<any[]>([])
@@ -125,6 +165,7 @@ const selectedRole = ref<any | null>(null)
 const selectedEvent = ref<any | null>(null)
 const saving = ref(false)
 const error = ref('')
+const deletingId = ref<number | null>(null)
 
 // Computed
 const filteredRoles = computed(() => {
@@ -173,6 +214,18 @@ function closeModal() {
   error.value = ''
 }
 
+async function loadEngagements() {
+  loading.value = true
+  try {
+    const response = await apiClient.get('/engagements')
+    engagements.value = response.data
+  } catch (err) {
+    console.error('Failed to load engagements', err)
+  } finally {
+    loading.value = false
+  }
+}
+
 async function loadOptions() {
   try {
     const response = await apiClient.get('/engagements/options')
@@ -194,7 +247,7 @@ async function saveEngagement() {
       event_id: selectedEvent.value.id,
     })
     closeModal()
-    // TODO: reload user engagements list
+    await loadEngagements()
   } catch (err: any) {
     error.value = err.response?.data?.message || 'Fehler beim Speichern.'
   } finally {
@@ -202,5 +255,20 @@ async function saveEngagement() {
   }
 }
 
-onMounted(loadOptions)
+async function deleteEngagement(id: number) {
+  deletingId.value = id
+  try {
+    await apiClient.delete(`/engagements/${id}`)
+    await loadEngagements()
+  } catch (err) {
+    console.error('Failed to delete engagement', err)
+  } finally {
+    deletingId.value = null
+  }
+}
+
+onMounted(() => {
+  loadEngagements()
+  loadOptions()
+})
 </script>
