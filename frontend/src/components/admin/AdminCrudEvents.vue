@@ -68,33 +68,47 @@
       <form @submit.prevent="saveItem" class="p-4 space-y-4">
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">Programm *</label>
-          <select v-model="form.first_program_id" required class="w-full px-3 py-2 border border-gray-300 rounded-md">
-            <option value="">Bitte wählen</option>
-            <option v-for="p in options.programs" :key="p.id" :value="p.id">{{ p.name }}</option>
-          </select>
+          <input v-model="programSearch" type="text" placeholder="Programm suchen..." class="w-full px-3 py-2 border border-gray-300 rounded-md" />
+          <div v-if="filteredProgramsSearch.length > 0 && programSearch && !selectedProgram" class="mt-1 max-h-40 overflow-y-auto border border-gray-200 rounded-md">
+            <button v-for="p in filteredProgramsSearch" :key="p.id" type="button" @click="selectProgram(p)" class="w-full px-3 py-2 text-left hover:bg-gray-50 text-sm border-b border-gray-100 last:border-b-0">{{ p.name }}</button>
+          </div>
+          <div v-if="selectedProgram" class="mt-2 p-2 bg-blue-50 rounded-md flex items-center justify-between">
+            <span class="text-sm font-medium">{{ selectedProgram.name }}</span>
+            <button type="button" @click="clearProgram" class="text-gray-400 hover:text-gray-600">✕</button>
+          </div>
         </div>
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">Saison *</label>
-          <select v-model="form.season_id" required class="w-full px-3 py-2 border border-gray-300 rounded-md">
-            <option value="">Bitte wählen</option>
-            <option v-for="s in filteredSeasons" :key="s.id" :value="s.id">{{ s.name }}</option>
-          </select>
+          <input v-model="seasonSearch" type="text" placeholder="Saison suchen..." class="w-full px-3 py-2 border border-gray-300 rounded-md" />
+          <div v-if="filteredSeasonsSearch.length > 0 && seasonSearch && !selectedSeason" class="mt-1 max-h-40 overflow-y-auto border border-gray-200 rounded-md">
+            <button v-for="s in filteredSeasonsSearch" :key="s.id" type="button" @click="selectSeason(s)" class="w-full px-3 py-2 text-left hover:bg-gray-50 text-sm border-b border-gray-100 last:border-b-0">{{ s.name }}</button>
+          </div>
+          <div v-if="selectedSeason" class="mt-2 p-2 bg-blue-50 rounded-md flex items-center justify-between">
+            <span class="text-sm font-medium">{{ selectedSeason.name }}</span>
+            <button type="button" @click="clearSeason" class="text-gray-400 hover:text-gray-600">✕</button>
+          </div>
         </div>
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">Level *</label>
-          <select v-model="form.level_id" required class="w-full px-3 py-2 border border-gray-300 rounded-md">
-            <option value="">Bitte wählen</option>
-            <option v-for="l in options.levels" :key="l.id" :value="l.id">{{ l.name }}</option>
-          </select>
+          <input v-model="levelSearch" type="text" placeholder="Level suchen..." class="w-full px-3 py-2 border border-gray-300 rounded-md" />
+          <div v-if="filteredLevelsSearch.length > 0 && levelSearch && !selectedLevel" class="mt-1 max-h-40 overflow-y-auto border border-gray-200 rounded-md">
+            <button v-for="l in filteredLevelsSearch" :key="l.id" type="button" @click="selectLevel(l)" class="w-full px-3 py-2 text-left hover:bg-gray-50 text-sm border-b border-gray-100 last:border-b-0">{{ l.name }}</button>
+          </div>
+          <div v-if="selectedLevel" class="mt-2 p-2 bg-blue-50 rounded-md flex items-center justify-between">
+            <span class="text-sm font-medium">{{ selectedLevel.name }}</span>
+            <button type="button" @click="clearLevel" class="text-gray-400 hover:text-gray-600">✕</button>
+          </div>
         </div>
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">Standort *</label>
-          <select v-model="form.location_id" required class="w-full px-3 py-2 border border-gray-300 rounded-md">
-            <option value="">Bitte wählen</option>
-            <option v-for="loc in options.locations" :key="loc.id" :value="loc.id">
-              {{ loc.name }}<span v-if="loc.city">, {{ loc.city }}</span>
-            </option>
-          </select>
+          <input v-model="locationSearch" type="text" placeholder="Standort suchen..." class="w-full px-3 py-2 border border-gray-300 rounded-md" />
+          <div v-if="filteredLocationsSearch.length > 0 && locationSearch && !selectedLocation" class="mt-1 max-h-40 overflow-y-auto border border-gray-200 rounded-md">
+            <button v-for="loc in filteredLocationsSearch" :key="loc.id" type="button" @click="selectLocation(loc)" class="w-full px-3 py-2 text-left hover:bg-gray-50 text-sm border-b border-gray-100 last:border-b-0">{{ loc.name }}{{ loc.city ? `, ${loc.city}` : '' }}</button>
+          </div>
+          <div v-if="selectedLocation" class="mt-2 p-2 bg-blue-50 rounded-md flex items-center justify-between">
+            <span class="text-sm font-medium">{{ selectedLocation.name }}{{ selectedLocation.city ? `, ${selectedLocation.city}` : '' }}</span>
+            <button type="button" @click="clearLocation" class="text-gray-400 hover:text-gray-600">✕</button>
+          </div>
         </div>
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">Datum *</label>
@@ -209,6 +223,101 @@ const filteredSeasons = computed(() => {
   return options.seasons.filter(s => s.first_program_id == form.first_program_id)
 })
 
+// Type-ahead state
+const programSearch = ref('')
+const seasonSearch = ref('')
+const levelSearch = ref('')
+const locationSearch = ref('')
+const selectedProgram = ref<any>(null)
+const selectedSeason = ref<any>(null)
+const selectedLevel = ref<any>(null)
+const selectedLocation = ref<any>(null)
+
+const filteredProgramsSearch = computed(() => {
+  if (!programSearch.value.trim()) return options.programs
+  const q = programSearch.value.toLowerCase()
+  return options.programs.filter((p: any) => p.name.toLowerCase().includes(q))
+})
+
+const filteredSeasonsSearch = computed(() => {
+  let seasons = form.first_program_id 
+    ? options.seasons.filter((s: any) => s.first_program_id == form.first_program_id)
+    : options.seasons
+  if (!seasonSearch.value.trim()) return seasons
+  const q = seasonSearch.value.toLowerCase()
+  return seasons.filter((s: any) => s.name.toLowerCase().includes(q))
+})
+
+const filteredLevelsSearch = computed(() => {
+  if (!levelSearch.value.trim()) return options.levels
+  const q = levelSearch.value.toLowerCase()
+  return options.levels.filter((l: any) => l.name.toLowerCase().includes(q))
+})
+
+const filteredLocationsSearch = computed(() => {
+  if (!locationSearch.value.trim()) return options.locations
+  const q = locationSearch.value.toLowerCase()
+  return options.locations.filter((loc: any) => 
+    loc.name.toLowerCase().includes(q) || loc.city?.toLowerCase().includes(q)
+  )
+})
+
+function selectProgram(p: any) {
+  selectedProgram.value = p
+  form.first_program_id = p.id
+  programSearch.value = ''
+  // Clear season if it doesn't belong to this program
+  if (selectedSeason.value && selectedSeason.value.first_program_id !== p.id) {
+    clearSeason()
+  }
+}
+function clearProgram() {
+  selectedProgram.value = null
+  form.first_program_id = ''
+  programSearch.value = ''
+}
+function selectSeason(s: any) {
+  selectedSeason.value = s
+  form.season_id = s.id
+  seasonSearch.value = ''
+}
+function clearSeason() {
+  selectedSeason.value = null
+  form.season_id = ''
+  seasonSearch.value = ''
+}
+function selectLevel(l: any) {
+  selectedLevel.value = l
+  form.level_id = l.id
+  levelSearch.value = ''
+}
+function clearLevel() {
+  selectedLevel.value = null
+  form.level_id = ''
+  levelSearch.value = ''
+}
+function selectLocation(loc: any) {
+  selectedLocation.value = loc
+  form.location_id = loc.id
+  locationSearch.value = ''
+}
+function clearLocation() {
+  selectedLocation.value = null
+  form.location_id = ''
+  locationSearch.value = ''
+}
+
+function clearAllSelections() {
+  selectedProgram.value = null
+  selectedSeason.value = null
+  selectedLevel.value = null
+  selectedLocation.value = null
+  programSearch.value = ''
+  seasonSearch.value = ''
+  levelSearch.value = ''
+  locationSearch.value = ''
+}
+
 // Methods
 const formatDate = (dateStr: string) => {
   if (!dateStr) return ''
@@ -262,6 +371,7 @@ function addItem() {
   form.location_id = ''
   form.date = ''
   form.status = 'approved'
+  clearAllSelections()
   error.value = ''
 }
 
@@ -273,6 +383,14 @@ function editItem(item: any) {
   form.location_id = item.location_id
   form.date = item.date?.split('T')[0] || ''
   form.status = item.status
+  selectedProgram.value = options.programs.find((p: any) => p.id === item.first_program_id) || null
+  selectedSeason.value = options.seasons.find((s: any) => s.id === item.season_id) || null
+  selectedLevel.value = options.levels.find((l: any) => l.id === item.level_id) || null
+  selectedLocation.value = options.locations.find((loc: any) => loc.id === item.location_id) || null
+  programSearch.value = ''
+  seasonSearch.value = ''
+  levelSearch.value = ''
+  locationSearch.value = ''
   error.value = ''
 }
 

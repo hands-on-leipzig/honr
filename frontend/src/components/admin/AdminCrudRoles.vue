@@ -83,10 +83,27 @@
         </div>
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">Programm *</label>
-          <select v-model="form.first_program_id" required class="w-full px-3 py-2 border border-gray-300 rounded-md">
-            <option value="">Bitte wählen</option>
-            <option v-for="p in programs" :key="p.id" :value="p.id">{{ p.name }}</option>
-          </select>
+          <input
+            v-model="programSearch"
+            type="text"
+            placeholder="Programm suchen..."
+            class="w-full px-3 py-2 border border-gray-300 rounded-md"
+          />
+          <div v-if="filteredPrograms.length > 0 && programSearch && !selectedProgram" class="mt-1 max-h-40 overflow-y-auto border border-gray-200 rounded-md">
+            <button
+              v-for="p in filteredPrograms"
+              :key="p.id"
+              type="button"
+              @click="selectProgram(p)"
+              class="w-full px-3 py-2 text-left hover:bg-gray-50 text-sm border-b border-gray-100 last:border-b-0"
+            >
+              {{ p.name }}
+            </button>
+          </div>
+          <div v-if="selectedProgram" class="mt-2 p-2 bg-blue-50 rounded-md flex items-center justify-between">
+            <span class="text-sm font-medium">{{ selectedProgram.name }}</span>
+            <button type="button" @click="clearProgram" class="text-gray-400 hover:text-gray-600">✕</button>
+          </div>
         </div>
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">Kategorie</label>
@@ -180,6 +197,28 @@ const showDeleteConfirm = ref(false)
 const draggingIndex = ref<number | null>(null)
 const dragOverIndex = ref<number | null>(null)
 
+// Type-ahead for program
+const programSearch = ref('')
+const selectedProgram = ref<any>(null)
+
+const filteredPrograms = computed(() => {
+  if (!programSearch.value.trim()) return programs.value
+  const q = programSearch.value.toLowerCase()
+  return programs.value.filter((p: any) => p.name.toLowerCase().includes(q))
+})
+
+function selectProgram(prog: any) {
+  selectedProgram.value = prog
+  form.first_program_id = prog.id
+  programSearch.value = ''
+}
+
+function clearProgram() {
+  selectedProgram.value = null
+  form.first_program_id = ''
+  programSearch.value = ''
+}
+
 // Computed
 const pendingCount = computed(() => items.value.filter(i => i.status === 'pending').length)
 const hasPending = computed(() => pendingCount.value > 0)
@@ -250,6 +289,8 @@ function addItem() {
   form.first_program_id = ''
   form.role_category = ''
   form.status = 'approved'
+  selectedProgram.value = null
+  programSearch.value = ''
   error.value = ''
 }
 
@@ -260,6 +301,8 @@ function editItem(item: any) {
   form.first_program_id = item.first_program_id
   form.role_category = item.role_category || ''
   form.status = item.status
+  selectedProgram.value = programs.value.find((p: any) => p.id === item.first_program_id) || null
+  programSearch.value = ''
   error.value = ''
 }
 

@@ -71,10 +71,27 @@
         </div>
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">Land *</label>
-          <select v-model="form.country_id" required class="w-full px-3 py-2 border border-gray-300 rounded-md">
-            <option value="">Bitte wählen</option>
-            <option v-for="c in countries" :key="c.id" :value="c.id">{{ c.name }} ({{ c.iso_code }})</option>
-          </select>
+          <input
+            v-model="countrySearch"
+            type="text"
+            placeholder="Land suchen..."
+            class="w-full px-3 py-2 border border-gray-300 rounded-md"
+          />
+          <div v-if="filteredCountriesSearch.length > 0 && countrySearch && !selectedCountry" class="mt-1 max-h-40 overflow-y-auto border border-gray-200 rounded-md">
+            <button
+              v-for="c in filteredCountriesSearch"
+              :key="c.id"
+              type="button"
+              @click="selectCountry(c)"
+              class="w-full px-3 py-2 text-left hover:bg-gray-50 text-sm border-b border-gray-100 last:border-b-0"
+            >
+              {{ c.name }} {{ c.iso_code ? `(${c.iso_code})` : '' }}
+            </button>
+          </div>
+          <div v-if="selectedCountry" class="mt-2 p-2 bg-blue-50 rounded-md flex items-center justify-between">
+            <span class="text-sm font-medium">{{ selectedCountry.name }} {{ selectedCountry.iso_code ? `(${selectedCountry.iso_code})` : '' }}</span>
+            <button type="button" @click="clearCountry" class="text-gray-400 hover:text-gray-600">✕</button>
+          </div>
         </div>
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">Straße</label>
@@ -199,6 +216,31 @@ const deleting = ref(false)
 const error = ref('')
 const showDeleteConfirm = ref(false)
 
+// Type-ahead for country
+const countrySearch = ref('')
+const selectedCountry = ref<any>(null)
+
+const filteredCountriesSearch = computed(() => {
+  if (!countrySearch.value.trim()) return countries.value
+  const q = countrySearch.value.toLowerCase()
+  return countries.value.filter((c: any) => 
+    c.name.toLowerCase().includes(q) || 
+    c.iso_code?.toLowerCase().includes(q)
+  )
+})
+
+function selectCountry(c: any) {
+  selectedCountry.value = c
+  form.country_id = c.id
+  countrySearch.value = ''
+}
+
+function clearCountry() {
+  selectedCountry.value = null
+  form.country_id = ''
+  countrySearch.value = ''
+}
+
 // Methods
 const statusLabel = (status: string) => {
   const labels: Record<string, string> = {
@@ -246,6 +288,8 @@ function addItem() {
   form.latitude = null
   form.longitude = null
   form.status = 'approved'
+  selectedCountry.value = null
+  countrySearch.value = ''
   error.value = ''
 }
 
@@ -259,6 +303,8 @@ function editItem(item: any) {
   form.latitude = item.latitude
   form.longitude = item.longitude
   form.status = item.status
+  selectedCountry.value = countries.value.find((c: any) => c.id === item.country_id) || null
+  countrySearch.value = ''
   error.value = ''
 }
 

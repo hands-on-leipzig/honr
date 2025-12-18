@@ -62,30 +62,36 @@
       <form @submit.prevent="saveItem" class="p-4 space-y-4">
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">Benutzer *</label>
-          <select v-model="form.user_id" required class="w-full px-3 py-2 border border-gray-300 rounded-md">
-            <option value="">Bitte wählen</option>
-            <option v-for="u in options.users" :key="u.id" :value="u.id">
-              {{ u.nickname || u.email }}
-            </option>
-          </select>
+          <input v-model="userSearch" type="text" placeholder="Benutzer suchen..." class="w-full px-3 py-2 border border-gray-300 rounded-md" />
+          <div v-if="filteredUsersSearch.length > 0 && userSearch && !selectedUser" class="mt-1 max-h-40 overflow-y-auto border border-gray-200 rounded-md">
+            <button v-for="u in filteredUsersSearch" :key="u.id" type="button" @click="selectUser(u)" class="w-full px-3 py-2 text-left hover:bg-gray-50 text-sm border-b border-gray-100 last:border-b-0">{{ u.nickname || u.email }}</button>
+          </div>
+          <div v-if="selectedUser" class="mt-2 p-2 bg-blue-50 rounded-md flex items-center justify-between">
+            <span class="text-sm font-medium">{{ selectedUser.nickname || selectedUser.email }}</span>
+            <button type="button" @click="clearUser" class="text-gray-400 hover:text-gray-600">✕</button>
+          </div>
         </div>
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">Rolle *</label>
-          <select v-model="form.role_id" required class="w-full px-3 py-2 border border-gray-300 rounded-md">
-            <option value="">Bitte wählen</option>
-            <option v-for="r in options.roles" :key="r.id" :value="r.id">
-              {{ r.name }} ({{ r.first_program?.name }})
-            </option>
-          </select>
+          <input v-model="roleSearch" type="text" placeholder="Rolle suchen..." class="w-full px-3 py-2 border border-gray-300 rounded-md" />
+          <div v-if="filteredRolesSearch.length > 0 && roleSearch && !selectedRole" class="mt-1 max-h-40 overflow-y-auto border border-gray-200 rounded-md">
+            <button v-for="r in filteredRolesSearch" :key="r.id" type="button" @click="selectRole(r)" class="w-full px-3 py-2 text-left hover:bg-gray-50 text-sm border-b border-gray-100 last:border-b-0">{{ r.name }} ({{ r.first_program?.name }})</button>
+          </div>
+          <div v-if="selectedRole" class="mt-2 p-2 bg-blue-50 rounded-md flex items-center justify-between">
+            <span class="text-sm font-medium">{{ selectedRole.name }} ({{ selectedRole.first_program?.name }})</span>
+            <button type="button" @click="clearRole" class="text-gray-400 hover:text-gray-600">✕</button>
+          </div>
         </div>
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">Veranstaltung *</label>
-          <select v-model="form.event_id" required class="w-full px-3 py-2 border border-gray-300 rounded-md">
-            <option value="">Bitte wählen</option>
-            <option v-for="e in options.events" :key="e.id" :value="e.id">
-              {{ formatDate(e.date) }} · {{ e.level?.name }} · {{ e.location?.name }}
-            </option>
-          </select>
+          <input v-model="eventSearch" type="text" placeholder="Veranstaltung suchen..." class="w-full px-3 py-2 border border-gray-300 rounded-md" />
+          <div v-if="filteredEventsSearch.length > 0 && eventSearch && !selectedEvent" class="mt-1 max-h-40 overflow-y-auto border border-gray-200 rounded-md">
+            <button v-for="e in filteredEventsSearch" :key="e.id" type="button" @click="selectEvent(e)" class="w-full px-3 py-2 text-left hover:bg-gray-50 text-sm border-b border-gray-100 last:border-b-0">{{ formatDate(e.date) }} · {{ e.level?.name }} · {{ e.location?.name }}</button>
+          </div>
+          <div v-if="selectedEvent" class="mt-2 p-2 bg-blue-50 rounded-md flex items-center justify-between">
+            <span class="text-sm font-medium">{{ formatDate(selectedEvent.date) }} · {{ selectedEvent.level?.name }} · {{ selectedEvent.location?.name }}</span>
+            <button type="button" @click="clearEvent" class="text-gray-400 hover:text-gray-600">✕</button>
+          </div>
         </div>
 
         <div v-if="editingItem.id" class="text-sm text-gray-500 space-y-1">
@@ -165,6 +171,79 @@ const deleting = ref(false)
 const error = ref('')
 const showDeleteConfirm = ref(false)
 
+// Type-ahead state
+const userSearch = ref('')
+const roleSearch = ref('')
+const eventSearch = ref('')
+const selectedUser = ref<any>(null)
+const selectedRole = ref<any>(null)
+const selectedEvent = ref<any>(null)
+
+const filteredUsersSearch = computed(() => {
+  if (!userSearch.value.trim()) return options.users
+  const q = userSearch.value.toLowerCase()
+  return options.users.filter((u: any) => 
+    u.nickname?.toLowerCase().includes(q) || u.email?.toLowerCase().includes(q)
+  )
+})
+
+const filteredRolesSearch = computed(() => {
+  if (!roleSearch.value.trim()) return options.roles
+  const q = roleSearch.value.toLowerCase()
+  return options.roles.filter((r: any) => 
+    r.name.toLowerCase().includes(q) || r.first_program?.name?.toLowerCase().includes(q)
+  )
+})
+
+const filteredEventsSearch = computed(() => {
+  if (!eventSearch.value.trim()) return options.events.slice(0, 20)
+  const q = eventSearch.value.toLowerCase()
+  return options.events.filter((e: any) => 
+    e.level?.name?.toLowerCase().includes(q) || 
+    e.location?.name?.toLowerCase().includes(q) ||
+    e.season?.name?.toLowerCase().includes(q)
+  ).slice(0, 20)
+})
+
+function selectUser(u: any) {
+  selectedUser.value = u
+  form.user_id = u.id
+  userSearch.value = ''
+}
+function clearUser() {
+  selectedUser.value = null
+  form.user_id = ''
+  userSearch.value = ''
+}
+function selectRole(r: any) {
+  selectedRole.value = r
+  form.role_id = r.id
+  roleSearch.value = ''
+}
+function clearRole() {
+  selectedRole.value = null
+  form.role_id = ''
+  roleSearch.value = ''
+}
+function selectEvent(e: any) {
+  selectedEvent.value = e
+  form.event_id = e.id
+  eventSearch.value = ''
+}
+function clearEvent() {
+  selectedEvent.value = null
+  form.event_id = ''
+  eventSearch.value = ''
+}
+function clearAllSelections() {
+  selectedUser.value = null
+  selectedRole.value = null
+  selectedEvent.value = null
+  userSearch.value = ''
+  roleSearch.value = ''
+  eventSearch.value = ''
+}
+
 // Computed
 const unrecognizedCount = computed(() => items.value.filter(i => !i.is_recognized).length)
 const hasUnrecognized = computed(() => unrecognizedCount.value > 0)
@@ -225,12 +304,19 @@ function addItem() {
   form.user_id = ''
   form.role_id = ''
   form.event_id = ''
+  clearAllSelections()
   error.value = ''
 }
 
 function editItem(item: any) {
   editingItem.value = item
   form.user_id = item.user_id
+  selectedUser.value = options.users.find((u: any) => u.id === item.user_id) || null
+  selectedRole.value = options.roles.find((r: any) => r.id === item.role_id) || null
+  selectedEvent.value = options.events.find((e: any) => e.id === item.event_id) || null
+  userSearch.value = ''
+  roleSearch.value = ''
+  eventSearch.value = ''
   form.role_id = item.role_id
   form.event_id = item.event_id
   error.value = ''
