@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\AdminEventController;
 use App\Http\Controllers\Api\AdminEngagementController;
 use App\Http\Controllers\Api\AdminBadgeController;
 use App\Http\Controllers\Api\AdminEarnedBadgeController;
+use App\Http\Controllers\Api\EngagementController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -49,6 +50,14 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/', [UserController::class, 'destroy']);
         Route::put('/password', [UserController::class, 'updatePassword']);
         Route::post('/email-change', [UserController::class, 'requestEmailChange']);
+    });
+
+    // Engagements - Current user's engagements
+    Route::prefix('engagements')->group(function () {
+        Route::get('/', [EngagementController::class, 'index']);
+        Route::get('/options', [EngagementController::class, 'options']);
+        Route::post('/', [EngagementController::class, 'store']);
+        Route::delete('/{engagement}', [EngagementController::class, 'destroy']);
     });
 
     // Admin routes
