@@ -175,7 +175,11 @@ const filteredItems = computed(() => {
   }
   if (searchQuery.value.trim()) {
     const q = searchQuery.value.toLowerCase()
-    result = result.filter(i => i.name.toLowerCase().includes(q))
+    result = result.filter(i =>
+      i.name.toLowerCase().includes(q) ||
+      i.city?.toLowerCase().includes(q) ||
+      i.country?.name?.toLowerCase().includes(q)
+    )
   }
   return result
 })

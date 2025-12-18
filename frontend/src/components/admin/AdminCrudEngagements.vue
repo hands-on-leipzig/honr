@@ -179,8 +179,10 @@ const filteredItems = computed(() => {
       i.user?.nickname?.toLowerCase().includes(q) ||
       i.user?.email?.toLowerCase().includes(q) ||
       i.role?.name?.toLowerCase().includes(q) ||
+      i.event?.season?.name?.toLowerCase().includes(q) ||
       i.event?.level?.name?.toLowerCase().includes(q) ||
-      i.event?.location?.name?.toLowerCase().includes(q)
+      i.event?.location?.name?.toLowerCase().includes(q) ||
+      i.event?.location?.city?.toLowerCase().includes(q)
     )
   }
   return result

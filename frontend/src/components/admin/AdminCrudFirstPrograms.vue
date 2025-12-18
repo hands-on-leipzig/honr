@@ -1,18 +1,26 @@
 <template>
   <div class="bg-white rounded-lg shadow">
-    <div class="p-4 border-b border-gray-200 flex items-center justify-between">
-      <div class="flex items-center space-x-3">
-        <h2 class="text-xl font-semibold">FIRST Programme</h2>
-        <button @click="addItem" class="px-3 py-1 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700">+ Neu</button>
+    <div class="p-4 border-b border-gray-200">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+          <h2 class="text-xl font-semibold">FIRST Programme</h2>
+          <button @click="addItem" class="px-3 py-1 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700">+ Neu</button>
+        </div>
+        <button @click="$emit('close')" class="text-gray-500 hover:text-gray-700">✕</button>
       </div>
-      <button @click="$emit('close')" class="text-gray-500 hover:text-gray-700">✕</button>
+      <input
+        v-model="searchQuery"
+        type="text"
+        placeholder="Suchen..."
+        class="mt-3 w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+      />
     </div>
 
     <div v-if="loading" class="p-4 text-center text-gray-500">Laden...</div>
 
     <div v-else class="divide-y divide-gray-200">
       <div
-        v-for="(item, index) in items"
+        v-for="(item, index) in filteredItems"
         :key="item.id"
         draggable="true"
         @dragstart="onDragStart($event, index)"
@@ -103,7 +111,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import apiClient from '@/api/client'
 
 const emit = defineEmits(['close'])
@@ -113,7 +121,15 @@ const API_PATH = '/admin/first-programs'
 // State
 const items = ref<any[]>([])
 const loading = ref(false)
+const searchQuery = ref('')
 const editingItem = ref<any | null>(null)
+
+// Computed
+const filteredItems = computed(() => {
+  if (!searchQuery.value.trim()) return items.value
+  const q = searchQuery.value.toLowerCase()
+  return items.value.filter(i => i.name.toLowerCase().includes(q))
+})
 const form = reactive({
   name: '',
   sort_order: 1,
