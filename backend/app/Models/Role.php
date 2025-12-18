@@ -3,8 +3,38 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Role extends Model
 {
-    //
+    protected $fillable = [
+        'name',
+        'description',
+        'sort_order',
+        'first_program_id',
+        'role_category',
+        'status',
+        'proposed_by_user_id',
+    ];
+
+    public function firstProgram(): BelongsTo
+    {
+        return $this->belongsTo(FirstProgram::class);
+    }
+
+    public function proposedByUser(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'proposed_by_user_id');
+    }
+
+    public function engagements(): HasMany
+    {
+        return $this->hasMany(Engagement::class);
+    }
+
+    public function badges(): HasMany
+    {
+        return $this->hasMany(Badge::class);
+    }
 }

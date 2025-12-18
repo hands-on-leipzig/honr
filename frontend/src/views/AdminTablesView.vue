@@ -29,6 +29,7 @@
     <AdminCrudLevels v-if="selectedTable === 'levels'" @close="selectedTable = null" />
     <AdminCrudCountries v-if="selectedTable === 'countries'" @close="selectedTable = null" />
     <AdminCrudLocations v-if="selectedTable === 'locations'" @close="selectedTable = null" />
+    <AdminCrudRoles v-if="selectedTable === 'roles'" @close="selectedTable = null" />
 
     <!-- Generic Table Placeholder -->
     <div v-if="selectedTable && !implementedTables.includes(selectedTable)" class="bg-white rounded-lg shadow p-4">
@@ -52,11 +53,12 @@ import AdminCrudSeasons from '@/components/admin/AdminCrudSeasons.vue'
 import AdminCrudLevels from '@/components/admin/AdminCrudLevels.vue'
 import AdminCrudCountries from '@/components/admin/AdminCrudCountries.vue'
 import AdminCrudLocations from '@/components/admin/AdminCrudLocations.vue'
+import AdminCrudRoles from '@/components/admin/AdminCrudRoles.vue'
 
 const selectedTable = ref<string | null>(null)
 
 // Tables with implemented CRUD components
-const implementedTables = ['users', 'first_programs', 'seasons', 'levels', 'countries', 'locations']
+const implementedTables = ['users', 'first_programs', 'seasons', 'levels', 'countries', 'locations', 'roles']
 
 // Pending counts for crowdsourced tables
 const pendingCounts = reactive<Record<string, number>>({
@@ -103,6 +105,10 @@ async function loadPendingCounts() {
     // Load locations pending count
     const locationsRes = await apiClient.get('/admin/locations')
     pendingCounts.locations = locationsRes.data.filter((i: any) => i.status === 'pending').length
+
+    // Load roles pending count
+    const rolesRes = await apiClient.get('/admin/roles')
+    pendingCounts.roles = rolesRes.data.filter((i: any) => i.status === 'pending').length
   } catch (err) {
     console.error('Failed to load pending counts', err)
   }

@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\AdminSeasonController;
 use App\Http\Controllers\Api\AdminLevelController;
 use App\Http\Controllers\Api\AdminCountryController;
 use App\Http\Controllers\Api\AdminLocationController;
+use App\Http\Controllers\Api\AdminRoleController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -86,6 +87,14 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/locations', [AdminLocationController::class, 'store']);
         Route::put('/locations/{location}', [AdminLocationController::class, 'update']);
         Route::delete('/locations/{location}', [AdminLocationController::class, 'destroy']);
+
+        // Roles (crowdsourced)
+        Route::get('/roles', [AdminRoleController::class, 'index']);
+        Route::get('/roles/programs', [AdminRoleController::class, 'programs']);
+        Route::post('/roles', [AdminRoleController::class, 'store']);
+        Route::put('/roles/reorder', [AdminRoleController::class, 'reorder']);
+        Route::put('/roles/{role}', [AdminRoleController::class, 'update']);
+        Route::delete('/roles/{role}', [AdminRoleController::class, 'destroy']);
     });
 });
 
