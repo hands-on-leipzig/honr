@@ -1,0 +1,144 @@
+<?php
+
+namespace App\Http\Controllers\Api;
+
+use App\Http\Controllers\Controller;
+use App\Models\Engagement;
+use App\Models\User;
+use App\Models\Role;
+use App\Models\Event;
+use Illuminate\Http\Request;
+
+class AdminEngagementController extends Controller
+{
+    public function index()
+    {
+        return response()->json(
+            Engagement::with([
+                'user:id,nickname,email',
+                'role:id,name,first_program_id',
+                'role.firstProgram:id,name',
+                'event:id,date,level_id,location_id,season_id',
+                'event.level:id,name',
+                'event.location:id,name,city',
+                'event.season:id,name',
+            ])
+                ->orderBy('created_at', 'desc')
+                ->get()
+        );
+    }
+
+    public function store(Request $request)
+    {
+        $request->validate([
+            'user_id' => 'required|exists:users,id',
+            'role_id' => 'required|exists:roles,id',
+            'event_id' => 'required|exists:events,id',
+        ]);
+
+        // Check for duplicate
+        $exists = Engagement::where('user_id', $request->user_id)
+            ->where('role_id', $request->role_id)
+            ->where('event_id', $request->event_id)
+            ->exists();
+
+        if ($exists) {
+            return response()->json([
+                'message' => 'Dieser Einsatz existiert bereits (gleiche Kombination aus Benutzer, Rolle und Veranstaltung).'
+            ], 422);
+        }
+
+        // Check if should be recognized
+        $user = User::find($request->user_id);
+        $role = Role::find($request->role_id);
+        $event = Event::find($request->event_id);
+
+        $isRecognized = $user->status === 'active'
+            && $role->status === 'approved'
+            && $event->status === 'approved';
+
+        $engagement = Engagement::create([
+            'user_id' => $request->user_id,
+            'role_id' => $request->role_id,
+            'event_id' => $request->event_id,
+            'is_recognized' => $isRecognized,
+            'recognized_at' => $isRecognized ? now() : null,
+        ]);
+
+        return response()->json($engagement->load([
+            'user:id,nickname,email',
+            'role:id,name',
+            'event:id,date,level_id,location_id',
+            'event.level:id,name',
+            'event.location:id,name,city',
+        ]), 201);
+    }
+
+    public function update(Request $request, Engagement $engagement)
+    {
+        $request->validate([
+            'user_id' => 'required|exists:users,id',
+            'role_id' => 'required|exists:roles,id',
+            'event_id' => 'required|exists:events,id',
+        ]);
+
+        // Check for duplicate (excluding current)
+        $exists = Engagement::where('user_id', $request->user_id)
+            ->where('role_id', $request->role_id)
+            ->where('event_id', $request->event_id)
+            ->where('id', '!=', $engagement->id)
+            ->exists();
+
+        if ($exists) {
+            return response()->json([
+                'message' => 'Dieser Einsatz existiert bereits (gleiche Kombination aus Benutzer, Rolle und Veranstaltung).'
+            ], 422);
+        }
+
+        // Check if should be recognized
+        $user = User::find($request->user_id);
+        $role = Role::find($request->role_id);
+        $event = Event::find($request->event_id);
+
+        $isRecognized = $user->status === 'active'
+            && $role->status === 'approved'
+            && $event->status === 'approved';
+
+        $wasRecognized = $engagement->is_recognized;
+
+        $engagement->update([
+            'user_id' => $request->user_id,
+            'role_id' => $request->role_id,
+            'event_id' => $request->event_id,
+            'is_recognized' => $isRecognized,
+            'recognized_at' => $isRecognized && !$wasRecognized ? now() : $engagement->recognized_at,
+        ]);
+
+        return response()->json($engagement->load([
+            'user:id,nickname,email',
+            'role:id,name',
+            'event:id,date,level_id,location_id',
+            'event.level:id,name',
+            'event.location:id,name,city',
+        ]));
+    }
+
+    public function destroy(Engagement $engagement)
+    {
+        $engagement->delete();
+        return response()->json(['message' => 'Einsatz gelöscht.']);
+    }
+
+    public function options()
+    {
+        return response()->json([
+            'users' => User::where('status', 'active')->orderBy('nickname')->get(['id', 'nickname', 'email']),
+            'roles' => Role::where('status', 'approved')->with('firstProgram:id,name')->orderBy('sort_order')->get(['id', 'name', 'first_program_id']),
+            'events' => Event::where('status', 'approved')
+                ->with(['level:id,name', 'location:id,name,city', 'season:id,name'])
+                ->orderBy('date', 'desc')
+                ->get(['id', 'date', 'level_id', 'location_id', 'season_id']),
+        ]);
+    }
+}
+

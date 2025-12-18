@@ -31,6 +31,7 @@
     <AdminCrudLocations v-if="selectedTable === 'locations'" @close="selectedTable = null" />
     <AdminCrudRoles v-if="selectedTable === 'roles'" @close="selectedTable = null" />
     <AdminCrudEvents v-if="selectedTable === 'events'" @close="selectedTable = null" />
+    <AdminCrudEngagements v-if="selectedTable === 'engagements'" @close="selectedTable = null" />
 
     <!-- Generic Table Placeholder -->
     <div v-if="selectedTable && !implementedTables.includes(selectedTable)" class="bg-white rounded-lg shadow p-4">
@@ -56,11 +57,12 @@ import AdminCrudCountries from '@/components/admin/AdminCrudCountries.vue'
 import AdminCrudLocations from '@/components/admin/AdminCrudLocations.vue'
 import AdminCrudRoles from '@/components/admin/AdminCrudRoles.vue'
 import AdminCrudEvents from '@/components/admin/AdminCrudEvents.vue'
+import AdminCrudEngagements from '@/components/admin/AdminCrudEngagements.vue'
 
 const selectedTable = ref<string | null>(null)
 
 // Tables with implemented CRUD components
-const implementedTables = ['users', 'first_programs', 'seasons', 'levels', 'countries', 'locations', 'roles', 'events']
+const implementedTables = ['users', 'first_programs', 'seasons', 'levels', 'countries', 'locations', 'roles', 'events', 'engagements']
 
 // Pending counts for crowdsourced tables
 const pendingCounts = reactive<Record<string, number>>({

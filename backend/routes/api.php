@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\AdminCountryController;
 use App\Http\Controllers\Api\AdminLocationController;
 use App\Http\Controllers\Api\AdminRoleController;
 use App\Http\Controllers\Api\AdminEventController;
+use App\Http\Controllers\Api\AdminEngagementController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -103,6 +104,13 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/events', [AdminEventController::class, 'store']);
         Route::put('/events/{event}', [AdminEventController::class, 'update']);
         Route::delete('/events/{event}', [AdminEventController::class, 'destroy']);
+
+        // Engagements
+        Route::get('/engagements', [AdminEngagementController::class, 'index']);
+        Route::get('/engagements/options', [AdminEngagementController::class, 'options']);
+        Route::post('/engagements', [AdminEngagementController::class, 'store']);
+        Route::put('/engagements/{engagement}', [AdminEngagementController::class, 'update']);
+        Route::delete('/engagements/{engagement}', [AdminEngagementController::class, 'destroy']);
     });
 });
 
