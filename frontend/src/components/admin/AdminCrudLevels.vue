@@ -4,6 +4,14 @@
       <div class="flex items-center space-x-3">
         <h2 class="text-xl font-semibold">Level</h2>
         <button @click="addItem" class="px-3 py-1 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700">+ Neu</button>
+        <div v-if="hasPending" class="flex items-center space-x-2">
+          <BellIcon class="w-4 h-4 text-amber-500" />
+          <span class="text-sm text-amber-600 font-medium">{{ pendingCount }}</span>
+          <label class="relative inline-flex items-center cursor-pointer">
+            <input type="checkbox" v-model="filterPending" class="sr-only peer" />
+            <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
+          </label>
+        </div>
       </div>
       <button @click="$emit('close')" class="text-gray-500 hover:text-gray-700">✕</button>
     </div>
@@ -12,7 +20,7 @@
 
     <div v-else class="divide-y divide-gray-200">
       <div
-        v-for="(item, index) in items"
+        v-for="(item, index) in filteredItems"
         :key="item.id"
         draggable="true"
         @dragstart="onDragStart($event, index)"
@@ -116,7 +124,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { BellIcon } from '@heroicons/vue/24/solid'
 import apiClient from '@/api/client'
 
@@ -127,7 +135,18 @@ const API_PATH = '/admin/levels'
 // State
 const items = ref<any[]>([])
 const loading = ref(false)
+const filterPending = ref(false)
 const editingItem = ref<any | null>(null)
+
+// Computed
+const pendingCount = computed(() => items.value.filter(i => i.status === 'pending').length)
+const hasPending = computed(() => pendingCount.value > 0)
+const filteredItems = computed(() => {
+  if (filterPending.value) {
+    return items.value.filter(i => i.status === 'pending')
+  }
+  return items.value
+})
 const form = reactive({
   name: '',
   description: '',
@@ -165,6 +184,8 @@ async function load() {
   try {
     const response = await apiClient.get(API_PATH)
     items.value = response.data
+    // Default filter on if there are pending items
+    filterPending.value = items.value.some(i => i.status === 'pending')
   } catch (err) {
     console.error('Failed to load', err)
   } finally {
