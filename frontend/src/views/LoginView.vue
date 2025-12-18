@@ -2,54 +2,192 @@
   <div class="min-h-screen bg-gray-50 flex items-center justify-center p-4">
     <div class="w-full max-w-sm">
       <div class="bg-white rounded-lg shadow-lg p-6">
-        <h1 class="text-2xl font-bold text-center mb-6">Anmelden</h1>
-        
-        <form @submit.prevent="handleLogin">
-          <div class="mb-4">
-            <label for="email" class="block text-sm font-medium text-gray-700 mb-1">E-Mail</label>
-            <input
-              id="email"
-              v-model="email"
-              type="email"
-              required
-              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
+        <!-- Login Form -->
+        <template v-if="mode === 'login'">
+          <h1 class="text-2xl font-bold text-center mb-6">Anmelden</h1>
           
-          <div class="mb-4">
-            <label for="password" class="block text-sm font-medium text-gray-700 mb-1">Passwort</label>
-            <input
-              id="password"
-              v-model="password"
-              type="password"
-              required
-              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          
-          <div class="mb-6">
-            <label class="flex items-center">
+          <form @submit.prevent="handleLogin">
+            <div class="mb-4">
+              <label for="email" class="block text-sm font-medium text-gray-700 mb-1">E-Mail</label>
               <input
-                v-model="remember"
-                type="checkbox"
-                class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                id="email"
+                v-model="email"
+                type="email"
+                required
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
-              <span class="ml-2 text-sm text-gray-600">Angemeldet bleiben</span>
-            </label>
-          </div>
+            </div>
+            
+            <div class="mb-4">
+              <label for="password" class="block text-sm font-medium text-gray-700 mb-1">Passwort</label>
+              <input
+                id="password"
+                v-model="password"
+                type="password"
+                required
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            
+            <div class="mb-4">
+              <label class="flex items-center">
+                <input
+                  v-model="remember"
+                  type="checkbox"
+                  class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                />
+                <span class="ml-2 text-sm text-gray-600">Angemeldet bleiben</span>
+              </label>
+            </div>
+            
+            <div v-if="error" class="mb-4 p-3 bg-red-50 text-red-700 rounded-md text-sm">
+              {{ error }}
+            </div>
+            
+            <button
+              type="submit"
+              :disabled="loading"
+              class="w-full py-2 px-4 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+            >
+              {{ loading ? 'Wird angemeldet...' : 'Anmelden' }}
+            </button>
+          </form>
           
-          <div v-if="error" class="mb-4 p-3 bg-red-50 text-red-700 rounded-md text-sm">
-            {{ error }}
+          <div class="mt-4 text-center space-y-2">
+            <button @click="mode = 'reset'" class="text-sm text-blue-600 hover:underline">
+              Passwort vergessen?
+            </button>
+            <div class="text-sm text-gray-600">
+              Noch kein Konto? 
+              <button @click="mode = 'register'" class="text-blue-600 hover:underline">Registrieren</button>
+            </div>
           </div>
+        </template>
+
+        <!-- Register Form -->
+        <template v-else-if="mode === 'register'">
+          <h1 class="text-2xl font-bold text-center mb-6">Registrieren</h1>
           
-          <button
-            type="submit"
-            :disabled="loading"
-            class="w-full py-2 px-4 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
-          >
-            {{ loading ? 'Wird angemeldet...' : 'Anmelden' }}
-          </button>
-        </form>
+          <form @submit.prevent="handleRegister">
+            <div class="mb-4">
+              <label for="reg-email" class="block text-sm font-medium text-gray-700 mb-1">E-Mail</label>
+              <input
+                id="reg-email"
+                v-model="regEmail"
+                type="email"
+                required
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            
+            <div class="mb-4">
+              <label for="reg-name" class="block text-sm font-medium text-gray-700 mb-1">Name</label>
+              <input
+                id="reg-name"
+                v-model="regName"
+                type="text"
+                required
+                @blur="checkNicknameAvailability"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <p v-if="nicknameError" class="text-xs text-red-600 mt-1">{{ nicknameError }}</p>
+              <p v-else class="text-xs text-gray-500 mt-1">Dein Name muss einzigartig sein.</p>
+            </div>
+            
+            <div class="mb-4">
+              <label for="reg-password" class="block text-sm font-medium text-gray-700 mb-1">Passwort</label>
+              <input
+                id="reg-password"
+                v-model="regPassword"
+                type="password"
+                required
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <ul class="mt-1 text-xs text-gray-500 space-y-0.5">
+                <li :class="regPassword.length >= 8 ? 'text-green-600' : ''">• Mindestens 8 Zeichen</li>
+                <li :class="/[A-Z]/.test(regPassword) ? 'text-green-600' : ''">• Mindestens 1 Großbuchstabe</li>
+                <li :class="/[a-z]/.test(regPassword) ? 'text-green-600' : ''">• Mindestens 1 Kleinbuchstabe</li>
+                <li :class="/[0-9]/.test(regPassword) ? 'text-green-600' : ''">• Mindestens 1 Zahl</li>
+              </ul>
+            </div>
+            
+            <div class="mb-4">
+              <label for="reg-password-confirm" class="block text-sm font-medium text-gray-700 mb-1">Passwort bestätigen</label>
+              <input
+                id="reg-password-confirm"
+                v-model="regPasswordConfirm"
+                type="password"
+                required
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <p v-if="regPassword && regPasswordConfirm && regPassword !== regPasswordConfirm" class="text-xs text-red-600 mt-1">
+                Passwörter stimmen nicht überein.
+              </p>
+            </div>
+            
+            <div v-if="error" class="mb-4 p-3 bg-red-50 text-red-700 rounded-md text-sm">
+              {{ error }}
+            </div>
+            
+            <div v-if="success" class="mb-4 p-3 bg-green-50 text-green-700 rounded-md text-sm">
+              {{ success }}
+            </div>
+            
+            <button
+              type="submit"
+              :disabled="loading || (regPassword !== regPasswordConfirm)"
+              class="w-full py-2 px-4 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+            >
+              {{ loading ? 'Wird registriert...' : 'Registrieren' }}
+            </button>
+          </form>
+          
+          <div class="mt-4 text-center">
+            <button @click="mode = 'login'; error = ''; success = ''" class="text-sm text-blue-600 hover:underline">
+              Zurück zur Anmeldung
+            </button>
+          </div>
+        </template>
+
+        <!-- Reset Password Form -->
+        <template v-else-if="mode === 'reset'">
+          <h1 class="text-2xl font-bold text-center mb-6">Passwort zurücksetzen</h1>
+          
+          <form @submit.prevent="handleResetPassword">
+            <div class="mb-4">
+              <label for="reset-email" class="block text-sm font-medium text-gray-700 mb-1">E-Mail</label>
+              <input
+                id="reset-email"
+                v-model="resetEmail"
+                type="email"
+                required
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            
+            <div v-if="error" class="mb-4 p-3 bg-red-50 text-red-700 rounded-md text-sm">
+              {{ error }}
+            </div>
+            
+            <div v-if="success" class="mb-4 p-3 bg-green-50 text-green-700 rounded-md text-sm">
+              {{ success }}
+            </div>
+            
+            <button
+              type="submit"
+              :disabled="loading"
+              class="w-full py-2 px-4 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+            >
+              {{ loading ? 'Wird gesendet...' : 'Link senden' }}
+            </button>
+          </form>
+          
+          <div class="mt-4 text-center">
+            <button @click="mode = 'login'; error = ''; success = ''" class="text-sm text-blue-600 hover:underline">
+              Zurück zur Anmeldung
+            </button>
+          </div>
+        </template>
       </div>
     </div>
   </div>
@@ -59,15 +197,32 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import api from '@/api/client'
 
 const router = useRouter()
 const authStore = useAuthStore()
 
+const mode = ref<'login' | 'register' | 'reset'>('login')
+
+// Login
 const email = ref('')
 const password = ref('')
 const remember = ref(false)
+
+// Register
+const regEmail = ref('')
+const regName = ref('')
+const regPassword = ref('')
+const regPasswordConfirm = ref('')
+const nicknameError = ref('')
+
+// Reset
+const resetEmail = ref('')
+
+// Shared
 const loading = ref(false)
 const error = ref('')
+const success = ref('')
 
 async function handleLogin() {
   loading.value = true
@@ -82,5 +237,66 @@ async function handleLogin() {
     loading.value = false
   }
 }
+
+async function checkNicknameAvailability() {
+  if (!regName.value) {
+    nicknameError.value = ''
+    return
+  }
+  try {
+    const response = await api.post('/auth/check-nickname', { nickname: regName.value })
+    nicknameError.value = response.data.available ? '' : 'Dieser Name ist schon vergeben.'
+  } catch {
+    nicknameError.value = ''
+  }
+}
+
+async function handleRegister() {
+  if (regPassword.value !== regPasswordConfirm.value) {
+    error.value = 'Passwörter stimmen nicht überein.'
+    return
+  }
+  
+  loading.value = true
+  error.value = ''
+  success.value = ''
+  
+  try {
+    await api.post('/auth/register', {
+      email: regEmail.value,
+      nickname: regName.value,
+      password: regPassword.value,
+      password_confirmation: regPasswordConfirm.value
+    })
+    success.value = 'Registrierung erfolgreich! Bitte überprüfe deine E-Mails, um dein Konto zu bestätigen.'
+    regEmail.value = ''
+    regName.value = ''
+    regPassword.value = ''
+    regPasswordConfirm.value = ''
+  } catch (err: any) {
+    error.value = err.response?.data?.message || 'Registrierung fehlgeschlagen.'
+  } finally {
+    loading.value = false
+  }
+}
+
+async function handleResetPassword() {
+  loading.value = true
+  error.value = ''
+  success.value = ''
+  
+  try {
+    await api.post('/auth/forgot-password', {
+      email: resetEmail.value
+    })
+    success.value = 'Falls ein Konto mit dieser E-Mail existiert, wurde ein Link zum Zurücksetzen gesendet.'
+  } catch (err: any) {
+    // Always show success to prevent email enumeration
+    success.value = 'Falls ein Konto mit dieser E-Mail existiert, wurde ein Link zum Zurücksetzen gesendet.'
+  } finally {
+    loading.value = false
+  }
+}
 </script>
+
 

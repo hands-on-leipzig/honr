@@ -6,6 +6,9 @@ use App\Http\Controllers\Api\AdminUserController;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/login', [AuthController::class, 'login']);
+Route::post('/auth/register', [AuthController::class, 'register']);
+Route::post('/auth/check-nickname', [AuthController::class, 'checkNickname']);
+Route::post('/auth/forgot-password', [AuthController::class, 'forgotPassword']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
