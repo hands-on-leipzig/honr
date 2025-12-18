@@ -15,6 +15,7 @@ use App\Http\Controllers\Api\AdminBadgeController;
 use App\Http\Controllers\Api\AdminEarnedBadgeController;
 use App\Http\Controllers\Api\EngagementController;
 use App\Http\Controllers\Api\LeaderboardController;
+use App\Http\Controllers\Api\HeatmapController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -71,6 +72,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/regional-partners', [LeaderboardController::class, 'regionalPartners']);
         Route::get('/coaches', [LeaderboardController::class, 'coaches']);
     });
+
+    // Heatmap
+    Route::get('/heatmap', [HeatmapController::class, 'index']);
+    Route::get('/heatmap/options', [HeatmapController::class, 'options']);
 
     // Admin routes
     Route::middleware('admin')->prefix('admin')->group(function () {
