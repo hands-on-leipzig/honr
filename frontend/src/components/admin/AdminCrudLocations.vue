@@ -42,7 +42,8 @@
                 {{ statusLabel(item.status) }}
               </span>
             </div>
-            <div class="text-sm text-gray-500 truncate">
+            <div class="text-sm text-gray-500 truncate flex items-center">
+              <MapPinIcon v-if="item.latitude && item.longitude" class="w-4 h-4 text-green-500 mr-1 flex-shrink-0" />
               {{ item.city }}<span v-if="item.city && item.country">, </span>{{ item.country?.name }}
             </div>
             <div class="flex flex-wrap gap-1 mt-1 text-xs">
@@ -163,7 +164,7 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted } from 'vue'
-import { BellIcon } from '@heroicons/vue/24/solid'
+import { BellIcon, MapPinIcon } from '@heroicons/vue/24/solid'
 import apiClient from '@/api/client'
 
 const emit = defineEmits(['close'])
