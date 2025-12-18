@@ -14,6 +14,7 @@ use App\Http\Controllers\Api\AdminEngagementController;
 use App\Http\Controllers\Api\AdminBadgeController;
 use App\Http\Controllers\Api\AdminEarnedBadgeController;
 use App\Http\Controllers\Api\EngagementController;
+use App\Http\Controllers\Api\LeaderboardController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -62,6 +63,13 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/propose-event', [EngagementController::class, 'proposeEvent']);
         Route::post('/propose-country', [EngagementController::class, 'proposeCountry']);
         Route::post('/propose-location', [EngagementController::class, 'proposeLocation']);
+    });
+
+    // Leaderboards
+    Route::prefix('leaderboard')->group(function () {
+        Route::get('/volunteers', [LeaderboardController::class, 'volunteers']);
+        Route::get('/regional-partners', [LeaderboardController::class, 'regionalPartners']);
+        Route::get('/coaches', [LeaderboardController::class, 'coaches']);
     });
 
     // Admin routes

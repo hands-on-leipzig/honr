@@ -1,0 +1,109 @@
+<?php
+
+namespace App\Http\Controllers\Api;
+
+use App\Http\Controllers\Controller;
+use App\Models\Engagement;
+use App\Models\User;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+
+class LeaderboardController extends Controller
+{
+    /**
+     * Volunteer leaderboard - total recognized engagements where role_category = 'volunteer' or NULL
+     */
+    public function volunteers(Request $request)
+    {
+        $leaderboard = DB::table('engagements')
+            ->join('roles', 'engagements.role_id', '=', 'roles.id')
+            ->join('users', 'engagements.user_id', '=', 'users.id')
+            ->where('engagements.is_recognized', true)
+            ->where('users.status', 'active')
+            ->where(function ($q) {
+                $q->where('roles.role_category', 'volunteer')
+                  ->orWhereNull('roles.role_category');
+            })
+            ->select(
+                'users.id',
+                'users.nickname',
+                DB::raw('COUNT(engagements.id) as engagement_count')
+            )
+            ->groupBy('users.id', 'users.nickname')
+            ->orderByDesc('engagement_count')
+            ->limit(100)
+            ->get();
+
+        // Add rank
+        $ranked = $leaderboard->values()->map(function ($item, $index) {
+            $item->rank = $index + 1;
+            return $item;
+        });
+
+        return response()->json($ranked);
+    }
+
+    /**
+     * Regional Partner leaderboard - distinct seasons where role_category = 'regional_partner'
+     */
+    public function regionalPartners(Request $request)
+    {
+        $leaderboard = DB::table('engagements')
+            ->join('roles', 'engagements.role_id', '=', 'roles.id')
+            ->join('events', 'engagements.event_id', '=', 'events.id')
+            ->join('users', 'engagements.user_id', '=', 'users.id')
+            ->where('engagements.is_recognized', true)
+            ->where('users.status', 'active')
+            ->where('roles.role_category', 'regional_partner')
+            ->select(
+                'users.id',
+                'users.nickname',
+                'users.regional_partner_name',
+                DB::raw('COUNT(DISTINCT events.season_id) as season_count')
+            )
+            ->groupBy('users.id', 'users.nickname', 'users.regional_partner_name')
+            ->orderByDesc('season_count')
+            ->limit(100)
+            ->get();
+
+        // Add rank, use regional_partner_name if set
+        $ranked = $leaderboard->values()->map(function ($item, $index) {
+            $item->rank = $index + 1;
+            $item->display_name = $item->regional_partner_name ?: $item->nickname;
+            return $item;
+        });
+
+        return response()->json($ranked);
+    }
+
+    /**
+     * Coach leaderboard - distinct seasons where role_category = 'coach'
+     */
+    public function coaches(Request $request)
+    {
+        $leaderboard = DB::table('engagements')
+            ->join('roles', 'engagements.role_id', '=', 'roles.id')
+            ->join('events', 'engagements.event_id', '=', 'events.id')
+            ->join('users', 'engagements.user_id', '=', 'users.id')
+            ->where('engagements.is_recognized', true)
+            ->where('users.status', 'active')
+            ->where('roles.role_category', 'coach')
+            ->select(
+                'users.id',
+                'users.nickname',
+                DB::raw('COUNT(DISTINCT events.season_id) as season_count')
+            )
+            ->groupBy('users.id', 'users.nickname')
+            ->orderByDesc('season_count')
+            ->limit(100)
+            ->get();
+
+        // Add rank
+        $ranked = $leaderboard->values()->map(function ($item, $index) {
+            $item->rank = $index + 1;
+            return $item;
+        });
+
+        return response()->json($ranked);
+    }
+}
