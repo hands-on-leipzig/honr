@@ -10,6 +10,12 @@ const router = createRouter({
       redirect: '/awards',
     },
     {
+      path: '/login',
+      name: 'login',
+      component: () => import('../views/LoginView.vue'),
+      meta: { public: true },
+    },
+    {
       path: '/',
       component: MainLayout,
       children: [
@@ -52,6 +58,28 @@ const router = createRouter({
       ],
     },
   ],
+})
+
+// Navigation guard
+router.beforeEach((to, _from, next) => {
+  const token = localStorage.getItem('auth_token')
+  const isAuthenticated = !!token
+
+  if (to.meta.public) {
+    // Public route - redirect to awards if already authenticated
+    if (isAuthenticated && to.name === 'login') {
+      next('/awards')
+    } else {
+      next()
+    }
+  } else {
+    // Protected route - redirect to login if not authenticated
+    if (!isAuthenticated) {
+      next('/login')
+    } else {
+      next()
+    }
+  }
 })
 
 export default router

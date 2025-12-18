@@ -16,7 +16,7 @@ export default defineConfig({
     },
   },
   server: {
-    host: '0.0.0.0', // Allow access from network devices
-    port: 5173, // Default Vite port
+    host: '0.0.0.0',
+    port: 5174,
   },
 })
