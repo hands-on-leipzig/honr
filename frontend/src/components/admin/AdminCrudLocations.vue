@@ -1,19 +1,27 @@
 <template>
   <div class="bg-white rounded-lg shadow">
-    <div class="p-4 border-b border-gray-200 flex items-center justify-between">
-      <div class="flex items-center space-x-3">
-        <h2 class="text-xl font-semibold">Standorte</h2>
-        <button @click="addItem" class="px-3 py-1 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700">+ Neu</button>
-        <div v-if="hasPending" class="flex items-center space-x-2">
-          <BellIcon class="w-4 h-4 text-amber-500" />
-          <span class="text-sm text-amber-600 font-medium">{{ pendingCount }}</span>
-          <label class="relative inline-flex items-center cursor-pointer">
-            <input type="checkbox" v-model="filterPending" class="sr-only peer" />
-            <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
-          </label>
+    <div class="p-4 border-b border-gray-200">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+          <h2 class="text-xl font-semibold">Standorte</h2>
+          <button @click="addItem" class="px-3 py-1 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700">+ Neu</button>
+          <div v-if="hasPending" class="flex items-center space-x-2">
+            <BellIcon class="w-4 h-4 text-amber-500" />
+            <span class="text-sm text-amber-600 font-medium">{{ pendingCount }}</span>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" v-model="filterPending" class="sr-only peer" />
+              <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
+            </label>
+          </div>
         </div>
+        <button @click="$emit('close')" class="text-gray-500 hover:text-gray-700">✕</button>
       </div>
-      <button @click="$emit('close')" class="text-gray-500 hover:text-gray-700">✕</button>
+      <input
+        v-model="searchQuery"
+        type="text"
+        placeholder="Suchen..."
+        class="mt-3 w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+      />
     </div>
 
     <div v-if="loading" class="p-4 text-center text-gray-500">Laden...</div>
@@ -155,15 +163,21 @@ const items = ref<any[]>([])
 const countries = ref<any[]>([])
 const loading = ref(false)
 const filterPending = ref(false)
+const searchQuery = ref('')
 
 // Computed
 const pendingCount = computed(() => items.value.filter(i => i.status === 'pending').length)
 const hasPending = computed(() => pendingCount.value > 0)
 const filteredItems = computed(() => {
+  let result = items.value
   if (filterPending.value) {
-    return items.value.filter(i => i.status === 'pending')
+    result = result.filter(i => i.status === 'pending')
   }
-  return items.value
+  if (searchQuery.value.trim()) {
+    const q = searchQuery.value.toLowerCase()
+    result = result.filter(i => i.name.toLowerCase().includes(q))
+  }
+  return result
 })
 const editingItem = ref<any | null>(null)
 const form = reactive({
