@@ -146,17 +146,15 @@
         </div>
       </div>
 
+      <!-- Stats -->
+      <div class="bg-white rounded-lg shadow p-3 mb-4 flex justify-between text-sm">
+        <span class="text-gray-700"><strong>{{ heatmapData.length }}</strong> Standorte</span>
+        <span class="text-gray-700"><strong>{{ totalEngagements }}</strong> Einsätze</span>
+      </div>
+
       <!-- Map Container -->
       <div class="bg-white rounded-lg shadow overflow-hidden" style="height: 400px;">
         <div ref="mapContainer" class="w-full h-full"></div>
-      </div>
-
-      <!-- Legend -->
-      <div v-if="heatmapData.length > 0" class="mt-4 bg-white rounded-lg shadow p-4">
-        <h3 class="text-sm font-medium text-gray-700 mb-2">{{ heatmapData.length }} Standorte</h3>
-        <div class="text-xs text-gray-500">
-          Gesamt: {{ totalEngagements }} Einsätze
-        </div>
       </div>
     </div>
 
@@ -192,6 +190,7 @@ const loading = ref(false)
 const mapContainer = ref<HTMLElement | null>(null)
 const mapInstance = ref<L.Map | null>(null)
 const heatLayer = ref<any>(null)
+const markersLayer = ref<L.LayerGroup | null>(null)
 const heatmapData = ref<any[]>([])
 const mapOptions = ref<{ programs: any[], seasons: any[], levels: any[] }>({ programs: [], seasons: [], levels: [] })
 const mapFilters = ref({ program_id: '', season_id: '', level_id: '' })
@@ -265,9 +264,14 @@ function initMap() {
 function updateHeatmap() {
   if (!mapInstance.value) return
 
-  // Remove existing heat layer
+  // Remove existing layers
   if (heatLayer.value) {
     mapInstance.value.removeLayer(heatLayer.value)
+    heatLayer.value = null
+  }
+  if (markersLayer.value) {
+    mapInstance.value.removeLayer(markersLayer.value)
+    markersLayer.value = null
   }
 
   if (heatmapData.value.length === 0) return
@@ -289,7 +293,8 @@ function updateHeatmap() {
     gradient: { 0.4: 'blue', 0.6: 'cyan', 0.7: 'lime', 0.8: 'yellow', 1: 'red' }
   }).addTo(mapInstance.value)
 
-  // Add markers for locations
+  // Add markers for locations in a layer group
+  markersLayer.value = L.layerGroup().addTo(mapInstance.value)
   heatmapData.value.forEach(loc => {
     L.circleMarker([parseFloat(loc.latitude), parseFloat(loc.longitude)], {
       radius: 6,
@@ -300,7 +305,7 @@ function updateHeatmap() {
       fillOpacity: 0.8
     })
     .bindPopup(`<strong>${loc.name}</strong>${loc.city ? '<br>' + loc.city : ''}<br>${loc.engagement_count} Einsätze`)
-    .addTo(mapInstance.value!)
+    .addTo(markersLayer.value!)
   })
 }
 
