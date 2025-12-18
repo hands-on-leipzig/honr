@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\AdminLocationController;
 use App\Http\Controllers\Api\AdminRoleController;
 use App\Http\Controllers\Api\AdminEventController;
 use App\Http\Controllers\Api\AdminEngagementController;
+use App\Http\Controllers\Api\AdminBadgeController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -111,6 +112,13 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/engagements', [AdminEngagementController::class, 'store']);
         Route::put('/engagements/{engagement}', [AdminEngagementController::class, 'update']);
         Route::delete('/engagements/{engagement}', [AdminEngagementController::class, 'destroy']);
+
+        // Badges
+        Route::get('/badges', [AdminBadgeController::class, 'index']);
+        Route::get('/badges/options', [AdminBadgeController::class, 'options']);
+        Route::post('/badges', [AdminBadgeController::class, 'store']);
+        Route::put('/badges/{badge}', [AdminBadgeController::class, 'update']);
+        Route::delete('/badges/{badge}', [AdminBadgeController::class, 'destroy']);
     });
 });
 
