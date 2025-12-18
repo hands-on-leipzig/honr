@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\AdminUserController;
 use App\Http\Controllers\Api\AdminFirstProgramController;
 use App\Http\Controllers\Api\AdminSeasonController;
 use App\Http\Controllers\Api\AdminLevelController;
+use App\Http\Controllers\Api\AdminCountryController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -71,6 +72,12 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/levels/reorder', [AdminLevelController::class, 'reorder']);
         Route::put('/levels/{level}', [AdminLevelController::class, 'update']);
         Route::delete('/levels/{level}', [AdminLevelController::class, 'destroy']);
+
+        // Countries (crowdsourced)
+        Route::get('/countries', [AdminCountryController::class, 'index']);
+        Route::post('/countries', [AdminCountryController::class, 'store']);
+        Route::put('/countries/{country}', [AdminCountryController::class, 'update']);
+        Route::delete('/countries/{country}', [AdminCountryController::class, 'destroy']);
     });
 });
 
