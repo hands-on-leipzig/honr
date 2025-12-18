@@ -70,10 +70,32 @@ class EngagementController extends Controller
             'roles' => $roles,
             'events' => $events,
             'programs' => FirstProgram::orderBy('sort_order')->get(['id', 'name']),
-            'seasons' => Season::orderBy('start_year', 'desc')->get(['id', 'name']),
+            'seasons' => Season::orderBy('start_year', 'desc')->get(['id', 'name', 'first_program_id']),
             'levels' => Level::where('status', 'approved')->orderBy('sort_order')->get(['id', 'name']),
-            'locations' => Location::where('status', 'approved')->orderBy('name')->get(['id', 'name', 'city']),
-            'countries' => Country::where('status', 'approved')->orderBy('name')->get(['id', 'name']),
+            'locations' => Location::where(function ($q) use ($userId) {
+                    $q->where('status', 'approved')
+                      ->orWhere('proposed_by_user_id', $userId);
+                })
+                ->orderBy('name')
+                ->get(['id', 'name', 'city', 'status', 'proposed_by_user_id'])
+                ->map(function ($loc) use ($userId) {
+                    if ($loc->proposed_by_user_id === $userId && $loc->status !== 'approved') {
+                        $loc->name = $loc->name . ' (von dir vorgeschlagen)';
+                    }
+                    return $loc;
+                }),
+            'countries' => Country::where(function ($q) use ($userId) {
+                    $q->where('status', 'approved')
+                      ->orWhere('proposed_by_user_id', $userId);
+                })
+                ->orderBy('name')
+                ->get(['id', 'name', 'status', 'proposed_by_user_id'])
+                ->map(function ($c) use ($userId) {
+                    if ($c->proposed_by_user_id === $userId && $c->status !== 'approved') {
+                        $c->name = $c->name . ' (von dir vorgeschlagen)';
+                    }
+                    return $c;
+                }),
         ]);
     }
 
@@ -179,16 +201,35 @@ class EngagementController extends Controller
         return response()->json($event, 201);
     }
 
+    public function proposeCountry(Request $request)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+        ]);
+
+        $country = Country::create([
+            'name' => $request->name,
+            'status' => 'pending',
+            'proposed_by_user_id' => $request->user()->id,
+        ]);
+
+        return response()->json($country, 201);
+    }
+
     public function proposeLocation(Request $request)
     {
         $request->validate([
             'name' => 'required|string|max:255',
+            'street_address' => 'nullable|string|max:255',
+            'postal_code' => 'nullable|string|max:20',
             'city' => 'nullable|string|max:255',
             'country_id' => 'required|exists:countries,id',
         ]);
 
         $location = Location::create([
             'name' => $request->name,
+            'street_address' => $request->street_address,
+            'postal_code' => $request->postal_code,
             'city' => $request->city,
             'country_id' => $request->country_id,
             'status' => 'pending',

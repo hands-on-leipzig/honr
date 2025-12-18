@@ -178,7 +178,7 @@
         <div class="p-4 space-y-4">
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Rollenname *</label>
-            <input v-model="proposeRoleForm.name" type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm" placeholder="z.B. Zeitnehmer:in" />
+            <input v-model="proposeRoleForm.name" type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm" placeholder="Welche Rolle fehlt?" />
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Programm *</label>
@@ -206,17 +206,31 @@
           <button @click="showProposeEventModal = false" class="text-gray-500 hover:text-gray-700">✕</button>
         </div>
         <div class="p-4 space-y-4">
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Datum *</label>
-            <input v-model="proposeEventForm.date" type="date" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm" />
-          </div>
+          <!-- Saison with type-ahead -->
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Saison *</label>
-            <select v-model="proposeEventForm.season_id" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
-              <option value="">Bitte wählen</option>
-              <option v-for="s in seasons" :key="s.id" :value="s.id">{{ s.name }}</option>
-            </select>
+            <input
+              v-model="proposeSeasonSearch"
+              type="text"
+              placeholder="Saison suchen..."
+              class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+            />
+            <div v-if="filteredProposeSeasons.length > 0 && proposeSeasonSearch && !proposeEventForm.season_id" class="mt-1 max-h-40 overflow-y-auto border border-gray-200 rounded-md">
+              <button
+                v-for="s in filteredProposeSeasons"
+                :key="s.id"
+                @click="selectProposeSeason(s)"
+                class="w-full px-3 py-2 text-left hover:bg-gray-50 text-sm border-b border-gray-100 last:border-b-0"
+              >
+                {{ s.name }}
+              </button>
+            </div>
+            <div v-if="selectedProposeSeason" class="mt-2 p-2 bg-blue-50 rounded-md flex items-center justify-between">
+              <span class="text-sm font-medium">{{ selectedProposeSeason.name }}</span>
+              <button @click="clearProposeSeason" class="text-gray-400 hover:text-gray-600">✕</button>
+            </div>
           </div>
+          <!-- Level -->
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Level *</label>
             <select v-model="proposeEventForm.level_id" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
@@ -224,12 +238,34 @@
               <option v-for="l in levels" :key="l.id" :value="l.id">{{ l.name }}</option>
             </select>
           </div>
+          <!-- Datum -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Datum *</label>
+            <input v-model="proposeEventForm.date" type="date" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm" />
+          </div>
+          <!-- Standort with type-ahead -->
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Standort *</label>
-            <select v-model="proposeEventForm.location_id" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
-              <option value="">Bitte wählen</option>
-              <option v-for="loc in locations" :key="loc.id" :value="loc.id">{{ loc.name }}<span v-if="loc.city">, {{ loc.city }}</span></option>
-            </select>
+            <input
+              v-model="proposeLocationSearch"
+              type="text"
+              placeholder="Standort suchen..."
+              class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+            />
+            <div v-if="filteredProposeLocations.length > 0 && proposeLocationSearch && !selectedProposeLocation" class="mt-1 max-h-40 overflow-y-auto border border-gray-200 rounded-md">
+              <button
+                v-for="loc in filteredProposeLocations"
+                :key="loc.id"
+                @click="selectProposeLocation(loc)"
+                class="w-full px-3 py-2 text-left hover:bg-gray-50 text-sm border-b border-gray-100 last:border-b-0"
+              >
+                {{ loc.name }}<span v-if="loc.city">, {{ loc.city }}</span>
+              </button>
+            </div>
+            <div v-if="selectedProposeLocation" class="mt-2 p-2 bg-blue-50 rounded-md flex items-center justify-between">
+              <span class="text-sm font-medium">{{ selectedProposeLocation.name }}<span v-if="selectedProposeLocation.city">, {{ selectedProposeLocation.city }}</span></span>
+              <button @click="clearProposeLocation" class="text-gray-400 hover:text-gray-600">✕</button>
+            </div>
             <button @click="showProposeLocationModal = true; showProposeEventModal = false" class="mt-2 text-sm text-blue-600 hover:text-blue-800">
               Fehlenden Standort vorschlagen
             </button>
@@ -258,8 +294,18 @@
             <input v-model="proposeLocationForm.name" type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm" placeholder="z.B. Universität Heidelberg" />
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Stadt</label>
-            <input v-model="proposeLocationForm.city" type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm" placeholder="z.B. Heidelberg" />
+            <label class="block text-sm font-medium text-gray-700 mb-1">Straße</label>
+            <input v-model="proposeLocationForm.street_address" type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm" placeholder="z.B. Im Neuenheimer Feld 205" />
+          </div>
+          <div class="grid grid-cols-3 gap-2">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">PLZ</label>
+              <input v-model="proposeLocationForm.postal_code" type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm" placeholder="69120" />
+            </div>
+            <div class="col-span-2">
+              <label class="block text-sm font-medium text-gray-700 mb-1">Stadt</label>
+              <input v-model="proposeLocationForm.city" type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm" placeholder="Heidelberg" />
+            </div>
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Land *</label>
@@ -267,6 +313,15 @@
               <option value="">Bitte wählen</option>
               <option v-for="c in countries" :key="c.id" :value="c.id">{{ c.name }}</option>
             </select>
+            <div v-if="!showNewCountryInput" class="mt-1">
+              <button @click="showNewCountryInput = true" class="text-sm text-blue-600 hover:text-blue-800">Land fehlt?</button>
+            </div>
+            <div v-else class="mt-2 flex gap-2">
+              <input v-model="newCountryName" type="text" class="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm" placeholder="Neues Land eingeben" />
+              <button @click="proposeCountry" :disabled="!newCountryName || proposingCountry" class="px-3 py-2 bg-blue-600 text-white rounded-md text-sm hover:bg-blue-700 disabled:opacity-50">
+                {{ proposingCountry ? '...' : '+' }}
+              </button>
+            </div>
           </div>
           <div v-if="proposeError" class="text-red-600 text-sm">{{ proposeError }}</div>
           <div class="flex gap-2 pt-2">
@@ -310,10 +365,21 @@ const levels = ref<any[]>([])
 const locations = ref<any[]>([])
 const proposeRoleForm = ref({ name: '', first_program_id: '' })
 const proposeEventForm = ref({ date: '', season_id: '', level_id: '', location_id: '' })
-const proposeLocationForm = ref({ name: '', city: '', country_id: '' })
+const proposeLocationForm = ref({ name: '', street_address: '', postal_code: '', city: '', country_id: '' })
 const countries = ref<any[]>([])
 const proposeSaving = ref(false)
 const proposeError = ref('')
+
+// Type-ahead for propose event modal
+const proposeSeasonSearch = ref('')
+const proposeLocationSearch = ref('')
+const selectedProposeSeason = ref<any>(null)
+const selectedProposeLocation = ref<any>(null)
+
+// Inline country proposal
+const showNewCountryInput = ref(false)
+const newCountryName = ref('')
+const proposingCountry = ref(false)
 
 // Computed
 const filteredRoles = computed(() => {
@@ -336,6 +402,21 @@ const filteredEvents = computed(() => {
   ).slice(0, 10)
 })
 
+const filteredProposeSeasons = computed(() => {
+  if (!proposeSeasonSearch.value.trim()) return []
+  const q = proposeSeasonSearch.value.toLowerCase()
+  return seasons.value.filter(s => s.name?.toLowerCase().includes(q)).slice(0, 10)
+})
+
+const filteredProposeLocations = computed(() => {
+  if (!proposeLocationSearch.value.trim()) return []
+  const q = proposeLocationSearch.value.toLowerCase()
+  return locations.value.filter(loc =>
+    loc.name?.toLowerCase().includes(q) ||
+    loc.city?.toLowerCase().includes(q)
+  ).slice(0, 10)
+})
+
 // Methods
 const formatDate = (dateStr: string) => {
   if (!dateStr) return ''
@@ -351,6 +432,30 @@ function selectRole(role: any) {
 function selectEvent(event: any) {
   selectedEvent.value = event
   eventSearch.value = ''
+}
+
+function selectProposeSeason(season: any) {
+  selectedProposeSeason.value = season
+  proposeEventForm.value.season_id = season.id
+  proposeSeasonSearch.value = ''
+}
+
+function clearProposeSeason() {
+  selectedProposeSeason.value = null
+  proposeEventForm.value.season_id = ''
+  proposeSeasonSearch.value = ''
+}
+
+function selectProposeLocation(location: any) {
+  selectedProposeLocation.value = location
+  proposeEventForm.value.location_id = location.id
+  proposeLocationSearch.value = ''
+}
+
+function clearProposeLocation() {
+  selectedProposeLocation.value = null
+  proposeEventForm.value.location_id = ''
+  proposeLocationSearch.value = ''
 }
 
 function closeModal() {
@@ -458,6 +563,22 @@ async function proposeEvent() {
   }
 }
 
+async function proposeCountry() {
+  if (!newCountryName.value) return
+  proposingCountry.value = true
+  try {
+    const response = await apiClient.post('/engagements/propose-country', { name: newCountryName.value })
+    await loadOptions()
+    proposeLocationForm.value.country_id = response.data.id
+    newCountryName.value = ''
+    showNewCountryInput.value = false
+  } catch (err: any) {
+    proposeError.value = err.response?.data?.message || 'Fehler beim Vorschlagen.'
+  } finally {
+    proposingCountry.value = false
+  }
+}
+
 async function proposeLocation() {
   if (!proposeLocationForm.value.name || !proposeLocationForm.value.country_id) {
     proposeError.value = 'Bitte alle Pflichtfelder ausfüllen.'
@@ -469,7 +590,7 @@ async function proposeLocation() {
     const response = await apiClient.post('/engagements/propose-location', proposeLocationForm.value)
     showProposeLocationModal.value = false
     showProposeEventModal.value = true
-    proposeLocationForm.value = { name: '', city: '', country_id: '' }
+    proposeLocationForm.value = { name: '', street_address: '', postal_code: '', city: '', country_id: '' }
     await loadOptions()
     // Auto-select the newly created location
     proposeEventForm.value.location_id = response.data.id

@@ -60,6 +60,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/{engagement}', [EngagementController::class, 'destroy']);
         Route::post('/propose-role', [EngagementController::class, 'proposeRole']);
         Route::post('/propose-event', [EngagementController::class, 'proposeEvent']);
+        Route::post('/propose-country', [EngagementController::class, 'proposeCountry']);
         Route::post('/propose-location', [EngagementController::class, 'proposeLocation']);
     });
 
