@@ -116,7 +116,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { BellIcon } from '@heroicons/vue/24/solid'
 import apiClient from '@/api/client'
 
@@ -140,9 +140,6 @@ const error = ref('')
 const showDeleteConfirm = ref(false)
 const draggingIndex = ref<number | null>(null)
 const dragOverIndex = ref<number | null>(null)
-
-// Computed
-const hasPending = computed(() => items.value.some(i => i.status === 'pending'))
 
 // Methods
 const statusLabel = (status: string) => {
