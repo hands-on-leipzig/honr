@@ -333,7 +333,7 @@ async function requestEmailChange() {
   emailSuccess.value = ''
   emailLoading.value = true
   try {
-    await apiClient.post('/user/request-email-change', {
+    await apiClient.post('/user/email-change', {
       new_email: emailForm.new_email,
       password: emailForm.password,
     })
@@ -374,7 +374,7 @@ async function updateName() {
   nameError.value = ''
   nameLoading.value = true
   try {
-    await apiClient.put('/user/profile', { nickname: nameForm.nickname })
+    await apiClient.put('/user', { nickname: nameForm.nickname })
     await userStore.fetchUser()
     showNameModal.value = false
   } catch (err: any) {
@@ -388,7 +388,7 @@ async function updateBio() {
   bioError.value = ''
   bioLoading.value = true
   try {
-    await apiClient.put('/user/profile', { short_bio: bioForm.short_bio })
+    await apiClient.put('/user', { short_bio: bioForm.short_bio })
     await userStore.fetchUser()
     showBioModal.value = false
   } catch (err: any) {
@@ -400,7 +400,7 @@ async function updateBio() {
 
 async function updateNewsletter() {
   try {
-    await apiClient.put('/user/profile', { consent_to_newsletter: newsletterConsent.value })
+    await apiClient.put('/user', { consent_to_newsletter: newsletterConsent.value })
     await userStore.fetchUser()
   } catch (err: any) {
     // Revert on error
@@ -412,7 +412,7 @@ async function updateRegionalPartner() {
   regionalPartnerError.value = ''
   regionalPartnerLoading.value = true
   try {
-    await apiClient.put('/user/profile', { regional_partner_name: regionalPartnerForm.name })
+    await apiClient.put('/user', { regional_partner_name: regionalPartnerForm.name })
     await userStore.fetchUser()
     showRegionalPartnerModal.value = false
   } catch (err: any) {

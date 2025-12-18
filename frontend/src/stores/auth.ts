@@ -8,7 +8,7 @@ export const useAuthStore = defineStore('auth', () => {
   const isAuthenticated = computed(() => !!token.value)
 
   async function login(email: string, password: string) {
-    const response = await apiClient.post('/login', { email, password })
+    const response = await apiClient.post('/auth/login', { email, password })
     token.value = response.data.token
     localStorage.setItem('auth_token', response.data.token)
     return response.data.user
@@ -16,7 +16,7 @@ export const useAuthStore = defineStore('auth', () => {
 
   async function logout() {
     try {
-      await apiClient.post('/logout')
+      await apiClient.post('/auth/logout')
     } catch {
       // Ignore errors on logout
     }

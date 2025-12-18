@@ -6,30 +6,56 @@ use App\Http\Controllers\Api\AdminUserController;
 use App\Http\Controllers\Api\AdminFirstProgramController;
 use Illuminate\Support\Facades\Route;
 
-Route::post('/login', [AuthController::class, 'login']);
-Route::post('/auth/register', [AuthController::class, 'register']);
-Route::post('/auth/check-nickname', [AuthController::class, 'checkNickname']);
-Route::post('/auth/forgot-password', [AuthController::class, 'forgotPassword']);
+/*
+|--------------------------------------------------------------------------
+| API Routes Convention
+|--------------------------------------------------------------------------
+|
+| /auth/*              - Authentication (public + authenticated)
+| /user                - Current user profile
+| /user/*              - Current user actions (password, email)
+| /admin/{resource}    - Admin CRUD (RESTful: index, store, update, destroy)
+| /admin/{resource}/reorder - Batch reorder for sortable resources
+|
+*/
 
+// Auth - Public
+Route::prefix('auth')->group(function () {
+    Route::post('/login', [AuthController::class, 'login']);
+    Route::post('/register', [AuthController::class, 'register']);
+    Route::post('/check-nickname', [AuthController::class, 'checkNickname']);
+    Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
+});
+
+// Authenticated routes
 Route::middleware('auth:sanctum')->group(function () {
-    Route::post('/logout', [AuthController::class, 'logout']);
-    Route::get('/user', [UserController::class, 'me']);
-    Route::put('/user/profile', [UserController::class, 'updateProfile']);
-    Route::post('/user/request-email-change', [UserController::class, 'requestEmailChange']);
-    Route::put('/user/password', [UserController::class, 'updatePassword']);
-    Route::delete('/user', [UserController::class, 'destroy']);
+    
+    // Auth - Authenticated
+    Route::post('/auth/logout', [AuthController::class, 'logout']);
+
+    // User - Current user profile and actions
+    Route::prefix('user')->group(function () {
+        Route::get('/', [UserController::class, 'me']);
+        Route::put('/', [UserController::class, 'updateProfile']);
+        Route::delete('/', [UserController::class, 'destroy']);
+        Route::put('/password', [UserController::class, 'updatePassword']);
+        Route::post('/email-change', [UserController::class, 'requestEmailChange']);
+    });
 
     // Admin routes
-    Route::middleware('admin')->group(function () {
-        Route::get('/admin/users', [AdminUserController::class, 'index']);
-        Route::put('/admin/users/{user}', [AdminUserController::class, 'update']);
-        Route::delete('/admin/users/{user}', [AdminUserController::class, 'destroy']);
+    Route::middleware('admin')->prefix('admin')->group(function () {
+        
+        // Users
+        Route::get('/users', [AdminUserController::class, 'index']);
+        Route::put('/users/{user}', [AdminUserController::class, 'update']);
+        Route::delete('/users/{user}', [AdminUserController::class, 'destroy']);
 
-        Route::get('/admin/first-programs', [AdminFirstProgramController::class, 'index']);
-        Route::post('/admin/first-programs', [AdminFirstProgramController::class, 'store']);
-        Route::put('/admin/first-programs/reorder', [AdminFirstProgramController::class, 'reorder']);
-        Route::put('/admin/first-programs/{firstProgram}', [AdminFirstProgramController::class, 'update']);
-        Route::delete('/admin/first-programs/{firstProgram}', [AdminFirstProgramController::class, 'destroy']);
+        // First Programs
+        Route::get('/first-programs', [AdminFirstProgramController::class, 'index']);
+        Route::post('/first-programs', [AdminFirstProgramController::class, 'store']);
+        Route::put('/first-programs/reorder', [AdminFirstProgramController::class, 'reorder']);
+        Route::put('/first-programs/{firstProgram}', [AdminFirstProgramController::class, 'update']);
+        Route::delete('/first-programs/{firstProgram}', [AdminFirstProgramController::class, 'destroy']);
     });
 });
 
