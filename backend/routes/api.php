@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\AdminUserController;
+use App\Http\Controllers\Api\AdminFirstProgramController;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/login', [AuthController::class, 'login']);
@@ -22,6 +23,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/admin/users', [AdminUserController::class, 'index']);
     Route::put('/admin/users/{user}', [AdminUserController::class, 'update']);
     Route::delete('/admin/users/{user}', [AdminUserController::class, 'destroy']);
+
+    Route::get('/admin/first-programs', [AdminFirstProgramController::class, 'index']);
+    Route::post('/admin/first-programs', [AdminFirstProgramController::class, 'store']);
+    Route::put('/admin/first-programs/reorder', [AdminFirstProgramController::class, 'reorder']);
+    Route::put('/admin/first-programs/{firstProgram}', [AdminFirstProgramController::class, 'update']);
+    Route::delete('/admin/first-programs/{firstProgram}', [AdminFirstProgramController::class, 'destroy']);
 });
 
 

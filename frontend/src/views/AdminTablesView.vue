@@ -65,8 +65,51 @@
       </div>
     </div>
 
+    <!-- FIRST Programs Table CRUD -->
+    <div v-if="selectedTable === 'first_programs'" class="bg-white rounded-lg shadow">
+      <div class="p-4 border-b border-gray-200 flex items-center justify-between">
+        <h2 class="text-xl font-semibold">FIRST Programme</h2>
+        <div class="flex items-center space-x-2">
+          <button @click="addProgram" class="px-3 py-1 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700">+ Neu</button>
+          <button @click="selectedTable = null" class="text-gray-500 hover:text-gray-700">✕</button>
+        </div>
+      </div>
+
+      <div v-if="programsLoading" class="p-4 text-center text-gray-500">Laden...</div>
+
+      <div v-else class="divide-y divide-gray-200">
+        <div
+          v-for="(program, index) in programs"
+          :key="program.id"
+          draggable="true"
+          @dragstart="onDragStart($event, index)"
+          @dragover.prevent="onDragOver($event, index)"
+          @drop="onDrop($event, index)"
+          @dragend="onDragEnd"
+          @click="editProgram(program)"
+          :class="[
+            'px-4 py-3 hover:bg-gray-50 cursor-pointer transition-all',
+            dragOverIndex === index ? 'border-t-2 border-blue-500' : '',
+            draggingIndex === index ? 'opacity-50' : ''
+          ]"
+        >
+          <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+              <span class="text-gray-400 cursor-grab">⋮⋮</span>
+              <div>
+                <div class="font-medium">{{ program.name }}</div>
+                <div class="text-sm text-gray-500">
+                  {{ formatDateRange(program.valid_from, program.valid_to) }}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Generic Table Placeholder -->
-    <div v-if="selectedTable && selectedTable !== 'users'" class="bg-white rounded-lg shadow p-4">
+    <div v-if="selectedTable && !['users', 'first_programs'].includes(selectedTable)" class="bg-white rounded-lg shadow p-4">
       <div class="flex items-center justify-between mb-4">
         <h2 class="text-xl font-semibold">{{ getTableLabel(selectedTable) }}</h2>
         <button @click="selectedTable = null" class="text-gray-500 hover:text-gray-700">✕</button>
@@ -175,6 +218,62 @@
       </div>
     </div>
 
+    <!-- Program Edit Modal -->
+    <div v-if="editingProgram" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div class="bg-white rounded-lg w-full max-w-md">
+        <div class="p-4 border-b border-gray-200 flex items-center justify-between">
+          <h3 class="text-lg font-semibold">{{ editingProgram.id ? 'Programm bearbeiten' : 'Neues Programm' }}</h3>
+          <button @click="editingProgram = null" class="text-gray-500 hover:text-gray-700">✕</button>
+        </div>
+        <form @submit.prevent="saveProgram" class="p-4 space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Name *</label>
+            <input v-model="programForm.name" type="text" required class="w-full px-3 py-2 border border-gray-300 rounded-md" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Gültig ab</label>
+            <input v-model="programForm.valid_from" type="date" class="w-full px-3 py-2 border border-gray-300 rounded-md" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Gültig bis</label>
+            <input v-model="programForm.valid_to" type="date" class="w-full px-3 py-2 border border-gray-300 rounded-md" />
+          </div>
+
+          <div v-if="programError" class="text-red-600 text-sm">{{ programError }}</div>
+
+          <div class="flex gap-2 pt-2">
+            <button type="button" @click="editingProgram = null" class="flex-1 px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50">
+              Abbrechen
+            </button>
+            <button v-if="editingProgram.id" type="button" @click="confirmDeleteProgram" class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700">
+              Löschen
+            </button>
+            <button type="submit" :disabled="programSaving" class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50">
+              {{ programSaving ? 'Speichern...' : 'Speichern' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Program Delete Confirmation Modal -->
+    <div v-if="showDeleteProgramConfirm" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div class="bg-white rounded-lg w-full max-w-sm p-6">
+        <h3 class="text-lg font-semibold mb-4 text-red-600">Programm löschen?</h3>
+        <p class="mb-4 text-gray-600">
+          Möchtest du das Programm <strong>{{ editingProgram?.name }}</strong> wirklich löschen?
+        </p>
+        <div class="flex gap-2">
+          <button @click="showDeleteProgramConfirm = false" class="flex-1 px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50">
+            Abbrechen
+          </button>
+          <button @click="deleteProgram" :disabled="programDeleting" class="flex-1 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 disabled:opacity-50">
+            {{ programDeleting ? 'Löschen...' : 'Löschen' }}
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- Delete Confirmation Modal -->
     <div v-if="showDeleteConfirm" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div class="bg-white rounded-lg w-full max-w-sm p-6">
@@ -223,6 +322,23 @@ const userSaving = ref(false)
 const userDeleting = ref(false)
 const userError = ref('')
 const showDeleteConfirm = ref(false)
+
+// Programs state
+const programs = ref<any[]>([])
+const programsLoading = ref(false)
+const editingProgram = ref<any | null>(null)
+const programForm = reactive({
+  name: '',
+  sort_order: 1,
+  valid_from: '',
+  valid_to: '',
+})
+const programSaving = ref(false)
+const programDeleting = ref(false)
+const programError = ref('')
+const showDeleteProgramConfirm = ref(false)
+const draggingIndex = ref<number | null>(null)
+const dragOverIndex = ref<number | null>(null)
 
 const tables = [
   { name: 'badges', label: 'Badges', hasPending: false },
@@ -281,10 +397,12 @@ const statusLabel = (status: string) => {
   return labels[status] || status
 }
 
-// Watch for users table selection
+// Watch for table selection
 watch(selectedTable, async (newVal) => {
   if (newVal === 'users') {
     await loadUsers()
+  } else if (newVal === 'first_programs') {
+    await loadPrograms()
   }
 })
 
@@ -344,6 +462,125 @@ async function deleteUser() {
     showDeleteConfirm.value = false
   } finally {
     userDeleting.value = false
+  }
+}
+
+// Programs functions
+async function loadPrograms() {
+  programsLoading.value = true
+  try {
+    const response = await apiClient.get('/admin/first-programs')
+    programs.value = response.data
+  } catch (err) {
+    console.error('Failed to load programs', err)
+  } finally {
+    programsLoading.value = false
+  }
+}
+
+function addProgram() {
+  editingProgram.value = {}
+  programForm.name = ''
+  programForm.sort_order = programs.value.length + 1
+  programForm.valid_from = ''
+  programForm.valid_to = ''
+  programError.value = ''
+}
+
+function editProgram(program: any) {
+  editingProgram.value = program
+  programForm.name = program.name
+  programForm.sort_order = program.sort_order
+  programForm.valid_from = program.valid_from ? program.valid_from.split('T')[0] : ''
+  programForm.valid_to = program.valid_to ? program.valid_to.split('T')[0] : ''
+  programError.value = ''
+}
+
+async function saveProgram() {
+  programError.value = ''
+  programSaving.value = true
+  try {
+    const data = {
+      name: programForm.name,
+      sort_order: programForm.sort_order,
+      valid_from: programForm.valid_from || null,
+      valid_to: programForm.valid_to || null,
+    }
+    if (editingProgram.value.id) {
+      await apiClient.put(`/admin/first-programs/${editingProgram.value.id}`, data)
+    } else {
+      await apiClient.post('/admin/first-programs', data)
+    }
+    await loadPrograms()
+    editingProgram.value = null
+  } catch (err: any) {
+    programError.value = err.response?.data?.message || 'Fehler beim Speichern.'
+  } finally {
+    programSaving.value = false
+  }
+}
+
+function confirmDeleteProgram() {
+  showDeleteProgramConfirm.value = true
+}
+
+async function deleteProgram() {
+  programDeleting.value = true
+  try {
+    await apiClient.delete(`/admin/first-programs/${editingProgram.value.id}`)
+    await loadPrograms()
+    showDeleteProgramConfirm.value = false
+    editingProgram.value = null
+  } catch (err: any) {
+    programError.value = err.response?.data?.message || 'Fehler beim Löschen.'
+    showDeleteProgramConfirm.value = false
+  } finally {
+    programDeleting.value = false
+  }
+}
+
+function formatDateRange(from: string, to: string) {
+  if (!from && !to) return 'Unbegrenzt gültig'
+  const f = from ? new Date(from).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '–'
+  const t = to ? new Date(to).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '–'
+  return `${f} bis ${t}`
+}
+
+// Drag and drop for programs
+function onDragStart(e: DragEvent, index: number) {
+  draggingIndex.value = index
+  e.dataTransfer!.effectAllowed = 'move'
+}
+
+function onDragOver(e: DragEvent, index: number) {
+  dragOverIndex.value = index
+}
+
+function onDrop(e: DragEvent, toIndex: number) {
+  const fromIndex = draggingIndex.value
+  if (fromIndex === null || fromIndex === toIndex) return
+  
+  const items = [...programs.value]
+  const [moved] = items.splice(fromIndex, 1)
+  items.splice(toIndex, 0, moved)
+  programs.value = items
+  
+  // Update sort_order and save
+  updateProgramsOrder()
+}
+
+function onDragEnd() {
+  draggingIndex.value = null
+  dragOverIndex.value = null
+}
+
+async function updateProgramsOrder() {
+  const updates = programs.value.map((p, i) => ({ id: p.id, sort_order: i + 1 }))
+  try {
+    await apiClient.put('/admin/first-programs/reorder', { programs: updates })
+  } catch (err) {
+    console.error('Failed to update order', err)
+    await loadPrograms() // Reload on error
   }
 }
 </script>
