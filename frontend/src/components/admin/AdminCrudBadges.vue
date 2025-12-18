@@ -90,47 +90,31 @@
           <div v-if="form.type === 'tick_box'" class="space-y-3">
             <div>
               <label class="block text-xs text-gray-500 mb-1">Programm</label>
-              <input v-model="criteriaSearch.program" type="text" placeholder="Programm suchen..." class="w-full px-3 py-2 border border-gray-300 rounded-md" :disabled="!!selectedCriteria && selectedCriteria !== 'program'" />
-              <div v-if="filteredCriteriaPrograms.length > 0 && criteriaSearch.program && !form.first_program_id" class="mt-1 max-h-32 overflow-y-auto border border-gray-200 rounded-md">
-                <button v-for="p in filteredCriteriaPrograms" :key="p.id" type="button" @click="selectCriteriaProgram(p)" class="w-full px-3 py-2 text-left hover:bg-gray-50 text-sm border-b border-gray-100 last:border-b-0">{{ p.name }}</button>
-              </div>
-              <div v-if="selectedCriteriaProgram" class="mt-2 p-2 bg-blue-50 rounded-md flex items-center justify-between">
-                <span class="text-sm font-medium">{{ selectedCriteriaProgram.name }}</span>
-                <button type="button" @click="clearCriteriaProgram" class="text-gray-400 hover:text-gray-600">✕</button>
-              </div>
+              <select v-model="form.first_program_id" class="w-full px-3 py-2 border border-gray-300 rounded-md" @change="clearOtherCriteria('first_program_id')">
+                <option value="">-</option>
+                <option v-for="p in options.programs" :key="p.id" :value="p.id">{{ p.name }}</option>
+              </select>
             </div>
             <div>
               <label class="block text-xs text-gray-500 mb-1">Saison</label>
-              <input v-model="criteriaSearch.season" type="text" placeholder="Saison suchen..." class="w-full px-3 py-2 border border-gray-300 rounded-md" :disabled="!!selectedCriteria && selectedCriteria !== 'season'" />
-              <div v-if="filteredCriteriaSeasons.length > 0 && criteriaSearch.season && !form.season_id" class="mt-1 max-h-32 overflow-y-auto border border-gray-200 rounded-md">
-                <button v-for="s in filteredCriteriaSeasons" :key="s.id" type="button" @click="selectCriteriaSeason(s)" class="w-full px-3 py-2 text-left hover:bg-gray-50 text-sm border-b border-gray-100 last:border-b-0">{{ s.name }}</button>
-              </div>
-              <div v-if="selectedCriteriaSeason" class="mt-2 p-2 bg-blue-50 rounded-md flex items-center justify-between">
-                <span class="text-sm font-medium">{{ selectedCriteriaSeason.name }}</span>
-                <button type="button" @click="clearCriteriaSeason" class="text-gray-400 hover:text-gray-600">✕</button>
-              </div>
+              <select v-model="form.season_id" class="w-full px-3 py-2 border border-gray-300 rounded-md" @change="clearOtherCriteria('season_id')">
+                <option value="">-</option>
+                <option v-for="s in options.seasons" :key="s.id" :value="s.id">{{ s.name }}</option>
+              </select>
             </div>
             <div>
               <label class="block text-xs text-gray-500 mb-1">Level</label>
-              <input v-model="criteriaSearch.level" type="text" placeholder="Level suchen..." class="w-full px-3 py-2 border border-gray-300 rounded-md" :disabled="!!selectedCriteria && selectedCriteria !== 'level'" />
-              <div v-if="filteredCriteriaLevels.length > 0 && criteriaSearch.level && !form.level_id" class="mt-1 max-h-32 overflow-y-auto border border-gray-200 rounded-md">
-                <button v-for="l in filteredCriteriaLevels" :key="l.id" type="button" @click="selectCriteriaLevel(l)" class="w-full px-3 py-2 text-left hover:bg-gray-50 text-sm border-b border-gray-100 last:border-b-0">{{ l.name }}</button>
-              </div>
-              <div v-if="selectedCriteriaLevel" class="mt-2 p-2 bg-blue-50 rounded-md flex items-center justify-between">
-                <span class="text-sm font-medium">{{ selectedCriteriaLevel.name }}</span>
-                <button type="button" @click="clearCriteriaLevel" class="text-gray-400 hover:text-gray-600">✕</button>
-              </div>
+              <select v-model="form.level_id" class="w-full px-3 py-2 border border-gray-300 rounded-md" @change="clearOtherCriteria('level_id')">
+                <option value="">-</option>
+                <option v-for="l in options.levels" :key="l.id" :value="l.id">{{ l.name }}</option>
+              </select>
             </div>
             <div>
               <label class="block text-xs text-gray-500 mb-1">Land</label>
-              <input v-model="criteriaSearch.country" type="text" placeholder="Land suchen..." class="w-full px-3 py-2 border border-gray-300 rounded-md" :disabled="!!selectedCriteria && selectedCriteria !== 'country'" />
-              <div v-if="filteredCriteriaCountries.length > 0 && criteriaSearch.country && !form.country_id" class="mt-1 max-h-32 overflow-y-auto border border-gray-200 rounded-md">
-                <button v-for="c in filteredCriteriaCountries" :key="c.id" type="button" @click="selectCriteriaCountry(c)" class="w-full px-3 py-2 text-left hover:bg-gray-50 text-sm border-b border-gray-100 last:border-b-0">{{ c.name }}</button>
-              </div>
-              <div v-if="selectedCriteriaCountry" class="mt-2 p-2 bg-blue-50 rounded-md flex items-center justify-between">
-                <span class="text-sm font-medium">{{ selectedCriteriaCountry.name }}</span>
-                <button type="button" @click="clearCriteriaCountry" class="text-gray-400 hover:text-gray-600">✕</button>
-              </div>
+              <select v-model="form.country_id" class="w-full px-3 py-2 border border-gray-300 rounded-md" @change="clearOtherCriteria('country_id')">
+                <option value="">-</option>
+                <option v-for="c in options.countries" :key="c.id" :value="c.id">{{ c.name }}</option>
+              </select>
             </div>
           </div>
 
@@ -232,98 +216,16 @@ const deleting = ref(false)
 const error = ref('')
 const showDeleteConfirm = ref(false)
 
-// Type-ahead for criteria
-const criteriaSearch = reactive({
-  program: '',
-  season: '',
-  level: '',
-  country: '',
-  role: ''
-})
-const selectedCriteriaProgram = ref<any>(null)
-const selectedCriteriaSeason = ref<any>(null)
-const selectedCriteriaLevel = ref<any>(null)
-const selectedCriteriaCountry = ref<any>(null)
+// Type-ahead for role criteria
+const criteriaSearch = reactive({ role: '' })
 const selectedCriteriaRole = ref<any>(null)
 
-const selectedCriteria = computed(() => {
-  if (form.first_program_id) return 'program'
-  if (form.season_id) return 'season'
-  if (form.level_id) return 'level'
-  if (form.country_id) return 'country'
-  return null
-})
-
-const filteredCriteriaPrograms = computed(() => {
-  if (!criteriaSearch.program.trim()) return options.programs
-  const q = criteriaSearch.program.toLowerCase()
-  return options.programs.filter((p: any) => p.name.toLowerCase().includes(q))
-})
-const filteredCriteriaSeasons = computed(() => {
-  if (!criteriaSearch.season.trim()) return options.seasons
-  const q = criteriaSearch.season.toLowerCase()
-  return options.seasons.filter((s: any) => s.name.toLowerCase().includes(q))
-})
-const filteredCriteriaLevels = computed(() => {
-  if (!criteriaSearch.level.trim()) return options.levels
-  const q = criteriaSearch.level.toLowerCase()
-  return options.levels.filter((l: any) => l.name.toLowerCase().includes(q))
-})
-const filteredCriteriaCountries = computed(() => {
-  if (!criteriaSearch.country.trim()) return options.countries
-  const q = criteriaSearch.country.toLowerCase()
-  return options.countries.filter((c: any) => c.name.toLowerCase().includes(q))
-})
 const filteredCriteriaRoles = computed(() => {
   if (!criteriaSearch.role.trim()) return options.roles
   const q = criteriaSearch.role.toLowerCase()
   return options.roles.filter((r: any) => r.name.toLowerCase().includes(q))
 })
 
-function selectCriteriaProgram(p: any) {
-  selectedCriteriaProgram.value = p
-  form.first_program_id = p.id
-  criteriaSearch.program = ''
-  clearOtherCriteria('first_program_id')
-}
-function clearCriteriaProgram() {
-  selectedCriteriaProgram.value = null
-  form.first_program_id = ''
-  criteriaSearch.program = ''
-}
-function selectCriteriaSeason(s: any) {
-  selectedCriteriaSeason.value = s
-  form.season_id = s.id
-  criteriaSearch.season = ''
-  clearOtherCriteria('season_id')
-}
-function clearCriteriaSeason() {
-  selectedCriteriaSeason.value = null
-  form.season_id = ''
-  criteriaSearch.season = ''
-}
-function selectCriteriaLevel(l: any) {
-  selectedCriteriaLevel.value = l
-  form.level_id = l.id
-  criteriaSearch.level = ''
-  clearOtherCriteria('level_id')
-}
-function clearCriteriaLevel() {
-  selectedCriteriaLevel.value = null
-  form.level_id = ''
-  criteriaSearch.level = ''
-}
-function selectCriteriaCountry(c: any) {
-  selectedCriteriaCountry.value = c
-  form.country_id = c.id
-  criteriaSearch.country = ''
-  clearOtherCriteria('country_id')
-}
-function clearCriteriaCountry() {
-  selectedCriteriaCountry.value = null
-  form.country_id = ''
-  criteriaSearch.country = ''
-}
 function selectCriteriaRole(r: any) {
   selectedCriteriaRole.value = r
   form.role_id = r.id
@@ -332,19 +234,6 @@ function selectCriteriaRole(r: any) {
 function clearCriteriaRole() {
   selectedCriteriaRole.value = null
   form.role_id = ''
-  criteriaSearch.role = ''
-}
-
-function clearAllCriteriaSelections() {
-  selectedCriteriaProgram.value = null
-  selectedCriteriaSeason.value = null
-  selectedCriteriaLevel.value = null
-  selectedCriteriaCountry.value = null
-  selectedCriteriaRole.value = null
-  criteriaSearch.program = ''
-  criteriaSearch.season = ''
-  criteriaSearch.level = ''
-  criteriaSearch.country = ''
   criteriaSearch.role = ''
 }
 
@@ -430,7 +319,8 @@ function addItem() {
   form.country_id = ''
   form.role_id = ''
   form.description = ''
-  clearAllCriteriaSelections()
+  selectedCriteriaRole.value = null
+  criteriaSearch.role = ''
   error.value = ''
 }
 
@@ -446,16 +336,7 @@ function editItem(item: any) {
   form.country_id = item.country_id || ''
   form.role_id = item.role_id || ''
   form.description = item.description || ''
-  // Set selected criteria based on what's set
-  selectedCriteriaProgram.value = item.first_program_id ? options.programs.find((p: any) => p.id === item.first_program_id) : null
-  selectedCriteriaSeason.value = item.season_id ? options.seasons.find((s: any) => s.id === item.season_id) : null
-  selectedCriteriaLevel.value = item.level_id ? options.levels.find((l: any) => l.id === item.level_id) : null
-  selectedCriteriaCountry.value = item.country_id ? options.countries.find((c: any) => c.id === item.country_id) : null
   selectedCriteriaRole.value = item.role_id ? options.roles.find((r: any) => r.id === item.role_id) : null
-  criteriaSearch.program = ''
-  criteriaSearch.season = ''
-  criteriaSearch.level = ''
-  criteriaSearch.country = ''
   criteriaSearch.role = ''
   error.value = ''
 }
