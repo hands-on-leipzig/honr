@@ -42,10 +42,10 @@
             </span>
           </div>
           <div class="text-sm text-gray-600 truncate">
-            {{ item.role?.name }} · {{ formatDate(item.event?.date) }}
+            {{ item.role?.name }}
           </div>
-          <div class="text-xs text-gray-500 truncate">
-            {{ item.event?.level?.name }} · {{ item.event?.location?.name }}<span v-if="item.event?.location?.city">, {{ item.event.location.city }}</span>
+          <div class="text-sm text-gray-600 truncate">
+            {{ item.event?.season?.name }} · {{ item.event?.level?.name }} · {{ item.event?.location?.name }}<span v-if="item.event?.location?.city">, {{ item.event.location.city }}</span>
           </div>
         </div>
       </div>
