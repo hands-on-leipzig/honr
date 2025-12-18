@@ -2,6 +2,16 @@
   <div class="p-4">
     <h1 class="text-2xl font-bold mb-4">Einstellungen</h1>
 
+    <!-- Administration (Admin Only) -->
+    <div v-if="userStore.user?.is_admin" class="bg-white rounded-lg shadow mb-4">
+      <RouterLink
+        to="/admin/tables"
+        class="block w-full px-4 py-3 text-left hover:bg-gray-50"
+      >
+        <span class="font-semibold text-blue-600">Administration</span>
+      </RouterLink>
+    </div>
+
     <!-- Account Settings -->
     <div class="bg-white rounded-lg shadow mb-4">
       <div class="p-4 border-b border-gray-200">
@@ -79,16 +89,6 @@
           honr@hands-on-technology.org
         </a>
       </div>
-    </div>
-
-    <!-- Administration (Admin Only) -->
-    <div v-if="userStore.user?.is_admin" class="bg-white rounded-lg shadow mb-4">
-      <RouterLink
-        to="/admin/tables"
-        class="block w-full px-4 py-3 text-left hover:bg-gray-50"
-      >
-        <span class="font-semibold text-blue-600">Administration</span>
-      </RouterLink>
     </div>
 
     <!-- Password Modal -->

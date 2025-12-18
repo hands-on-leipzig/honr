@@ -26,6 +26,7 @@
     <!-- Table CRUD Components -->
     <AdminCrudUsers v-if="selectedTable === 'users'" @close="selectedTable = null" />
     <AdminCrudFirstPrograms v-if="selectedTable === 'first_programs'" @close="selectedTable = null" />
+    <AdminCrudSeasons v-if="selectedTable === 'seasons'" @close="selectedTable = null" />
 
     <!-- Generic Table Placeholder -->
     <div v-if="selectedTable && !implementedTables.includes(selectedTable)" class="bg-white rounded-lg shadow p-4">
@@ -44,11 +45,12 @@ import { ref, computed } from 'vue'
 import { BellIcon } from '@heroicons/vue/24/solid'
 import AdminCrudUsers from '@/components/admin/AdminCrudUsers.vue'
 import AdminCrudFirstPrograms from '@/components/admin/AdminCrudFirstPrograms.vue'
+import AdminCrudSeasons from '@/components/admin/AdminCrudSeasons.vue'
 
 const selectedTable = ref<string | null>(null)
 
 // Tables with implemented CRUD components
-const implementedTables = ['users', 'first_programs']
+const implementedTables = ['users', 'first_programs', 'seasons']
 
 const tables = [
   { name: 'badges', label: 'Badges', hasPending: false },

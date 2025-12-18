@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\AdminUserController;
 use App\Http\Controllers\Api\AdminFirstProgramController;
+use App\Http\Controllers\Api\AdminSeasonController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -56,6 +57,12 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/first-programs/reorder', [AdminFirstProgramController::class, 'reorder']);
         Route::put('/first-programs/{firstProgram}', [AdminFirstProgramController::class, 'update']);
         Route::delete('/first-programs/{firstProgram}', [AdminFirstProgramController::class, 'destroy']);
+
+        // Seasons
+        Route::get('/seasons', [AdminSeasonController::class, 'index']);
+        Route::post('/seasons', [AdminSeasonController::class, 'store']);
+        Route::put('/seasons/{season}', [AdminSeasonController::class, 'update']);
+        Route::delete('/seasons/{season}', [AdminSeasonController::class, 'destroy']);
     });
 });
 
