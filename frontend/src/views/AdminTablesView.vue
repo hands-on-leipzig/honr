@@ -2,33 +2,21 @@
   <div class="p-4">
     <h1 class="text-2xl font-bold mb-4">Tabellen</h1>
 
-    <!-- Global Filter -->
-    <div class="mb-4">
-      <label class="flex items-center space-x-2">
-        <input
-          v-model="showPendingOnly"
-          type="checkbox"
-          class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-        />
-        <span class="text-sm font-medium">Admin-Aktion erforderlich (nur ausstehende Einträge)</span>
-      </label>
-    </div>
-
     <!-- Table Selection -->
     <div v-if="!selectedTable" class="bg-white rounded-lg shadow">
       <div class="divide-y divide-gray-200">
         <button
-          v-for="table in filteredTables"
+          v-for="table in sortedTables"
           :key="table.name"
           @click="selectTable(table.name)"
           class="w-full px-4 py-3 text-left hover:bg-gray-50 flex items-center justify-between"
         >
           <div class="flex items-center space-x-2">
             <span class="font-medium">{{ table.label }}</span>
-            <ExclamationCircleIcon
+            <BellIcon
               v-if="table.hasPending"
-              class="w-5 h-5 text-red-600"
-              title="Aktion erforderlich"
+              class="w-5 h-5 text-amber-500"
+              title="Aufmerksamkeit erforderlich"
             />
           </div>
         </button>
@@ -203,7 +191,7 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed, watch, onMounted } from 'vue'
-import { ExclamationCircleIcon } from '@heroicons/vue/24/solid'
+import { BellIcon } from '@heroicons/vue/24/solid'
 import apiClient from '@/api/client'
 import { useUserStore } from '@/stores/user'
 
@@ -215,7 +203,6 @@ onMounted(() => {
   }
 })
 
-const showPendingOnly = ref(true)
 const selectedTable = ref<string | null>(null)
 
 // Users state
@@ -232,25 +219,22 @@ const userError = ref('')
 const showDeleteConfirm = ref(false)
 
 const tables = [
+  { name: 'badges', label: 'Badges', hasPending: false },
+  { name: 'badge_thresholds', label: 'Badge-Schwellenwerte', hasPending: false },
   { name: 'users', label: 'Benutzer', hasPending: false },
   { name: 'first_programs', label: 'FIRST Programme', hasPending: false },
-  { name: 'seasons', label: 'Saisons', hasPending: false },
-  { name: 'levels', label: 'Ebenen', hasPending: true },
-  { name: 'roles', label: 'Rollen', hasPending: true },
   { name: 'countries', label: 'Länder', hasPending: true },
+  { name: 'levels', label: 'Level', hasPending: true },
+  { name: 'roles', label: 'Rollen', hasPending: true },
+  { name: 'seasons', label: 'Saisons', hasPending: false },
   { name: 'locations', label: 'Standorte', hasPending: true },
   { name: 'events', label: 'Veranstaltungen', hasPending: true },
-  { name: 'engagements', label: 'Engagements', hasPending: false },
-  { name: 'badges', label: 'Abzeichen', hasPending: false },
-  { name: 'badge_thresholds', label: 'Abzeichen-Schwellenwerte', hasPending: false },
-  { name: 'earned_badges', label: 'Verdiente Abzeichen', hasPending: false },
+  { name: 'earned_badges', label: 'Verdiente Badges', hasPending: false },
+  { name: 'engagements', label: 'Volunteer-Einsätze', hasPending: false },
 ]
 
-const filteredTables = computed(() => {
-  if (showPendingOnly.value) {
-    return tables.filter(table => table.hasPending)
-  }
-  return tables
+const sortedTables = computed(() => {
+  return [...tables].sort((a, b) => a.label.localeCompare(b.label, 'de'))
 })
 
 const isCurrentUser = computed(() => {
