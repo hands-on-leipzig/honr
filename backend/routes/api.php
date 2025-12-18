@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\AdminLevelController;
 use App\Http\Controllers\Api\AdminCountryController;
 use App\Http\Controllers\Api\AdminLocationController;
 use App\Http\Controllers\Api\AdminRoleController;
+use App\Http\Controllers\Api\AdminEventController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -95,6 +96,13 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/roles/reorder', [AdminRoleController::class, 'reorder']);
         Route::put('/roles/{role}', [AdminRoleController::class, 'update']);
         Route::delete('/roles/{role}', [AdminRoleController::class, 'destroy']);
+
+        // Events (crowdsourced)
+        Route::get('/events', [AdminEventController::class, 'index']);
+        Route::get('/events/options', [AdminEventController::class, 'options']);
+        Route::post('/events', [AdminEventController::class, 'store']);
+        Route::put('/events/{event}', [AdminEventController::class, 'update']);
+        Route::delete('/events/{event}', [AdminEventController::class, 'destroy']);
     });
 });
 
