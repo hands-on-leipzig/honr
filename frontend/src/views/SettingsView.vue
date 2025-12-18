@@ -8,9 +8,9 @@
         <h2 class="font-semibold">Benutzer-Einstellungen</h2>
       </div>
       <div class="divide-y divide-gray-200">
-        <!-- E-Mail ändern - disabled, requires mail server -->
-        <button class="w-full px-4 py-3 text-left text-gray-400 cursor-not-allowed" disabled>
-          E-Mail ändern (demnächst)
+        <!-- E-Mail ändern -->
+        <button @click="showEmailModal = true" class="w-full px-4 py-3 text-left hover:bg-gray-50">
+          E-Mail ändern
         </button>
         
         <!-- Passwort ändern -->
@@ -188,6 +188,37 @@
       </div>
     </div>
 
+    <!-- Email Modal -->
+    <div v-if="showEmailModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div class="bg-white rounded-lg w-full max-w-sm p-6">
+        <h3 class="text-lg font-semibold mb-4">E-Mail ändern</h3>
+        <form @submit.prevent="requestEmailChange">
+          <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-1">Aktuelle E-Mail</label>
+            <div class="px-3 py-2 bg-gray-100 border border-gray-200 rounded-md text-gray-700">
+              {{ userStore.user?.email }}
+            </div>
+          </div>
+          <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-1">Neue E-Mail</label>
+            <input v-model="emailForm.new_email" type="email" required class="w-full px-3 py-2 border border-gray-300 rounded-md" />
+          </div>
+          <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-1">Passwort zur Bestätigung</label>
+            <input v-model="emailForm.password" type="password" required class="w-full px-3 py-2 border border-gray-300 rounded-md" />
+          </div>
+          <div v-if="emailError" class="mb-4 text-red-600 text-sm">{{ emailError }}</div>
+          <div v-if="emailSuccess" class="mb-4 text-green-600 text-sm">{{ emailSuccess }}</div>
+          <div class="flex gap-2">
+            <button type="button" @click="closeEmailModal" class="flex-1 px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50">Abbrechen</button>
+            <button type="submit" :disabled="emailLoading" class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50">
+              {{ emailLoading ? 'Senden...' : 'Link senden' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
     <!-- Delete Account Modal -->
     <div v-if="showDeleteModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div class="bg-white rounded-lg w-full max-w-sm p-6">
@@ -224,6 +255,7 @@ const userStore = useUserStore()
 const authStore = useAuthStore()
 
 // Modal visibility
+const showEmailModal = ref(false)
 const showPasswordModal = ref(false)
 const showNameModal = ref(false)
 const showBioModal = ref(false)
@@ -234,6 +266,7 @@ const showDeleteModal = ref(false)
 const newsletterConsent = ref(false)
 
 // Forms
+const emailForm = reactive({ new_email: '', password: '' })
 const passwordForm = reactive({ current: '', new: '', confirm: '' })
 const nameForm = reactive({ nickname: '' })
 const bioForm = reactive({ short_bio: '' })
@@ -241,6 +274,7 @@ const regionalPartnerForm = reactive({ name: '' })
 const deleteForm = reactive({ password: '' })
 
 // Loading states
+const emailLoading = ref(false)
 const passwordLoading = ref(false)
 const nameLoading = ref(false)
 const bioLoading = ref(false)
@@ -248,6 +282,8 @@ const regionalPartnerLoading = ref(false)
 const deleteLoading = ref(false)
 
 // Error states
+const emailError = ref('')
+const emailSuccess = ref('')
 const passwordError = ref('')
 const nameError = ref('')
 const bioError = ref('')
@@ -266,6 +302,14 @@ const isPasswordValid = computed(() => {
   )
 })
 
+function closeEmailModal() {
+  showEmailModal.value = false
+  emailForm.new_email = ''
+  emailForm.password = ''
+  emailError.value = ''
+  emailSuccess.value = ''
+}
+
 function closePasswordModal() {
   showPasswordModal.value = false
   passwordForm.current = ''
@@ -283,6 +327,24 @@ onMounted(async () => {
     regionalPartnerForm.name = userStore.user.regional_partner_name || ''
   }
 })
+
+async function requestEmailChange() {
+  emailError.value = ''
+  emailSuccess.value = ''
+  emailLoading.value = true
+  try {
+    await apiClient.post('/user/request-email-change', {
+      new_email: emailForm.new_email,
+      password: emailForm.password,
+    })
+    emailSuccess.value = 'Ein Bestätigungslink wurde an die neue E-Mail-Adresse gesendet.'
+    emailForm.password = ''
+  } catch (err: any) {
+    emailError.value = err.response?.data?.message || 'Fehler beim Anfordern der E-Mail-Änderung.'
+  } finally {
+    emailLoading.value = false
+  }
+}
 
 async function updatePassword() {
   passwordError.value = ''

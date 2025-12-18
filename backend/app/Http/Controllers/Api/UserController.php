@@ -29,6 +29,40 @@ class UserController extends Controller
         return response()->json($user);
     }
 
+    public function requestEmailChange(Request $request)
+    {
+        $request->validate([
+            'new_email' => 'required|email|unique:users,email',
+            'password' => 'required',
+        ], [
+            'new_email.unique' => 'Diese E-Mail-Adresse ist bereits registriert.',
+        ]);
+
+        $user = $request->user();
+
+        if (! Hash::check($request->password, $user->password)) {
+            throw ValidationException::withMessages([
+                'password' => ['Das Passwort ist falsch.'],
+            ]);
+        }
+
+        // TODO: Send confirmation email to new address
+        // $token = Str::random(64);
+        // DB::table('email_verification_tokens')->insert([
+        //     'user_id' => $user->id,
+        //     'email' => $request->new_email,
+        //     'token' => Hash::make($token),
+        //     'type' => 'email_change',
+        //     'expires_at' => now()->addHours(24),
+        //     'created_at' => now(),
+        // ]);
+        // Mail::to($request->new_email)->send(new VerifyEmailChange($user, $token));
+
+        return response()->json([
+            'message' => 'Ein Bestätigungslink wurde an die neue E-Mail-Adresse gesendet.',
+        ]);
+    }
+
     public function updatePassword(Request $request)
     {
         $request->validate([

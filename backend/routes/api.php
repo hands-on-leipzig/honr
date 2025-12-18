@@ -14,6 +14,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/user', [UserController::class, 'me']);
     Route::put('/user/profile', [UserController::class, 'updateProfile']);
+    Route::post('/user/request-email-change', [UserController::class, 'requestEmailChange']);
     Route::put('/user/password', [UserController::class, 'updatePassword']);
     Route::delete('/user', [UserController::class, 'destroy']);
 
