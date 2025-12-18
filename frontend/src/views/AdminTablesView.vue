@@ -36,7 +36,7 @@
       <!-- Users List -->
       <div v-else class="divide-y divide-gray-200">
         <div
-          v-for="user in users"
+          v-for="user in sortedUsers"
           :key="user.id"
           @click="editUser(user)"
           class="px-4 py-3 hover:bg-gray-50 cursor-pointer"
@@ -47,6 +47,7 @@
               <div class="text-sm text-gray-500">{{ user.email }}</div>
             </div>
             <div class="flex items-center space-x-2">
+              <span v-if="user.is_admin" class="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800">Admin</span>
               <span
                 :class="[
                   'px-2 py-1 text-xs rounded-full',
@@ -58,7 +59,6 @@
               >
                 {{ statusLabel(user.status) }}
               </span>
-              <span v-if="user.is_admin" class="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800">Admin</span>
             </div>
           </div>
         </div>
@@ -117,6 +117,10 @@
             <label class="block text-sm font-medium text-gray-700 mb-1">Administrator</label>
             <div class="px-3 py-2 bg-gray-100 border border-gray-200 rounded-md text-gray-700">{{ editingUser.is_admin ? 'Ja' : 'Nein' }}</div>
           </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Letzter Login</label>
+            <div class="px-3 py-2 bg-gray-100 border border-gray-200 rounded-md text-gray-700">{{ formatDate(editingUser.last_login_at) }}</div>
+          </div>
 
           <!-- Close button for current user -->
           <div v-if="isCurrentUser" class="flex gap-2 pt-2">
@@ -132,8 +136,10 @@
             <div class="space-y-4">
               <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Status ändern</label>
-                <select v-model="userForm.status" class="w-full px-3 py-2 border border-gray-300 rounded-md">
-                  <option value="requested">Angefragt</option>
+                <div v-if="editingUser.status === 'requested'" class="px-3 py-2 bg-gray-100 border border-gray-200 rounded-md text-gray-500">
+                  Unbestätigt (wartet auf E-Mail-Bestätigung)
+                </div>
+                <select v-else v-model="userForm.status" class="w-full px-3 py-2 border border-gray-300 rounded-md">
                   <option value="active">Aktiv</option>
                   <option value="disabled">Gesperrt</option>
                 </select>
@@ -241,6 +247,18 @@ const isCurrentUser = computed(() => {
   return editingUser.value?.id === userStore.user?.id
 })
 
+const sortedUsers = computed(() => {
+  return [...users.value].sort((a, b) => {
+    // Requested users at top
+    if (a.status === 'requested' && b.status !== 'requested') return -1
+    if (a.status !== 'requested' && b.status === 'requested') return 1
+    // Then alphabetically
+    const nameA = a.nickname || a.email
+    const nameB = b.nickname || b.email
+    return nameA.localeCompare(nameB, 'de')
+  })
+})
+
 const selectTable = (tableName: string) => {
   selectedTable.value = tableName
 }
@@ -249,9 +267,14 @@ const getTableLabel = (tableName: string) => {
   return tables.find(t => t.name === tableName)?.label || tableName
 }
 
+const formatDate = (dateStr: string) => {
+  if (!dateStr) return '–'
+  return new Date(dateStr).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' })
+}
+
 const statusLabel = (status: string) => {
   const labels: Record<string, string> = {
-    requested: 'Angefragt',
+    requested: 'Unbestätigt',
     active: 'Aktiv',
     disabled: 'Gesperrt',
   }

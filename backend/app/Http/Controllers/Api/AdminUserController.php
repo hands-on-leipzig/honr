@@ -16,7 +16,7 @@ class AdminUserController extends Controller
     public function update(Request $request, User $user)
     {
         $request->validate([
-            'status' => 'required|in:requested,active,disabled',
+            'status' => 'required|in:active,disabled',
             'is_admin' => 'boolean',
         ]);
 
