@@ -20,9 +20,9 @@ class EngagementController extends Controller
         return response()->json(
             Engagement::where('user_id', $request->user()->id)
                 ->with([
-                    'role:id,name,first_program_id',
+                    'role:id,name,first_program_id,status',
                     'role.firstProgram:id,name',
-                    'event:id,date,season_id,level_id,location_id',
+                    'event:id,date,season_id,level_id,location_id,status',
                     'event.season:id,name',
                     'event.level:id,name',
                     'event.location:id,name,city',
@@ -34,17 +34,41 @@ class EngagementController extends Controller
         );
     }
 
-    public function options()
+    public function options(Request $request)
     {
+        $userId = $request->user()->id;
+
+        $roles = Role::where(function ($q) use ($userId) {
+                $q->where('status', 'approved')
+                  ->orWhere('proposed_by_user_id', $userId);
+            })
+            ->with('firstProgram:id,name')
+            ->orderBy('sort_order')
+            ->get(['id', 'name', 'first_program_id', 'status', 'proposed_by_user_id'])
+            ->map(function ($role) use ($userId) {
+                if ($role->proposed_by_user_id === $userId && $role->status !== 'approved') {
+                    $role->name = $role->name . ' (von dir vorgeschlagen)';
+                }
+                return $role;
+            });
+
+        $events = Event::where(function ($q) use ($userId) {
+                $q->where('status', 'approved')
+                  ->orWhere('proposed_by_user_id', $userId);
+            })
+            ->with(['season:id,name', 'level:id,name', 'location:id,name,city'])
+            ->orderBy('date', 'desc')
+            ->get(['id', 'date', 'season_id', 'level_id', 'location_id', 'status', 'proposed_by_user_id'])
+            ->map(function ($event) use ($userId) {
+                if ($event->proposed_by_user_id === $userId && $event->status !== 'approved') {
+                    $event->user_proposed = true;
+                }
+                return $event;
+            });
+
         return response()->json([
-            'roles' => Role::where('status', 'approved')
-                ->with('firstProgram:id,name')
-                ->orderBy('sort_order')
-                ->get(['id', 'name', 'first_program_id']),
-            'events' => Event::where('status', 'approved')
-                ->with(['season:id,name', 'level:id,name', 'location:id,name,city'])
-                ->orderBy('date', 'desc')
-                ->get(['id', 'date', 'season_id', 'level_id', 'location_id']),
+            'roles' => $roles,
+            'events' => $events,
             'programs' => FirstProgram::orderBy('sort_order')->get(['id', 'name']),
             'seasons' => Season::orderBy('start_year', 'desc')->get(['id', 'name']),
             'levels' => Level::where('status', 'approved')->orderBy('sort_order')->get(['id', 'name']),

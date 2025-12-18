@@ -23,12 +23,18 @@
     <div v-else class="bg-white rounded-lg shadow divide-y divide-gray-200">
       <div v-for="item in engagements" :key="item.id" class="p-4">
         <div class="flex items-start justify-between">
+          <!-- Status Icon -->
+          <div class="mr-3 pt-1">
+            <CheckCircleIcon v-if="item.is_recognized" class="w-5 h-5 text-green-500" />
+            <ClockIcon v-else class="w-5 h-5 text-amber-500" />
+          </div>
           <div class="flex-1 grid grid-cols-2 gap-4">
             <!-- Role Column -->
             <div>
               <div class="text-xs text-gray-500 uppercase tracking-wide mb-1">Rolle</div>
               <div class="font-medium">{{ item.role?.name }}</div>
               <div class="text-xs text-gray-500">{{ item.role?.first_program?.name }}</div>
+              <div v-if="item.role?.status !== 'approved'" class="text-xs text-amber-600">Von dir vorgeschlagen, noch nicht bestätigt</div>
             </div>
             <!-- Event Column -->
             <div>
@@ -36,6 +42,7 @@
               <div class="font-medium">{{ formatDate(item.event?.date) }}</div>
               <div class="text-xs text-gray-500">{{ item.event?.season?.name }} · {{ item.event?.level?.name }}</div>
               <div class="text-xs text-gray-500">{{ item.event?.location?.name }}<span v-if="item.event?.location?.city">, {{ item.event.location.city }}</span></div>
+              <div v-if="item.event?.status !== 'approved'" class="text-xs text-amber-600">Von dir vorgeschlagen, noch nicht bestätigt</div>
             </div>
           </div>
           <!-- Delete Button -->
@@ -113,7 +120,7 @@
                 @click="selectEvent(event)"
                 class="w-full px-3 py-2 text-left hover:bg-gray-50 text-sm border-b border-gray-100 last:border-b-0"
               >
-                <div class="font-medium">{{ formatDate(event.date) }}</div>
+                <div class="font-medium">{{ formatDate(event.date) }}<span v-if="event.user_proposed" class="text-amber-600"> (von dir vorgeschlagen)</span></div>
                 <div class="text-xs text-gray-500">
                   {{ event.season?.name }} · {{ event.level?.name }}
                 </div>
@@ -276,6 +283,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import { CheckCircleIcon, ClockIcon } from '@heroicons/vue/24/solid'
 import apiClient from '@/api/client'
 
 // State
