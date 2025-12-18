@@ -56,7 +56,7 @@
     <div v-if="showAddModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div class="bg-white rounded-lg w-full max-w-md max-h-[90vh] overflow-y-auto">
         <div class="p-4 border-b border-gray-200 flex items-center justify-between sticky top-0 bg-white">
-          <h3 class="text-lg font-semibold">Neuer Einsatz</h3>
+          <h3 class="text-lg font-semibold">Neuer Volunteer-Einsatz</h3>
           <button @click="closeModal" class="text-gray-500 hover:text-gray-700">✕</button>
         </div>
         
@@ -88,6 +88,13 @@
               </div>
               <button @click="selectedRole = null" class="text-gray-400 hover:text-gray-600">✕</button>
             </div>
+            <button
+              v-if="!selectedRole"
+              @click="showProposeRoleModal = true"
+              class="mt-2 text-sm text-blue-600 hover:text-blue-800"
+            >
+              Fehlende Rolle vorschlagen
+            </button>
           </div>
 
           <!-- Event Selection -->
@@ -127,6 +134,13 @@
               </div>
               <button @click="selectedEvent = null" class="text-gray-400 hover:text-gray-600">✕</button>
             </div>
+            <button
+              v-if="!selectedEvent"
+              @click="showProposeEventModal = true"
+              class="mt-2 text-sm text-blue-600 hover:text-blue-800"
+            >
+              Fehlende Veranstaltung vorschlagen
+            </button>
           </div>
 
           <div v-if="error" class="text-red-600 text-sm">{{ error }}</div>
@@ -141,6 +155,117 @@
               class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {{ saving ? 'Speichern...' : 'Speichern' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Propose Role Modal -->
+    <div v-if="showProposeRoleModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div class="bg-white rounded-lg w-full max-w-md">
+        <div class="p-4 border-b border-gray-200 flex items-center justify-between">
+          <h3 class="text-lg font-semibold">Fehlende Rolle vorschlagen</h3>
+          <button @click="showProposeRoleModal = false" class="text-gray-500 hover:text-gray-700">✕</button>
+        </div>
+        <div class="p-4 space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Rollenname *</label>
+            <input v-model="proposeRoleForm.name" type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm" placeholder="z.B. Zeitnehmer:in" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Programm *</label>
+            <select v-model="proposeRoleForm.first_program_id" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+              <option value="">Bitte wählen</option>
+              <option v-for="p in programs" :key="p.id" :value="p.id">{{ p.name }}</option>
+            </select>
+          </div>
+          <div v-if="proposeError" class="text-red-600 text-sm">{{ proposeError }}</div>
+          <div class="flex gap-2 pt-2">
+            <button @click="showProposeRoleModal = false" class="flex-1 px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50">Abbrechen</button>
+            <button @click="proposeRole" :disabled="proposeSaving" class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50">
+              {{ proposeSaving ? 'Senden...' : 'Vorschlagen' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Propose Event Modal -->
+    <div v-if="showProposeEventModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div class="bg-white rounded-lg w-full max-w-md">
+        <div class="p-4 border-b border-gray-200 flex items-center justify-between">
+          <h3 class="text-lg font-semibold">Fehlende Veranstaltung vorschlagen</h3>
+          <button @click="showProposeEventModal = false" class="text-gray-500 hover:text-gray-700">✕</button>
+        </div>
+        <div class="p-4 space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Datum *</label>
+            <input v-model="proposeEventForm.date" type="date" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Saison *</label>
+            <select v-model="proposeEventForm.season_id" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+              <option value="">Bitte wählen</option>
+              <option v-for="s in seasons" :key="s.id" :value="s.id">{{ s.name }}</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Level *</label>
+            <select v-model="proposeEventForm.level_id" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+              <option value="">Bitte wählen</option>
+              <option v-for="l in levels" :key="l.id" :value="l.id">{{ l.name }}</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Standort *</label>
+            <select v-model="proposeEventForm.location_id" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+              <option value="">Bitte wählen</option>
+              <option v-for="loc in locations" :key="loc.id" :value="loc.id">{{ loc.name }}<span v-if="loc.city">, {{ loc.city }}</span></option>
+            </select>
+            <button @click="showProposeLocationModal = true; showProposeEventModal = false" class="mt-2 text-sm text-blue-600 hover:text-blue-800">
+              Fehlenden Standort vorschlagen
+            </button>
+          </div>
+          <div v-if="proposeError" class="text-red-600 text-sm">{{ proposeError }}</div>
+          <div class="flex gap-2 pt-2">
+            <button @click="showProposeEventModal = false" class="flex-1 px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50">Abbrechen</button>
+            <button @click="proposeEvent" :disabled="proposeSaving" class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50">
+              {{ proposeSaving ? 'Senden...' : 'Vorschlagen' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Propose Location Modal -->
+    <div v-if="showProposeLocationModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div class="bg-white rounded-lg w-full max-w-md">
+        <div class="p-4 border-b border-gray-200 flex items-center justify-between">
+          <h3 class="text-lg font-semibold">Fehlenden Standort vorschlagen</h3>
+          <button @click="showProposeLocationModal = false; showProposeEventModal = true" class="text-gray-500 hover:text-gray-700">✕</button>
+        </div>
+        <div class="p-4 space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Name *</label>
+            <input v-model="proposeLocationForm.name" type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm" placeholder="z.B. Universität Heidelberg" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Stadt</label>
+            <input v-model="proposeLocationForm.city" type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm" placeholder="z.B. Heidelberg" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Land *</label>
+            <select v-model="proposeLocationForm.country_id" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+              <option value="">Bitte wählen</option>
+              <option v-for="c in countries" :key="c.id" :value="c.id">{{ c.name }}</option>
+            </select>
+          </div>
+          <div v-if="proposeError" class="text-red-600 text-sm">{{ proposeError }}</div>
+          <div class="flex gap-2 pt-2">
+            <button @click="showProposeLocationModal = false; showProposeEventModal = true" class="flex-1 px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50">Zurück</button>
+            <button @click="proposeLocation" :disabled="proposeSaving" class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50">
+              {{ proposeSaving ? 'Senden...' : 'Vorschlagen' }}
             </button>
           </div>
         </div>
@@ -166,6 +291,21 @@ const selectedEvent = ref<any | null>(null)
 const saving = ref(false)
 const error = ref('')
 const deletingId = ref<number | null>(null)
+
+// Propose modals
+const showProposeRoleModal = ref(false)
+const showProposeEventModal = ref(false)
+const showProposeLocationModal = ref(false)
+const programs = ref<any[]>([])
+const seasons = ref<any[]>([])
+const levels = ref<any[]>([])
+const locations = ref<any[]>([])
+const proposeRoleForm = ref({ name: '', first_program_id: '' })
+const proposeEventForm = ref({ date: '', season_id: '', level_id: '', location_id: '' })
+const proposeLocationForm = ref({ name: '', city: '', country_id: '' })
+const countries = ref<any[]>([])
+const proposeSaving = ref(false)
+const proposeError = ref('')
 
 // Computed
 const filteredRoles = computed(() => {
@@ -231,6 +371,11 @@ async function loadOptions() {
     const response = await apiClient.get('/engagements/options')
     roles.value = response.data.roles
     events.value = response.data.events
+    programs.value = response.data.programs
+    seasons.value = response.data.seasons
+    levels.value = response.data.levels
+    locations.value = response.data.locations
+    countries.value = response.data.countries
   } catch (err) {
     console.error('Failed to load options', err)
   }
@@ -264,6 +409,66 @@ async function deleteEngagement(id: number) {
     console.error('Failed to delete engagement', err)
   } finally {
     deletingId.value = null
+  }
+}
+
+async function proposeRole() {
+  if (!proposeRoleForm.value.name || !proposeRoleForm.value.first_program_id) {
+    proposeError.value = 'Bitte alle Pflichtfelder ausfüllen.'
+    return
+  }
+  proposeError.value = ''
+  proposeSaving.value = true
+  try {
+    await apiClient.post('/engagements/propose-role', proposeRoleForm.value)
+    showProposeRoleModal.value = false
+    proposeRoleForm.value = { name: '', first_program_id: '' }
+    await loadOptions()
+  } catch (err: any) {
+    proposeError.value = err.response?.data?.message || 'Fehler beim Vorschlagen.'
+  } finally {
+    proposeSaving.value = false
+  }
+}
+
+async function proposeEvent() {
+  if (!proposeEventForm.value.date || !proposeEventForm.value.season_id || !proposeEventForm.value.level_id || !proposeEventForm.value.location_id) {
+    proposeError.value = 'Bitte alle Pflichtfelder ausfüllen.'
+    return
+  }
+  proposeError.value = ''
+  proposeSaving.value = true
+  try {
+    await apiClient.post('/engagements/propose-event', proposeEventForm.value)
+    showProposeEventModal.value = false
+    proposeEventForm.value = { date: '', season_id: '', level_id: '', location_id: '' }
+    await loadOptions()
+  } catch (err: any) {
+    proposeError.value = err.response?.data?.message || 'Fehler beim Vorschlagen.'
+  } finally {
+    proposeSaving.value = false
+  }
+}
+
+async function proposeLocation() {
+  if (!proposeLocationForm.value.name || !proposeLocationForm.value.country_id) {
+    proposeError.value = 'Bitte alle Pflichtfelder ausfüllen.'
+    return
+  }
+  proposeError.value = ''
+  proposeSaving.value = true
+  try {
+    const response = await apiClient.post('/engagements/propose-location', proposeLocationForm.value)
+    showProposeLocationModal.value = false
+    showProposeEventModal.value = true
+    proposeLocationForm.value = { name: '', city: '', country_id: '' }
+    await loadOptions()
+    // Auto-select the newly created location
+    proposeEventForm.value.location_id = response.data.id
+  } catch (err: any) {
+    proposeError.value = err.response?.data?.message || 'Fehler beim Vorschlagen.'
+  } finally {
+    proposeSaving.value = false
   }
 }
 

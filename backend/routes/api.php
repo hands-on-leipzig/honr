@@ -58,6 +58,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/options', [EngagementController::class, 'options']);
         Route::post('/', [EngagementController::class, 'store']);
         Route::delete('/{engagement}', [EngagementController::class, 'destroy']);
+        Route::post('/propose-role', [EngagementController::class, 'proposeRole']);
+        Route::post('/propose-event', [EngagementController::class, 'proposeEvent']);
+        Route::post('/propose-location', [EngagementController::class, 'proposeLocation']);
     });
 
     // Admin routes
