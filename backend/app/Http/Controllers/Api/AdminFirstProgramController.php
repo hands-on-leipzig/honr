@@ -11,7 +11,9 @@ class AdminFirstProgramController extends Controller
     public function index()
     {
         return response()->json(
-            FirstProgram::orderBy('sort_order')->get()
+            FirstProgram::withCount(['seasons', 'roles', 'events', 'badges'])
+                ->orderBy('sort_order')
+                ->get()
         );
     }
 

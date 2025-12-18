@@ -28,4 +28,14 @@ class FirstProgram extends Model
     {
         return $this->hasMany(Role::class);
     }
+
+    public function events(): HasMany
+    {
+        return $this->hasMany(Event::class);
+    }
+
+    public function badges(): HasMany
+    {
+        return $this->hasMany(Badge::class);
+    }
 }

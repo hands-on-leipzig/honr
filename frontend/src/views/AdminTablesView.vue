@@ -68,11 +68,11 @@
     <!-- FIRST Programs Table CRUD -->
     <div v-if="selectedTable === 'first_programs'" class="bg-white rounded-lg shadow">
       <div class="p-4 border-b border-gray-200 flex items-center justify-between">
-        <h2 class="text-xl font-semibold">FIRST Programme</h2>
-        <div class="flex items-center space-x-2">
+        <div class="flex items-center space-x-3">
+          <h2 class="text-xl font-semibold">FIRST Programme</h2>
           <button @click="addProgram" class="px-3 py-1 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700">+ Neu</button>
-          <button @click="selectedTable = null" class="text-gray-500 hover:text-gray-700">✕</button>
         </div>
+        <button @click="selectedTable = null" class="text-gray-500 hover:text-gray-700">✕</button>
       </div>
 
       <div v-if="programsLoading" class="p-4 text-center text-gray-500">Laden...</div>
@@ -93,14 +93,18 @@
             draggingIndex === index ? 'opacity-50' : ''
           ]"
         >
-          <div class="flex items-center justify-between">
-            <div class="flex items-center space-x-3">
-              <span class="text-gray-400 cursor-grab">⋮⋮</span>
-              <div>
-                <div class="font-medium">{{ program.name }}</div>
-                <div class="text-sm text-gray-500">
-                  {{ formatDateRange(program.valid_from, program.valid_to) }}
-                </div>
+          <div class="flex items-center space-x-3">
+            <span class="text-gray-400 cursor-grab">⋮⋮</span>
+            <div class="flex-1 min-w-0">
+              <div class="font-medium truncate">{{ program.name }}</div>
+              <div class="text-xs text-gray-500">
+                {{ formatDateRange(program.valid_from, program.valid_to) }}
+              </div>
+              <div class="flex flex-wrap gap-1 mt-1 text-xs">
+                <span class="px-2 py-0.5 bg-gray-100 rounded-full">{{ program.seasons_count }} Saisons</span>
+                <span class="px-2 py-0.5 bg-gray-100 rounded-full">{{ program.roles_count }} Rollen</span>
+                <span class="px-2 py-0.5 bg-gray-100 rounded-full">{{ program.events_count }} Veranst.</span>
+                <span class="px-2 py-0.5 bg-gray-100 rounded-full">{{ program.badges_count }} Badges</span>
               </div>
             </div>
           </div>
