@@ -90,15 +90,27 @@
             <input v-model="form.city" type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="z.B. Heidelberg" />
           </div>
         </div>
-        <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Breitengrad</label>
-            <input v-model="form.latitude" type="number" step="any" class="w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="z.B. 49.4175" />
+        <div>
+          <div class="flex items-center justify-between mb-1">
+            <label class="block text-sm font-medium text-gray-700">Koordinaten</label>
+            <button 
+              type="button" 
+              @click="geocodeAddress" 
+              :disabled="geocoding || !hasAddressData"
+              class="text-xs text-blue-600 hover:text-blue-800 disabled:text-gray-400 disabled:cursor-not-allowed"
+            >
+              {{ geocoding ? 'Berechne...' : 'Aus Adresse berechnen' }}
+            </button>
           </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Längengrad</label>
-            <input v-model="form.longitude" type="number" step="any" class="w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="z.B. 8.6756" />
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <input v-model="form.latitude" type="number" step="any" class="w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="Breitengrad" />
+            </div>
+            <div>
+              <input v-model="form.longitude" type="number" step="any" class="w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="Längengrad" />
+            </div>
           </div>
+          <p v-if="geocodeError" class="text-xs text-red-500 mt-1">{{ geocodeError }}</p>
         </div>
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">Status *</label>
@@ -198,6 +210,57 @@ const saving = ref(false)
 const deleting = ref(false)
 const error = ref('')
 const showDeleteConfirm = ref(false)
+
+// Geocoding
+const geocoding = ref(false)
+const geocodeError = ref('')
+
+const hasAddressData = computed(() => {
+  return form.street_address || form.city || form.postal_code
+})
+
+async function geocodeAddress() {
+  geocodeError.value = ''
+  
+  // Build address string
+  const parts = []
+  if (form.street_address) parts.push(form.street_address)
+  if (form.postal_code) parts.push(form.postal_code)
+  if (form.city) parts.push(form.city)
+  
+  // Get country name
+  const country = countries.value.find((c: any) => c.id === form.country_id)
+  if (country) parts.push(country.name)
+  
+  if (parts.length === 0) {
+    geocodeError.value = 'Keine Adressdaten vorhanden'
+    return
+  }
+  
+  const address = parts.join(', ')
+  geocoding.value = true
+  
+  try {
+    // Use Nominatim (OpenStreetMap) geocoding API - free, no API key needed
+    const response = await fetch(
+      `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1`,
+      { headers: { 'User-Agent': 'HONR-App' } }
+    )
+    const data = await response.json()
+    
+    if (data && data.length > 0) {
+      form.latitude = parseFloat(data[0].lat)
+      form.longitude = parseFloat(data[0].lon)
+    } else {
+      geocodeError.value = 'Adresse nicht gefunden'
+    }
+  } catch (err) {
+    console.error('Geocoding failed', err)
+    geocodeError.value = 'Fehler bei der Berechnung'
+  } finally {
+    geocoding.value = false
+  }
+}
 
 // Methods
 const statusLabel = (status: string) => {
