@@ -13,6 +13,7 @@
         >
           <div class="flex items-center space-x-2">
             <span class="font-medium">{{ table.label }}</span>
+            <span v-if="readOnlyTables.includes(table.name)" class="text-xs text-gray-500">(nur Ansicht)</span>
             <template v-if="pendingCounts[table.name] > 0">
               <BellIcon class="w-5 h-5 text-amber-500" />
               <span class="text-xs text-amber-600 font-medium">{{ pendingCounts[table.name] }}</span>
@@ -33,6 +34,7 @@
     <AdminCrudEvents v-if="selectedTable === 'events'" @close="selectedTable = null" />
     <AdminCrudEngagements v-if="selectedTable === 'engagements'" @close="selectedTable = null" />
     <AdminCrudBadges v-if="selectedTable === 'badges'" @close="selectedTable = null" />
+    <AdminCrudEarnedBadges v-if="selectedTable === 'earned_badges'" @close="selectedTable = null" />
 
     <!-- Generic Table Placeholder -->
     <div v-if="selectedTable && !implementedTables.includes(selectedTable)" class="bg-white rounded-lg shadow p-4">
@@ -60,11 +62,12 @@ import AdminCrudRoles from '@/components/admin/AdminCrudRoles.vue'
 import AdminCrudEvents from '@/components/admin/AdminCrudEvents.vue'
 import AdminCrudEngagements from '@/components/admin/AdminCrudEngagements.vue'
 import AdminCrudBadges from '@/components/admin/AdminCrudBadges.vue'
+import AdminCrudEarnedBadges from '@/components/admin/AdminCrudEarnedBadges.vue'
 
 const selectedTable = ref<string | null>(null)
 
 // Tables with implemented CRUD components
-const implementedTables = ['users', 'first_programs', 'seasons', 'levels', 'countries', 'locations', 'roles', 'events', 'engagements', 'badges']
+const implementedTables = ['users', 'first_programs', 'seasons', 'levels', 'countries', 'locations', 'roles', 'events', 'engagements', 'badges', 'earned_badges']
 
 // Pending counts for crowdsourced tables
 const pendingCounts = reactive<Record<string, number>>({
@@ -74,6 +77,8 @@ const pendingCounts = reactive<Record<string, number>>({
   locations: 0,
   events: 0,
 })
+
+const readOnlyTables = ['earned_badges']
 
 const tables = [
   { name: 'badges', label: 'Badges' },

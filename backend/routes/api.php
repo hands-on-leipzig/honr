@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\AdminRoleController;
 use App\Http\Controllers\Api\AdminEventController;
 use App\Http\Controllers\Api\AdminEngagementController;
 use App\Http\Controllers\Api\AdminBadgeController;
+use App\Http\Controllers\Api\AdminEarnedBadgeController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -119,6 +120,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/badges', [AdminBadgeController::class, 'store']);
         Route::put('/badges/{badge}', [AdminBadgeController::class, 'update']);
         Route::delete('/badges/{badge}', [AdminBadgeController::class, 'destroy']);
+
+        // Earned Badges (read-only)
+        Route::get('/earned-badges', [AdminEarnedBadgeController::class, 'index']);
     });
 });
 
