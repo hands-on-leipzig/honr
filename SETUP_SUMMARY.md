@@ -101,3 +101,4 @@ VITE_API_URL=http://localhost:8000/api
 - CORS is configured for local development
 
 
+

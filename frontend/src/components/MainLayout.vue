@@ -12,11 +12,10 @@
           v-for="item in navigationItems"
           :key="item.name"
           :to="item.path"
-          class="flex flex-col items-center justify-center flex-1 h-full text-gray-600 hover:text-blue-600 transition-colors"
+          class="flex items-center justify-center flex-1 h-full text-gray-600 hover:text-blue-600 transition-colors"
           :class="{ 'text-blue-600': isActive(item.name) }"
         >
-          <component :is="isActive(item.name) ? item.iconSolid : item.iconOutline" class="w-6 h-6 mb-1" />
-          <span class="text-xs font-medium">{{ item.label }}</span>
+          <component :is="isActive(item.name) ? item.iconSolid : item.iconOutline" class="w-7 h-7" />
         </RouterLink>
       </div>
     </nav>
@@ -25,37 +24,33 @@
 
 <script setup lang="ts">
 import { RouterLink, RouterView, useRoute } from 'vue-router'
-import { FaceSmileIcon, CalendarIcon, GlobeAltIcon, Cog6ToothIcon } from '@heroicons/vue/24/outline'
-import { FaceSmileIcon as FaceSmileIconSolid, CalendarIcon as CalendarIconSolid, GlobeAltIcon as GlobeAltIconSolid, Cog6ToothIcon as Cog6ToothIconSolid } from '@heroicons/vue/24/solid'
+import { TrophyIcon, CalendarIcon, GlobeAltIcon, Cog6ToothIcon } from '@heroicons/vue/24/outline'
+import { TrophyIcon as TrophyIconSolid, CalendarIcon as CalendarIconSolid, GlobeAltIcon as GlobeAltIconSolid, Cog6ToothIcon as Cog6ToothIconSolid } from '@heroicons/vue/24/solid'
 
 const route = useRoute()
 
 const navigationItems = [
   {
-    name: 'me',
-    path: '/me',
-    label: 'Ich',
-    iconOutline: FaceSmileIcon,
-    iconSolid: FaceSmileIconSolid,
+    name: 'awards',
+    path: '/awards',
+    iconOutline: TrophyIcon,
+    iconSolid: TrophyIconSolid,
   },
   {
     name: 'engagement',
     path: '/engagement',
-    label: 'Engagement',
     iconOutline: CalendarIcon,
     iconSolid: CalendarIconSolid,
   },
   {
     name: 'all',
     path: '/all',
-    label: 'Alle',
     iconOutline: GlobeAltIcon,
     iconSolid: GlobeAltIconSolid,
   },
   {
     name: 'settings',
     path: '/settings',
-    label: 'Einstellungen',
     iconOutline: Cog6ToothIcon,
     iconSolid: Cog6ToothIconSolid,
   },

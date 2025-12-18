@@ -12,11 +12,10 @@
           v-for="item in navigationItems"
           :key="item.name"
           :to="item.path"
-          class="flex flex-col items-center justify-center flex-1 h-full text-gray-600 hover:text-blue-600 transition-colors"
+          class="flex items-center justify-center flex-1 h-full text-gray-600 hover:text-blue-600 transition-colors"
           :class="{ 'text-blue-600': isActive(item.name) }"
         >
-          <component :is="isActive(item.name) ? item.iconSolid : item.iconOutline" class="w-6 h-6 mb-1" />
-          <span class="text-xs font-medium">{{ item.label }}</span>
+          <component :is="isActive(item.name) ? item.iconSolid : item.iconOutline" class="w-7 h-7" />
         </RouterLink>
       </div>
     </nav>
@@ -34,21 +33,18 @@ const navigationItems = [
   {
     name: 'admin-tables',
     path: '/admin/tables',
-    label: 'Tabellen',
     iconOutline: TableCellsIcon,
     iconSolid: TableCellsIconSolid,
   },
   {
     name: 'admin-statistics',
     path: '/admin/statistics',
-    label: 'Statistiken',
     iconOutline: ChartBarIcon,
     iconSolid: ChartBarIconSolid,
   },
   {
     name: 'admin-back',
-    path: '/me',
-    label: 'Zurück',
+    path: '/awards',
     iconOutline: UserIcon,
     iconSolid: UserIconSolid,
   },

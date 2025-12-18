@@ -7,16 +7,16 @@ const router = createRouter({
   routes: [
     {
       path: '/',
-      redirect: '/me',
+      redirect: '/awards',
     },
     {
       path: '/',
       component: MainLayout,
       children: [
         {
-          path: 'me',
-          name: 'me',
-          component: () => import('../views/MeView.vue'),
+          path: 'awards',
+          name: 'awards',
+          component: () => import('../views/AwardsView.vue'),
         },
         {
           path: 'engagement',
