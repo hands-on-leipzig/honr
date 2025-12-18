@@ -13,11 +13,10 @@
         >
           <div class="flex items-center space-x-2">
             <span class="font-medium">{{ table.label }}</span>
-            <BellIcon
-              v-if="table.hasPending"
-              class="w-5 h-5 text-amber-500"
-              title="Aufmerksamkeit erforderlich"
-            />
+            <template v-if="pendingCounts[table.name] > 0">
+              <BellIcon class="w-5 h-5 text-amber-500" />
+              <span class="text-xs text-amber-600 font-medium">{{ pendingCounts[table.name] }}</span>
+            </template>
           </div>
         </button>
       </div>
@@ -27,6 +26,7 @@
     <AdminCrudUsers v-if="selectedTable === 'users'" @close="selectedTable = null" />
     <AdminCrudFirstPrograms v-if="selectedTable === 'first_programs'" @close="selectedTable = null" />
     <AdminCrudSeasons v-if="selectedTable === 'seasons'" @close="selectedTable = null" />
+    <AdminCrudLevels v-if="selectedTable === 'levels'" @close="selectedTable = null" />
 
     <!-- Generic Table Placeholder -->
     <div v-if="selectedTable && !implementedTables.includes(selectedTable)" class="bg-white rounded-lg shadow p-4">
@@ -41,30 +41,41 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { BellIcon } from '@heroicons/vue/24/solid'
+import apiClient from '@/api/client'
 import AdminCrudUsers from '@/components/admin/AdminCrudUsers.vue'
 import AdminCrudFirstPrograms from '@/components/admin/AdminCrudFirstPrograms.vue'
 import AdminCrudSeasons from '@/components/admin/AdminCrudSeasons.vue'
+import AdminCrudLevels from '@/components/admin/AdminCrudLevels.vue'
 
 const selectedTable = ref<string | null>(null)
 
 // Tables with implemented CRUD components
-const implementedTables = ['users', 'first_programs', 'seasons']
+const implementedTables = ['users', 'first_programs', 'seasons', 'levels']
+
+// Pending counts for crowdsourced tables
+const pendingCounts = reactive<Record<string, number>>({
+  levels: 0,
+  roles: 0,
+  countries: 0,
+  locations: 0,
+  events: 0,
+})
 
 const tables = [
-  { name: 'badges', label: 'Badges', hasPending: false },
-  { name: 'badge_thresholds', label: 'Badge-Schwellenwerte', hasPending: false },
-  { name: 'users', label: 'Benutzer', hasPending: false },
-  { name: 'first_programs', label: 'FIRST Programme', hasPending: false },
-  { name: 'countries', label: 'Länder', hasPending: true },
-  { name: 'levels', label: 'Level', hasPending: true },
-  { name: 'roles', label: 'Rollen', hasPending: true },
-  { name: 'seasons', label: 'Saisons', hasPending: false },
-  { name: 'locations', label: 'Standorte', hasPending: true },
-  { name: 'events', label: 'Veranstaltungen', hasPending: true },
-  { name: 'earned_badges', label: 'Verdiente Badges', hasPending: false },
-  { name: 'engagements', label: 'Volunteer-Einsätze', hasPending: false },
+  { name: 'badges', label: 'Badges' },
+  { name: 'badge_thresholds', label: 'Badge-Schwellenwerte' },
+  { name: 'users', label: 'Benutzer' },
+  { name: 'first_programs', label: 'FIRST Programme' },
+  { name: 'countries', label: 'Länder' },
+  { name: 'levels', label: 'Level' },
+  { name: 'roles', label: 'Rollen' },
+  { name: 'seasons', label: 'Saisons' },
+  { name: 'locations', label: 'Standorte' },
+  { name: 'events', label: 'Veranstaltungen' },
+  { name: 'earned_badges', label: 'Verdiente Badges' },
+  { name: 'engagements', label: 'Volunteer-Einsätze' },
 ]
 
 const sortedTables = computed(() => {
@@ -74,4 +85,23 @@ const sortedTables = computed(() => {
 const getTableLabel = (tableName: string) => {
   return tables.find(t => t.name === tableName)?.label || tableName
 }
+
+async function loadPendingCounts() {
+  try {
+    // Load levels pending count
+    const levelsRes = await apiClient.get('/admin/levels')
+    pendingCounts.levels = levelsRes.data.filter((i: any) => i.status === 'pending').length
+  } catch (err) {
+    console.error('Failed to load pending counts', err)
+  }
+}
+
+// Reload counts when returning from a CRUD view
+watch(selectedTable, (newVal) => {
+  if (newVal === null) {
+    loadPendingCounts()
+  }
+})
+
+onMounted(loadPendingCounts)
 </script>

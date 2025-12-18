@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\AdminUserController;
 use App\Http\Controllers\Api\AdminFirstProgramController;
 use App\Http\Controllers\Api\AdminSeasonController;
+use App\Http\Controllers\Api\AdminLevelController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -63,6 +64,13 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/seasons', [AdminSeasonController::class, 'store']);
         Route::put('/seasons/{season}', [AdminSeasonController::class, 'update']);
         Route::delete('/seasons/{season}', [AdminSeasonController::class, 'destroy']);
+
+        // Levels (crowdsourced)
+        Route::get('/levels', [AdminLevelController::class, 'index']);
+        Route::post('/levels', [AdminLevelController::class, 'store']);
+        Route::put('/levels/reorder', [AdminLevelController::class, 'reorder']);
+        Route::put('/levels/{level}', [AdminLevelController::class, 'update']);
+        Route::delete('/levels/{level}', [AdminLevelController::class, 'destroy']);
     });
 });
 
