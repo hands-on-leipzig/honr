@@ -19,11 +19,12 @@ class UserController extends Controller
         $request->validate([
             'nickname' => 'sometimes|string|max:255',
             'short_bio' => 'sometimes|nullable|string|max:1000',
+            'regional_partner_name' => 'sometimes|nullable|string|max:255',
             'consent_to_newsletter' => 'sometimes|boolean',
         ]);
 
         $user = $request->user();
-        $user->update($request->only(['nickname', 'short_bio', 'consent_to_newsletter']));
+        $user->update($request->only(['nickname', 'short_bio', 'regional_partner_name', 'consent_to_newsletter']));
 
         return response()->json($user);
     }
@@ -32,7 +33,16 @@ class UserController extends Controller
     {
         $request->validate([
             'current_password' => 'required',
-            'password' => 'required|min:8|confirmed',
+            'password' => [
+                'required',
+                'min:8',
+                'confirmed',
+                'regex:/[A-Z]/',      // at least one uppercase
+                'regex:/[a-z]/',      // at least one lowercase
+                'regex:/[0-9]/',      // at least one number
+            ],
+        ], [
+            'password.regex' => 'Das Passwort muss mindestens einen Großbuchstaben, einen Kleinbuchstaben und eine Zahl enthalten.',
         ]);
 
         $user = $request->user();

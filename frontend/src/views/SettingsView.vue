@@ -68,12 +68,17 @@
       <div class="p-4 border-b border-gray-200">
         <h2 class="font-semibold">Support</h2>
       </div>
-      <a
-        href="mailto:support@hands-on-technology.org?subject=HONR%20-%20Hilfe/Feedback/Ideen"
-        class="block w-full px-4 py-3 text-left hover:bg-gray-50"
-      >
-        Kontakt / Support
-      </a>
+      <div class="px-4 py-3">
+        <p class="text-sm text-gray-600 mb-3">
+          Hast du Ideen, Feedback oder Vorschläge zur Verbesserung? Wir freuen uns über deine Nachricht!
+        </p>
+        <a
+          href="mailto:honr@hands-on-technology.org?subject=HONR%20-%20Feedback"
+          class="inline-flex items-center text-blue-600 hover:underline"
+        >
+          honr@hands-on-technology.org
+        </a>
+      </div>
     </div>
 
     <!-- Administration (Admin Only) -->
@@ -98,15 +103,24 @@
           <div class="mb-4">
             <label class="block text-sm font-medium text-gray-700 mb-1">Neues Passwort</label>
             <input v-model="passwordForm.new" type="password" required class="w-full px-3 py-2 border border-gray-300 rounded-md" />
+            <ul class="mt-1 text-xs text-gray-500 space-y-0.5">
+              <li :class="passwordForm.new.length >= 8 ? 'text-green-600' : ''">• Mindestens 8 Zeichen</li>
+              <li :class="/[A-Z]/.test(passwordForm.new) ? 'text-green-600' : ''">• Mindestens 1 Großbuchstabe</li>
+              <li :class="/[a-z]/.test(passwordForm.new) ? 'text-green-600' : ''">• Mindestens 1 Kleinbuchstabe</li>
+              <li :class="/[0-9]/.test(passwordForm.new) ? 'text-green-600' : ''">• Mindestens 1 Zahl</li>
+            </ul>
           </div>
           <div class="mb-4">
             <label class="block text-sm font-medium text-gray-700 mb-1">Neues Passwort bestätigen</label>
             <input v-model="passwordForm.confirm" type="password" required class="w-full px-3 py-2 border border-gray-300 rounded-md" />
+            <p v-if="passwordForm.confirm && passwordForm.new !== passwordForm.confirm" class="mt-1 text-sm text-red-600">
+              Passwörter stimmen nicht überein
+            </p>
           </div>
           <div v-if="passwordError" class="mb-4 text-red-600 text-sm">{{ passwordError }}</div>
           <div class="flex gap-2">
-            <button type="button" @click="showPasswordModal = false" class="flex-1 px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50">Abbrechen</button>
-            <button type="submit" :disabled="passwordLoading" class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50">
+            <button type="button" @click="closePasswordModal" class="flex-1 px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50">Abbrechen</button>
+            <button type="submit" :disabled="passwordLoading || !isPasswordValid" class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50">
               {{ passwordLoading ? 'Speichern...' : 'Speichern' }}
             </button>
           </div>
@@ -199,7 +213,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { useAuthStore } from '@/stores/auth'
@@ -240,12 +254,33 @@ const bioError = ref('')
 const regionalPartnerError = ref('')
 const deleteError = ref('')
 
+// Password validation
+const isPasswordValid = computed(() => {
+  const pw = passwordForm.new
+  return (
+    pw.length >= 8 &&
+    /[A-Z]/.test(pw) &&
+    /[a-z]/.test(pw) &&
+    /[0-9]/.test(pw) &&
+    pw === passwordForm.confirm
+  )
+})
+
+function closePasswordModal() {
+  showPasswordModal.value = false
+  passwordForm.current = ''
+  passwordForm.new = ''
+  passwordForm.confirm = ''
+  passwordError.value = ''
+}
+
 onMounted(async () => {
   await userStore.fetchUser()
   if (userStore.user) {
     newsletterConsent.value = userStore.user.consent_to_newsletter
     nameForm.nickname = userStore.user.nickname || ''
     bioForm.short_bio = userStore.user.short_bio || ''
+    regionalPartnerForm.name = userStore.user.regional_partner_name || ''
   }
 })
 
@@ -315,8 +350,8 @@ async function updateRegionalPartner() {
   regionalPartnerError.value = ''
   regionalPartnerLoading.value = true
   try {
-    // TODO: Implement regional partner update endpoint
-    await apiClient.put('/user/regional-partner', { name: regionalPartnerForm.name })
+    await apiClient.put('/user/profile', { regional_partner_name: regionalPartnerForm.name })
+    await userStore.fetchUser()
     showRegionalPartnerModal.value = false
   } catch (err: any) {
     regionalPartnerError.value = err.response?.data?.message || 'Fehler beim Ändern des Regionalpartner-Namens.'

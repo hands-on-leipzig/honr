@@ -24,6 +24,7 @@ class User extends Authenticatable
         'nickname',
         'home_location',
         'short_bio',
+        'regional_partner_name',
         'consent_to_newsletter',
         'is_admin',
     ];
