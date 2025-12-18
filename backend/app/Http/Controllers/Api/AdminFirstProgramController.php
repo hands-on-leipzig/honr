@@ -79,6 +79,18 @@ class AdminFirstProgramController extends Controller
             ], 422);
         }
 
+        if ($firstProgram->events()->exists()) {
+            return response()->json([
+                'message' => 'Dieses Programm kann nicht gelöscht werden, da noch Veranstaltungen damit verknüpft sind.'
+            ], 422);
+        }
+
+        if ($firstProgram->badges()->exists()) {
+            return response()->json([
+                'message' => 'Dieses Programm kann nicht gelöscht werden, da noch Badges damit verknüpft sind.'
+            ], 422);
+        }
+
         $firstProgram->delete();
 
         return response()->json(['message' => 'Programm gelöscht.']);

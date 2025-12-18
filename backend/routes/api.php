@@ -20,15 +20,17 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/user', [UserController::class, 'destroy']);
 
     // Admin routes
-    Route::get('/admin/users', [AdminUserController::class, 'index']);
-    Route::put('/admin/users/{user}', [AdminUserController::class, 'update']);
-    Route::delete('/admin/users/{user}', [AdminUserController::class, 'destroy']);
+    Route::middleware('admin')->group(function () {
+        Route::get('/admin/users', [AdminUserController::class, 'index']);
+        Route::put('/admin/users/{user}', [AdminUserController::class, 'update']);
+        Route::delete('/admin/users/{user}', [AdminUserController::class, 'destroy']);
 
-    Route::get('/admin/first-programs', [AdminFirstProgramController::class, 'index']);
-    Route::post('/admin/first-programs', [AdminFirstProgramController::class, 'store']);
-    Route::put('/admin/first-programs/reorder', [AdminFirstProgramController::class, 'reorder']);
-    Route::put('/admin/first-programs/{firstProgram}', [AdminFirstProgramController::class, 'update']);
-    Route::delete('/admin/first-programs/{firstProgram}', [AdminFirstProgramController::class, 'destroy']);
+        Route::get('/admin/first-programs', [AdminFirstProgramController::class, 'index']);
+        Route::post('/admin/first-programs', [AdminFirstProgramController::class, 'store']);
+        Route::put('/admin/first-programs/reorder', [AdminFirstProgramController::class, 'reorder']);
+        Route::put('/admin/first-programs/{firstProgram}', [AdminFirstProgramController::class, 'update']);
+        Route::delete('/admin/first-programs/{firstProgram}', [AdminFirstProgramController::class, 'destroy']);
+    });
 });
 
 
