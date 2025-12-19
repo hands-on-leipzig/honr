@@ -68,42 +68,6 @@
         </div>
         
         <div class="p-4 space-y-4">
-          <!-- Role Selection -->
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Rolle *</label>
-            <input
-              v-model="roleSearch"
-              type="text"
-              placeholder="Rolle suchen..."
-              class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-            />
-            <div v-if="filteredRoles.length > 0 && roleSearch" class="mt-1 max-h-40 overflow-y-auto border border-gray-200 rounded-md">
-              <button
-                v-for="role in filteredRoles"
-                :key="role.id"
-                @click="selectRole(role)"
-                class="w-full px-3 py-2 text-left hover:bg-gray-50 text-sm border-b border-gray-100 last:border-b-0"
-              >
-                <div class="font-medium">{{ role.name }}</div>
-                <div class="text-xs text-gray-500">{{ role.first_program?.name }}</div>
-              </button>
-            </div>
-            <div v-if="selectedRole" class="mt-2 p-2 bg-blue-50 rounded-md flex items-center justify-between">
-              <div>
-                <div class="text-sm font-medium">{{ selectedRole.name }}</div>
-                <div class="text-xs text-gray-500">{{ selectedRole.first_program?.name }}</div>
-              </div>
-              <button @click="selectedRole = null" class="text-gray-400 hover:text-gray-600">✕</button>
-            </div>
-            <button
-              v-if="!selectedRole"
-              @click="showProposeRoleModal = true"
-              class="mt-2 text-sm text-blue-600 hover:text-blue-800"
-            >
-              Fehlende Rolle vorschlagen
-            </button>
-          </div>
-
           <!-- Event Selection -->
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Veranstaltung *</label>
@@ -139,7 +103,7 @@
                   {{ selectedEvent.location?.name }}<span v-if="selectedEvent.location?.city">, {{ selectedEvent.location.city }}</span>
                 </div>
               </div>
-              <button @click="selectedEvent = null" class="text-gray-400 hover:text-gray-600">✕</button>
+              <button @click="clearEvent" class="text-gray-400 hover:text-gray-600">✕</button>
             </div>
             <button
               v-if="!selectedEvent"
@@ -147,6 +111,49 @@
               class="mt-2 text-sm text-blue-600 hover:text-blue-800"
             >
               Fehlende Veranstaltung vorschlagen
+            </button>
+          </div>
+
+          <!-- Role Selection -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Rolle *</label>
+            <input
+              v-model="roleSearch"
+              type="text"
+              placeholder="Rolle suchen..."
+              :disabled="!selectedEvent"
+              :class="[
+                'w-full px-3 py-2 border border-gray-300 rounded-md text-sm',
+                !selectedEvent ? 'bg-gray-100 cursor-not-allowed' : ''
+              ]"
+            />
+            <div v-if="!selectedEvent" class="mt-1 text-xs text-gray-500">
+              Bitte zuerst eine Veranstaltung auswählen
+            </div>
+            <div v-if="filteredRoles.length > 0 && roleSearch && selectedEvent" class="mt-1 max-h-40 overflow-y-auto border border-gray-200 rounded-md">
+              <button
+                v-for="role in filteredRoles"
+                :key="role.id"
+                @click="selectRole(role)"
+                class="w-full px-3 py-2 text-left hover:bg-gray-50 text-sm border-b border-gray-100 last:border-b-0"
+              >
+                <div class="font-medium">{{ role.name }}</div>
+                <div class="text-xs text-gray-500">{{ role.first_program?.name }}</div>
+              </button>
+            </div>
+            <div v-if="selectedRole" class="mt-2 p-2 bg-blue-50 rounded-md flex items-center justify-between">
+              <div>
+                <div class="text-sm font-medium">{{ selectedRole.name }}</div>
+                <div class="text-xs text-gray-500">{{ selectedRole.first_program?.name }}</div>
+              </div>
+              <button @click="selectedRole = null" class="text-gray-400 hover:text-gray-600">✕</button>
+            </div>
+            <button
+              v-if="!selectedRole && selectedEvent"
+              @click="showProposeRoleModal = true"
+              class="mt-2 text-sm text-blue-600 hover:text-blue-800"
+            >
+              Fehlende Rolle vorschlagen
             </button>
           </div>
 
@@ -383,12 +390,15 @@ const proposingCountry = ref(false)
 
 // Computed
 const filteredRoles = computed(() => {
-  if (!roleSearch.value.trim()) return []
+  if (!roleSearch.value.trim() || !selectedEvent.value) return []
   const q = roleSearch.value.toLowerCase()
-  return roles.value.filter(r =>
-    r.name.toLowerCase().includes(q) ||
-    r.first_program?.name?.toLowerCase().includes(q)
-  ).slice(0, 10)
+  const eventProgramId = selectedEvent.value.first_program_id || selectedEvent.value.season?.first_program_id
+  return roles.value.filter(r => {
+    const matchesSearch = r.name.toLowerCase().includes(q) ||
+      r.first_program?.name?.toLowerCase().includes(q)
+    const matchesProgram = !eventProgramId || r.first_program_id === eventProgramId
+    return matchesSearch && matchesProgram
+  }).slice(0, 10)
 })
 
 const filteredEvents = computed(() => {
@@ -432,6 +442,20 @@ function selectRole(role: any) {
 function selectEvent(event: any) {
   selectedEvent.value = event
   eventSearch.value = ''
+  // Clear role if it doesn't match the event's program
+  if (selectedRole.value) {
+    const eventProgramId = event.first_program_id || event.season?.first_program_id
+    if (selectedRole.value.first_program_id !== eventProgramId) {
+      selectedRole.value = null
+    }
+  }
+}
+
+function clearEvent() {
+  selectedEvent.value = null
+  eventSearch.value = ''
+  selectedRole.value = null
+  roleSearch.value = ''
 }
 
 function selectProposeSeason(season: any) {

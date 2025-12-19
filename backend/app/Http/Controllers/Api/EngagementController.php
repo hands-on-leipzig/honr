@@ -56,9 +56,9 @@ class EngagementController extends Controller
                 $q->where('status', 'approved')
                   ->orWhere('proposed_by_user_id', $userId);
             })
-            ->with(['season:id,name', 'level:id,name', 'location:id,name,city'])
+            ->with(['season:id,name,first_program_id', 'level:id,name', 'location:id,name,city'])
             ->orderBy('date', 'desc')
-            ->get(['id', 'date', 'season_id', 'level_id', 'location_id', 'status', 'proposed_by_user_id'])
+            ->get(['id', 'date', 'season_id', 'level_id', 'location_id', 'status', 'proposed_by_user_id', 'first_program_id'])
             ->map(function ($event) use ($userId) {
                 if ($event->proposed_by_user_id === $userId && $event->status !== 'approved') {
                     $event->user_proposed = true;
