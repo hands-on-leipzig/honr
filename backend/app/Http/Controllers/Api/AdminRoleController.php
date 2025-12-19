@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Role;
 use App\Models\FirstProgram;
+use App\Services\EngagementRecognitionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -41,6 +42,12 @@ class AdminRoleController extends Controller
             'status' => $request->status,
         ]);
 
+        // If role was created as approved, update all related engagements
+        if ($request->status === 'approved') {
+            $service = new EngagementRecognitionService();
+            $service->updateEngagementsForRole($role);
+        }
+
         return response()->json($role->load(['firstProgram:id,name']), 201);
     }
 
@@ -54,13 +61,22 @@ class AdminRoleController extends Controller
             'status' => 'required|in:pending,approved,rejected',
         ]);
 
+        $oldStatus = $role->status;
+        $newStatus = $request->status;
+
         $role->update([
             'name' => $request->name,
             'description' => $request->description,
             'first_program_id' => $request->first_program_id,
             'role_category' => $request->role_category,
-            'status' => $request->status,
+            'status' => $newStatus,
         ]);
+
+        // If role was just approved, update all related engagements
+        if ($oldStatus !== 'approved' && $newStatus === 'approved') {
+            $service = new EngagementRecognitionService();
+            $service->updateEngagementsForRole($role);
+        }
 
         return response()->json($role->load(['firstProgram:id,name']));
     }

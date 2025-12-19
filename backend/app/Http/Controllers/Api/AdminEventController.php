@@ -8,6 +8,8 @@ use App\Models\FirstProgram;
 use App\Models\Season;
 use App\Models\Level;
 use App\Models\Location;
+use App\Services\EngagementRecognitionService;
+use App\Services\ApprovalValidationService;
 use Illuminate\Http\Request;
 
 class AdminEventController extends Controller
@@ -53,9 +55,36 @@ class AdminEventController extends Controller
             ], 422);
         }
 
+        // Validate approval dependencies if trying to approve
+        if ($request->status === 'approved') {
+            $location = Location::with('country')->find($request->location_id);
+            $level = Level::find($request->level_id);
+            
+            $validationService = new ApprovalValidationService();
+            
+            if ($location && !$validationService->canApproveLocation($location)) {
+                $error = $validationService->getLocationApprovalError($location);
+                return response()->json([
+                    'message' => "Der Standort kann nicht genehmigt werden. $error"
+                ], 422);
+            }
+            
+            if ($level && $level->status !== 'approved') {
+                return response()->json([
+                    'message' => "Das Level '{$level->name}' muss zuerst genehmigt werden."
+                ], 422);
+            }
+        }
+
         $event = Event::create($request->only([
             'first_program_id', 'season_id', 'level_id', 'location_id', 'date', 'status'
         ]));
+
+        // If event was created as approved, update all related engagements
+        if ($request->status === 'approved') {
+            $recognitionService = new EngagementRecognitionService();
+            $recognitionService->updateEngagementsForEvent($event);
+        }
 
         return response()->json($event->load([
             'firstProgram:id,name',
@@ -91,9 +120,48 @@ class AdminEventController extends Controller
             ], 422);
         }
 
+        // Validate approval dependencies
+        $oldStatus = $event->status;
+        $newStatus = $request->status;
+        $oldLocationId = $event->location_id;
+        $oldLevelId = $event->level_id;
+
+        // If trying to approve, check dependencies with NEW location and level
+        if ($oldStatus !== 'approved' && $newStatus === 'approved') {
+            // Load the new location and level for validation
+            $newLocation = Location::with('country')->find($request->location_id);
+            $newLevel = Level::find($request->level_id);
+            
+            if (!$newLocation || $newLocation->status !== 'approved') {
+                return response()->json([
+                    'message' => "Der Standort '{$newLocation->name}' muss zuerst genehmigt werden."
+                ], 422);
+            }
+            
+            if (!$newLevel || $newLevel->status !== 'approved') {
+                return response()->json([
+                    'message' => "Das Level '{$newLevel->name}' muss zuerst genehmigt werden."
+                ], 422);
+            }
+        }
+
         $event->update($request->only([
             'first_program_id', 'season_id', 'level_id', 'location_id', 'date', 'status'
         ]));
+
+        // Reload event with relationships
+        $event->load(['location', 'level']);
+
+        // Recalculate engagements if:
+        // 1. Status changed (approved/unapproved)
+        // 2. Location changed
+        // 3. Level changed
+        if ($oldStatus !== $newStatus || 
+            $oldLocationId != $request->location_id || 
+            $oldLevelId != $request->level_id) {
+            $recognitionService = new EngagementRecognitionService();
+            $recognitionService->updateEngagementsForEvent($event);
+        }
 
         return response()->json($event->load([
             'firstProgram:id,name',
