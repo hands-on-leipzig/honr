@@ -72,7 +72,7 @@
           :logo-path="badge.logo_path"
           :level="badge.level"
           :role-name="badge.role_name"
-          @click="filterByRole(badge.role_id, badge.role_name)"
+          @click="filterByRole(badge.role_id, badge.role_name, badge.logo_path)"
         />
       </div>
     </div>
@@ -83,7 +83,7 @@
         <button
           v-for="program in programsWithLogos"
           :key="program.id"
-          @click="filterByProgram(program.id, program.name)"
+          @click="filterByProgram(program.id, program.name, program.logo_path)"
           class="w-12 h-12 object-contain cursor-pointer hover:opacity-80 transition-opacity"
         >
           <img
@@ -102,7 +102,7 @@
         <button
           v-for="season in seasonsWithLogos"
           :key="season.id"
-          @click="filterBySeason(season.id, season.name)"
+          @click="filterBySeason(season.id, season.name, season.logo_path)"
           class="w-12 h-12 object-contain cursor-pointer hover:opacity-80 transition-opacity"
         >
           <img
@@ -121,7 +121,7 @@
         <button
           v-for="country in uniqueCountries"
           :key="country.id"
-          @click="filterByCountry(country.id, country.name)"
+          @click="filterByCountry(country.id, country.name, country.iso_code)"
           class="w-6 h-6 object-cover border border-gray-200 rounded cursor-pointer hover:opacity-80 transition-opacity"
         >
           <img
@@ -324,31 +324,55 @@ async function loadBadges() {
   }
 }
 
-function filterByRole(roleId: number, roleName: string) {
+function filterByRole(roleId: number, roleName: string, logoPath: string | null) {
   router.push({
     path: '/people',
-    query: { filter_type: 'role', filter_id: roleId, filter_label: `Rolle ${roleName}` }
+    query: {
+      filter_type: 'role',
+      filter_id: roleId,
+      filter_label: `Rolle ${roleName}`,
+      filter_icon_type: 'logo',
+      filter_icon_path: logoPath || ''
+    }
   })
 }
 
-function filterByProgram(programId: number, programName: string) {
+function filterByProgram(programId: number, programName: string, logoPath: string | null) {
   router.push({
     path: '/people',
-    query: { filter_type: 'program', filter_id: programId, filter_label: `Programm ${programName}` }
+    query: {
+      filter_type: 'program',
+      filter_id: programId,
+      filter_label: `Programm ${programName}`,
+      filter_icon_type: 'logo',
+      filter_icon_path: logoPath || ''
+    }
   })
 }
 
-function filterBySeason(seasonId: number, seasonName: string) {
+function filterBySeason(seasonId: number, seasonName: string, logoPath: string | null) {
   router.push({
     path: '/people',
-    query: { filter_type: 'season', filter_id: seasonId, filter_label: `Saison ${seasonName}` }
+    query: {
+      filter_type: 'season',
+      filter_id: seasonId,
+      filter_label: `Saison ${seasonName}`,
+      filter_icon_type: 'logo',
+      filter_icon_path: logoPath || ''
+    }
   })
 }
 
-function filterByCountry(countryId: number, countryName: string) {
+function filterByCountry(countryId: number, countryName: string, isoCode: string | null) {
   router.push({
     path: '/people',
-    query: { filter_type: 'country', filter_id: countryId, filter_label: `Land ${countryName}` }
+    query: {
+      filter_type: 'country',
+      filter_id: countryId,
+      filter_label: `Land ${countryName}`,
+      filter_icon_type: 'flag',
+      filter_icon_code: isoCode || ''
+    }
   })
 }
 

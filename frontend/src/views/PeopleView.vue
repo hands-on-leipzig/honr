@@ -26,11 +26,20 @@
     <div class="fixed bottom-24 left-0 right-0 px-4 pb-4">
       <div class="bg-white rounded-lg shadow-lg p-4">
         <!-- Filter Label -->
-        <div v-if="hasFilter" class="flex items-center justify-between">
-          <span class="text-sm font-medium text-gray-700">{{ filterLabel }}</span>
+        <div v-if="hasFilter" class="flex items-center justify-between gap-3">
+          <div class="flex items-center gap-2 flex-1 min-w-0">
+            <img
+              v-if="getFilterIconUrl()"
+              :src="getFilterIconUrl()"
+              :alt="filterLabel"
+              class="w-8 h-8 object-contain flex-shrink-0"
+              @error="(e) => { (e.target as HTMLImageElement).style.display = 'none' }"
+            />
+            <span class="text-sm font-medium text-gray-700 truncate">{{ filterLabel }}</span>
+          </div>
           <button
             @click="clearFilter"
-            class="text-blue-600 hover:text-blue-800 text-sm font-medium"
+            class="text-blue-600 hover:text-blue-800 text-sm font-medium flex-shrink-0"
           >
             Filter entfernen
           </button>
@@ -63,8 +72,28 @@ const searchQuery = ref('')
 const filterType = computed(() => route.query.filter_type as string | undefined)
 const filterId = computed(() => route.query.filter_id ? Number(route.query.filter_id) : undefined)
 const filterLabel = computed(() => route.query.filter_label as string | undefined)
+const filterIconType = computed(() => route.query.filter_icon_type as string | undefined)
+const filterIconPath = computed(() => route.query.filter_icon_path as string | undefined)
+const filterIconCode = computed(() => route.query.filter_icon_code as string | undefined)
 
 const hasFilter = computed(() => !!filterType.value && !!filterId.value)
+
+function getLogoUrl(logoPath: string | null) {
+  if (!logoPath) return ''
+  const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8001/api'
+  const backendUrl = apiUrl.replace('/api', '')
+  return `${backendUrl}/storage/${logoPath}`
+}
+
+function getFilterIconUrl() {
+  if (filterIconType.value === 'logo' && filterIconPath.value) {
+    return getLogoUrl(filterIconPath.value)
+  }
+  if (filterIconType.value === 'flag' && filterIconCode.value) {
+    return `https://flagcdn.com/w80/${filterIconCode.value.toLowerCase()}.png`
+  }
+  return null
+}
 
 async function loadUsers() {
   loading.value = true
