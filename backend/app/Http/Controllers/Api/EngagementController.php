@@ -22,10 +22,12 @@ class EngagementController extends Controller
                 ->with([
                     'role:id,name,first_program_id,status',
                     'role.firstProgram:id,name',
-                    'event:id,date,season_id,level_id,location_id,status',
-                    'event.season:id,name',
+                    'event:id,date,season_id,level_id,location_id,status,first_program_id',
+                    'event.firstProgram:id,name,logo_path',
+                    'event.season:id,name,logo_path',
                     'event.level:id,name',
-                    'event.location:id,name,city',
+                    'event.location:id,name,city,country_id',
+                    'event.location.country:id,name,iso_code',
                 ])
                 ->join('events', 'engagements.event_id', '=', 'events.id')
                 ->orderBy('events.date', 'desc')
