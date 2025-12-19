@@ -26,7 +26,7 @@ class EngagementController extends Controller
                     'event.firstProgram:id,name,logo_path',
                     'event.season:id,name,logo_path,start_year',
                     'event.level:id,name',
-                    'event.location:id,name,city,country_id',
+                    'event.location:id,name,city,country_id,latitude,longitude',
                     'event.location.country:id,name,iso_code',
                 ])
                 ->join('events', 'engagements.event_id', '=', 'events.id')
