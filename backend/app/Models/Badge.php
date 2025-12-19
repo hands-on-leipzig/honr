@@ -10,37 +10,11 @@ class Badge extends Model
 {
     protected $fillable = [
         'name',
-        'type',
         'status',
-        'icon_path',
-        'first_program_id',
-        'season_id',
-        'level_id',
-        'country_id',
         'role_id',
         'description',
         'sort_order',
     ];
-
-    public function firstProgram(): BelongsTo
-    {
-        return $this->belongsTo(FirstProgram::class);
-    }
-
-    public function season(): BelongsTo
-    {
-        return $this->belongsTo(Season::class);
-    }
-
-    public function level(): BelongsTo
-    {
-        return $this->belongsTo(Level::class);
-    }
-
-    public function country(): BelongsTo
-    {
-        return $this->belongsTo(Country::class);
-    }
 
     public function role(): BelongsTo
     {

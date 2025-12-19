@@ -28,9 +28,4 @@ class Season extends Model
     {
         return $this->hasMany(Event::class);
     }
-
-    public function badges(): HasMany
-    {
-        return $this->hasMany(Badge::class);
-    }
 }

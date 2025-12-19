@@ -24,9 +24,4 @@ class Country extends Model
     {
         return $this->hasMany(Location::class);
     }
-
-    public function badges(): HasMany
-    {
-        return $this->hasMany(Badge::class);
-    }
 }

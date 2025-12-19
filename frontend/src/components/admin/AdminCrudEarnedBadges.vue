@@ -31,9 +31,6 @@
         <div class="flex-1 min-w-0">
           <div class="flex items-center space-x-2">
             <span class="font-medium">{{ item.user?.nickname || item.user?.email }}</span>
-            <span :class="item.badge?.type === 'grow' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'" class="px-2 py-0.5 text-xs rounded-full">
-              {{ item.badge?.type === 'grow' ? 'Grow' : 'Tick' }}
-            </span>
           </div>
           <div class="text-sm text-gray-600">
             {{ item.badge?.name }}

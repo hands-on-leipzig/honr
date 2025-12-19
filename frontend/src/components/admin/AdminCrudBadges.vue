@@ -37,18 +37,15 @@
           <div class="flex items-center space-x-2">
             <span class="font-medium">{{ item.name }}</span>
             <BellIcon v-if="item.status === 'pending_icon'" class="w-4 h-4 text-amber-500" />
-            <span :class="item.type === 'grow' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'" class="px-2 py-0.5 text-xs rounded-full">
-              {{ item.type === 'grow' ? 'Grow' : 'Tick' }}
-            </span>
             <span :class="item.status === 'released' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'" class="px-2 py-0.5 text-xs rounded-full">
               {{ item.status === 'released' ? 'Veröffentlicht' : 'Icon fehlt' }}
             </span>
           </div>
           <div class="text-sm text-gray-600 truncate">
-            {{ getCriteriaLabel(item) }}
+            {{ item.role?.name || 'Keine Rolle' }}
           </div>
           <div class="flex flex-wrap gap-1 mt-1 text-xs">
-            <span v-if="item.type === 'grow'" class="px-2 py-0.5 bg-gray-100 rounded-full">{{ item.thresholds_count }} Schwellen</span>
+            <span class="px-2 py-0.5 bg-gray-100 rounded-full">{{ item.thresholds_count }} Schwellen</span>
             <span class="px-2 py-0.5 bg-gray-100 rounded-full">{{ item.earned_badges_count }} vergeben</span>
           </div>
         </div>
@@ -69,13 +66,6 @@
           <input v-model="form.name" type="text" required class="w-full px-3 py-2 border border-gray-300 rounded-md" />
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Typ *</label>
-          <select v-model="form.type" required class="w-full px-3 py-2 border border-gray-300 rounded-md" @change="onTypeChange">
-            <option value="tick_box">Tick the box (einmalig)</option>
-            <option value="grow">Grow (mit Schwellenwerten)</option>
-          </select>
-        </div>
-        <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">Status *</label>
           <select v-model="form.status" required class="w-full px-3 py-2 border border-gray-300 rounded-md">
             <option value="pending_icon">Icon fehlt</option>
@@ -83,57 +73,17 @@
           </select>
         </div>
 
-        <!-- Criteria selection -->
-        <div class="border-t pt-4">
-          <label class="block text-sm font-medium text-gray-700 mb-2">Kriterium * (genau eines wählen)</label>
-          
-          <div v-if="form.type === 'tick_box'" class="space-y-3">
-            <div>
-              <label class="block text-xs text-gray-500 mb-1">Programm</label>
-              <select v-model="form.first_program_id" class="w-full px-3 py-2 border border-gray-300 rounded-md" @change="clearOtherCriteria('first_program_id')">
-                <option value="">-</option>
-                <option v-for="p in options.programs" :key="p.id" :value="p.id">{{ p.name }}</option>
-              </select>
-            </div>
-            <div>
-              <label class="block text-xs text-gray-500 mb-1">Saison</label>
-              <select v-model="form.season_id" class="w-full px-3 py-2 border border-gray-300 rounded-md" @change="clearOtherCriteria('season_id')">
-                <option value="">-</option>
-                <option v-for="s in options.seasons" :key="s.id" :value="s.id">{{ s.name }}</option>
-              </select>
-            </div>
-            <div>
-              <label class="block text-xs text-gray-500 mb-1">Level</label>
-              <select v-model="form.level_id" class="w-full px-3 py-2 border border-gray-300 rounded-md" @change="clearOtherCriteria('level_id')">
-                <option value="">-</option>
-                <option v-for="l in options.levels" :key="l.id" :value="l.id">{{ l.name }}</option>
-              </select>
-            </div>
-            <div>
-              <label class="block text-xs text-gray-500 mb-1">Land</label>
-              <select v-model="form.country_id" class="w-full px-3 py-2 border border-gray-300 rounded-md" @change="clearOtherCriteria('country_id')">
-                <option value="">-</option>
-                <option v-for="c in options.countries" :key="c.id" :value="c.id">{{ c.name }}</option>
-              </select>
-            </div>
+        <!-- Role selection -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Rolle *</label>
+          <input v-model="criteriaSearch.role" type="text" placeholder="Rolle suchen..." class="w-full px-3 py-2 border border-gray-300 rounded-md" />
+          <div v-if="filteredCriteriaRoles.length > 0 && criteriaSearch.role && !form.role_id" class="mt-1 max-h-32 overflow-y-auto border border-gray-200 rounded-md">
+            <button v-for="r in filteredCriteriaRoles" :key="r.id" type="button" @click="selectCriteriaRole(r)" class="w-full px-3 py-2 text-left hover:bg-gray-50 text-sm border-b border-gray-100 last:border-b-0">{{ r.name }}</button>
           </div>
-
-          <div v-if="form.type === 'grow'">
-            <label class="block text-xs text-gray-500 mb-1">Rolle *</label>
-            <input v-model="criteriaSearch.role" type="text" placeholder="Rolle suchen..." class="w-full px-3 py-2 border border-gray-300 rounded-md" />
-            <div v-if="filteredCriteriaRoles.length > 0 && criteriaSearch.role && !form.role_id" class="mt-1 max-h-32 overflow-y-auto border border-gray-200 rounded-md">
-              <button v-for="r in filteredCriteriaRoles" :key="r.id" type="button" @click="selectCriteriaRole(r)" class="w-full px-3 py-2 text-left hover:bg-gray-50 text-sm border-b border-gray-100 last:border-b-0">{{ r.name }}</button>
-            </div>
-            <div v-if="selectedCriteriaRole" class="mt-2 p-2 bg-blue-50 rounded-md flex items-center justify-between">
-              <span class="text-sm font-medium">{{ selectedCriteriaRole.name }}</span>
-              <button type="button" @click="clearCriteriaRole" class="text-gray-400 hover:text-gray-600">✕</button>
-            </div>
+          <div v-if="selectedCriteriaRole" class="mt-2 p-2 bg-blue-50 rounded-md flex items-center justify-between">
+            <span class="text-sm font-medium">{{ selectedCriteriaRole.name }}</span>
+            <button type="button" @click="clearCriteriaRole" class="text-gray-400 hover:text-gray-600">✕</button>
           </div>
-        </div>
-
-        <div v-if="form.type === 'tick_box'">
-          <label class="block text-sm font-medium text-gray-700 mb-1">Icon-Pfad</label>
-          <input v-model="form.icon_path" type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="/icons/badge.svg" />
         </div>
 
         <div>
@@ -189,10 +139,6 @@ const API_PATH = '/admin/badges'
 // State
 const items = ref<any[]>([])
 const options = reactive({
-  programs: [] as any[],
-  seasons: [] as any[],
-  levels: [] as any[],
-  countries: [] as any[],
   roles: [] as any[],
 })
 const loading = ref(false)
@@ -201,13 +147,7 @@ const searchQuery = ref('')
 const editingItem = ref<any | null>(null)
 const form = reactive({
   name: '',
-  type: 'tick_box',
   status: 'pending_icon',
-  icon_path: '',
-  first_program_id: '',
-  season_id: '',
-  level_id: '',
-  country_id: '',
   role_id: '',
   description: '',
 })
@@ -249,42 +189,11 @@ const filteredItems = computed(() => {
     const q = searchQuery.value.toLowerCase()
     result = result.filter(i =>
       i.name.toLowerCase().includes(q) ||
-      i.first_program?.name?.toLowerCase().includes(q) ||
-      i.season?.name?.toLowerCase().includes(q) ||
-      i.level?.name?.toLowerCase().includes(q) ||
-      i.country?.name?.toLowerCase().includes(q) ||
       i.role?.name?.toLowerCase().includes(q)
     )
   }
   return result
 })
-
-// Methods
-const getCriteriaLabel = (item: any) => {
-  if (item.first_program) return `Programm: ${item.first_program.name}`
-  if (item.season) return `Saison: ${item.season.name}`
-  if (item.level) return `Level: ${item.level.name}`
-  if (item.country) return `Land: ${item.country.name}`
-  if (item.role) return `Rolle: ${item.role.name}`
-  return 'Kein Kriterium'
-}
-
-function onTypeChange() {
-  // Clear all criteria when type changes
-  form.first_program_id = ''
-  form.season_id = ''
-  form.level_id = ''
-  form.country_id = ''
-  form.role_id = ''
-}
-
-function clearOtherCriteria(keep: string) {
-  if (keep !== 'first_program_id') form.first_program_id = ''
-  if (keep !== 'season_id') form.season_id = ''
-  if (keep !== 'level_id') form.level_id = ''
-  if (keep !== 'country_id') form.country_id = ''
-  if (keep !== 'role_id') form.role_id = ''
-}
 
 async function load() {
   loading.value = true
@@ -294,10 +203,6 @@ async function load() {
       apiClient.get(`${API_PATH}/options`)
     ])
     items.value = itemsRes.data
-    options.programs = optionsRes.data.programs
-    options.seasons = optionsRes.data.seasons
-    options.levels = optionsRes.data.levels
-    options.countries = optionsRes.data.countries
     options.roles = optionsRes.data.roles
     filterPendingIcon.value = items.value.some(i => i.status === 'pending_icon')
   } catch (err) {
@@ -310,13 +215,7 @@ async function load() {
 function addItem() {
   editingItem.value = {}
   form.name = ''
-  form.type = 'tick_box'
   form.status = 'pending_icon'
-  form.icon_path = ''
-  form.first_program_id = ''
-  form.season_id = ''
-  form.level_id = ''
-  form.country_id = ''
   form.role_id = ''
   form.description = ''
   selectedCriteriaRole.value = null
@@ -327,13 +226,7 @@ function addItem() {
 function editItem(item: any) {
   editingItem.value = item
   form.name = item.name
-  form.type = item.type
   form.status = item.status
-  form.icon_path = item.icon_path || ''
-  form.first_program_id = item.first_program_id || ''
-  form.season_id = item.season_id || ''
-  form.level_id = item.level_id || ''
-  form.country_id = item.country_id || ''
   form.role_id = item.role_id || ''
   form.description = item.description || ''
   selectedCriteriaRole.value = item.role_id ? options.roles.find((r: any) => r.id === item.role_id) : null
@@ -347,13 +240,7 @@ async function saveItem() {
   try {
     const data = {
       name: form.name,
-      type: form.type,
       status: form.status,
-      icon_path: form.icon_path || null,
-      first_program_id: form.first_program_id || null,
-      season_id: form.season_id || null,
-      level_id: form.level_id || null,
-      country_id: form.country_id || null,
       role_id: form.role_id || null,
       description: form.description || null,
     }
