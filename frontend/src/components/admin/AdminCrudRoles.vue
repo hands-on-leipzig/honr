@@ -58,7 +58,6 @@
             </div>
             <div class="flex flex-wrap gap-1 mt-1 text-xs">
               <span class="px-2 py-0.5 bg-gray-100 rounded-full">{{ item.engagements_count }} Einsätze</span>
-              <span class="px-2 py-0.5 bg-gray-100 rounded-full">{{ item.badges_count }} Badges</span>
               <span v-if="item.proposed_by_user" class="px-2 py-0.5 bg-gray-100 rounded-full">
                 von {{ item.proposed_by_user.nickname || item.proposed_by_user.email }}
               </span>
@@ -108,6 +107,24 @@
             <option value="approved">Genehmigt</option>
             <option value="rejected">Abgelehnt</option>
           </select>
+        </div>
+
+        <!-- Logo Upload -->
+        <div v-if="editingItem.id" class="border-t pt-4">
+          <label class="block text-sm font-medium text-gray-700 mb-2">Logo</label>
+          <div v-if="editingItem.logo_path" class="mb-3">
+            <img :src="getLogoUrl(editingItem.logo_path)" :alt="editingItem.name" class="w-16 h-16 object-contain border border-gray-200 rounded" />
+          </div>
+          <div class="flex gap-2">
+            <input ref="logoInput" type="file" accept="image/*" @change="handleLogoSelect" class="hidden" />
+            <button type="button" @click="logoInput?.click()" :disabled="uploadingLogo" class="px-3 py-2 border border-gray-300 rounded-md hover:bg-gray-50 text-sm disabled:opacity-50">
+              {{ uploadingLogo ? 'Hochladen...' : editingItem.logo_path ? 'Logo ändern' : 'Logo hochladen' }}
+            </button>
+            <button v-if="editingItem.logo_path" type="button" @click="deleteLogo" :disabled="deletingLogo" class="px-3 py-2 border border-red-300 text-red-600 rounded-md hover:bg-red-50 text-sm disabled:opacity-50">
+              {{ deletingLogo ? 'Löschen...' : 'Logo löschen' }}
+            </button>
+          </div>
+          <div v-if="logoError" class="mt-2 text-red-600 text-sm">{{ logoError }}</div>
         </div>
 
         <div v-if="editingItem.proposed_by_user" class="text-sm text-gray-500">
@@ -179,6 +196,75 @@ const error = ref('')
 const showDeleteConfirm = ref(false)
 const draggingIndex = ref<number | null>(null)
 const dragOverIndex = ref<number | null>(null)
+
+// Logo upload
+const logoInput = ref<HTMLInputElement | null>(null)
+const uploadingLogo = ref(false)
+const deletingLogo = ref(false)
+const logoError = ref('')
+
+function getLogoUrl(logoPath: string | null) {
+  if (!logoPath) return ''
+  const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8001/api'
+  const backendUrl = apiUrl.replace('/api', '')
+  return `${backendUrl}/storage/${logoPath}`
+}
+
+async function handleLogoSelect(event: Event) {
+  const target = event.target as HTMLInputElement
+  const file = target.files?.[0]
+  if (!file || !editingItem.value?.id) return
+
+  logoError.value = ''
+  uploadingLogo.value = true
+
+  try {
+    const formData = new FormData()
+    formData.append('logo', file)
+
+    const response = await apiClient.post(`/admin/roles/${editingItem.value.id}/logo`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    })
+
+    // Reload item to get updated logo_path
+    await load()
+    const updatedItem = items.value.find(i => i.id === editingItem.value?.id)
+    if (updatedItem) {
+      editingItem.value = updatedItem
+    }
+
+    // Reset file input
+    if (logoInput.value) {
+      logoInput.value.value = ''
+    }
+  } catch (err: any) {
+    logoError.value = err.response?.data?.message || 'Fehler beim Hochladen.'
+  } finally {
+    uploadingLogo.value = false
+  }
+}
+
+async function deleteLogo() {
+  if (!editingItem.value?.id) return
+
+  deletingLogo.value = true
+  logoError.value = ''
+
+  try {
+    await apiClient.delete(`/admin/roles/${editingItem.value.id}/logo`)
+    
+    // Reload item
+    await load()
+    const updatedItem = items.value.find(i => i.id === editingItem.value?.id)
+    if (updatedItem) {
+      editingItem.value = updatedItem
+    }
+  } catch (err: any) {
+    logoError.value = err.response?.data?.message || 'Fehler beim Löschen.'
+  } finally {
+    deletingLogo.value = false
+  }
+}
 
 
 // Computed

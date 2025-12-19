@@ -11,9 +11,8 @@ use App\Http\Controllers\Api\AdminLocationController;
 use App\Http\Controllers\Api\AdminRoleController;
 use App\Http\Controllers\Api\AdminEventController;
 use App\Http\Controllers\Api\AdminEngagementController;
-use App\Http\Controllers\Api\AdminBadgeController;
-use App\Http\Controllers\Api\AdminEarnedBadgeController;
 use App\Http\Controllers\Api\EngagementController;
+use App\Http\Controllers\Api\BadgeController;
 use App\Http\Controllers\Api\LeaderboardController;
 use App\Http\Controllers\Api\HeatmapController;
 use Illuminate\Support\Facades\Route;
@@ -59,6 +58,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/', [UserController::class, 'index']);
         Route::get('/{id}', [UserController::class, 'show']);
         Route::get('/{id}/engagements', [UserController::class, 'getUserEngagements']);
+        Route::get('/{id}/badges', [BadgeController::class, 'getUserBadges']);
     });
 
     // Engagements - Current user's engagements
@@ -136,6 +136,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/roles/reorder', [AdminRoleController::class, 'reorder']);
         Route::put('/roles/{role}', [AdminRoleController::class, 'update']);
         Route::delete('/roles/{role}', [AdminRoleController::class, 'destroy']);
+        Route::post('/roles/{role}/logo', [AdminRoleController::class, 'uploadLogo']);
+        Route::delete('/roles/{role}/logo', [AdminRoleController::class, 'deleteLogo']);
 
         // Events (crowdsourced)
         Route::get('/events', [AdminEventController::class, 'index']);
@@ -150,16 +152,6 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/engagements', [AdminEngagementController::class, 'store']);
         Route::put('/engagements/{engagement}', [AdminEngagementController::class, 'update']);
         Route::delete('/engagements/{engagement}', [AdminEngagementController::class, 'destroy']);
-
-        // Badges
-        Route::get('/badges', [AdminBadgeController::class, 'index']);
-        Route::get('/badges/options', [AdminBadgeController::class, 'options']);
-        Route::post('/badges', [AdminBadgeController::class, 'store']);
-        Route::put('/badges/{badge}', [AdminBadgeController::class, 'update']);
-        Route::delete('/badges/{badge}', [AdminBadgeController::class, 'destroy']);
-
-        // Earned Badges (read-only)
-        Route::get('/earned-badges', [AdminEarnedBadgeController::class, 'index']);
     });
 });
 

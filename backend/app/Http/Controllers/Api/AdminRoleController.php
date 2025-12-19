@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Role;
 use App\Models\FirstProgram;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class AdminRoleController extends Controller
 {
@@ -13,7 +14,7 @@ class AdminRoleController extends Controller
     {
         return response()->json(
             Role::with(['firstProgram:id,name', 'proposedByUser:id,nickname,email'])
-                ->withCount(['engagements', 'badges'])
+                ->withCount('engagements')
                 ->orderBy('sort_order')
                 ->get()
         );
@@ -86,12 +87,6 @@ class AdminRoleController extends Controller
             ], 422);
         }
 
-        if ($role->badges()->exists()) {
-            return response()->json([
-                'message' => 'Diese Rolle kann nicht gelöscht werden, da noch Badges damit verknüpft sind.'
-            ], 422);
-        }
-
         $role->delete();
 
         return response()->json(['message' => 'Rolle gelöscht.']);
@@ -102,6 +97,47 @@ class AdminRoleController extends Controller
         return response()->json(
             FirstProgram::orderBy('sort_order')->get(['id', 'name'])
         );
+    }
+
+    public function uploadLogo(Request $request, Role $role)
+    {
+        $request->validate([
+            'logo' => 'required|image|mimes:png,jpg,jpeg,svg,webp|max:2048',
+        ]);
+
+        // Delete old logo if exists
+        if ($role->logo_path && Storage::disk('public')->exists($role->logo_path)) {
+            Storage::disk('public')->delete($role->logo_path);
+        }
+
+        // Get file extension
+        $extension = $request->file('logo')->getClientOriginalExtension();
+        
+        // Rename to {id}.{ext}
+        $filename = $role->id . '.' . $extension;
+        $path = 'logos/roles/' . $filename;
+
+        // Store file
+        $request->file('logo')->storeAs('logos/roles', $filename, 'public');
+
+        // Update database
+        $role->update(['logo_path' => $path]);
+
+        return response()->json([
+            'logo_path' => $path,
+            'logo_url' => Storage::url($path),
+        ]);
+    }
+
+    public function deleteLogo(Role $role)
+    {
+        if ($role->logo_path && Storage::disk('public')->exists($role->logo_path)) {
+            Storage::disk('public')->delete($role->logo_path);
+        }
+
+        $role->update(['logo_path' => null]);
+
+        return response()->json(['message' => 'Logo gelöscht.']);
     }
 }
 

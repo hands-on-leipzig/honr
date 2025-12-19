@@ -82,12 +82,6 @@ class AdminSeasonController extends Controller
             ], 422);
         }
 
-        if ($season->badges()->exists()) {
-            return response()->json([
-                'message' => 'Diese Saison kann nicht gelöscht werden, da noch Badges damit verknüpft sind.'
-            ], 422);
-        }
-
         $season->delete();
 
         return response()->json(['message' => 'Saison gelöscht.']);

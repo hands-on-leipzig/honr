@@ -35,7 +35,6 @@
             </div>
             <div class="flex flex-wrap gap-1 mt-1 text-xs">
               <span class="px-2 py-0.5 bg-gray-100 rounded-full">{{ item.events_count }} Veranst.</span>
-              <span class="px-2 py-0.5 bg-gray-100 rounded-full">{{ item.badges_count }} Badges</span>
             </div>
             </div>
           </div>

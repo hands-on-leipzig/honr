@@ -12,7 +12,7 @@ class AdminFirstProgramController extends Controller
     public function index()
     {
         return response()->json(
-            FirstProgram::withCount(['seasons', 'roles', 'events', 'badges'])
+            FirstProgram::withCount(['seasons', 'roles', 'events'])
                 ->orderBy('sort_order')
                 ->get()
         );
@@ -83,12 +83,6 @@ class AdminFirstProgramController extends Controller
         if ($firstProgram->events()->exists()) {
             return response()->json([
                 'message' => 'Dieses Programm kann nicht gelöscht werden, da noch Veranstaltungen damit verknüpft sind.'
-            ], 422);
-        }
-
-        if ($firstProgram->badges()->exists()) {
-            return response()->json([
-                'message' => 'Dieses Programm kann nicht gelöscht werden, da noch Badges damit verknüpft sind.'
             ], 422);
         }
 

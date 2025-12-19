@@ -63,6 +63,19 @@
       </div>
     </div>
 
+    <!-- Badges -->
+    <div v-if="badges.length > 0" class="bg-white rounded-lg shadow p-4 mb-4">
+      <div class="flex flex-wrap gap-3">
+        <BadgeIcon
+          v-for="badge in badges"
+          :key="badge.role_name"
+          :logo-path="badge.logo_path"
+          :level="badge.level"
+          :role-name="badge.role_name"
+        />
+      </div>
+    </div>
+
     <!-- Program Logos -->
     <div v-if="programsWithLogos.length > 0" class="bg-white rounded-lg shadow p-4 mb-4">
       <div class="flex flex-wrap gap-3">
@@ -117,6 +130,7 @@ import { useUserStore } from '@/stores/user'
 import apiClient from '@/api/client'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
+import BadgeIcon from './BadgeIcon.vue'
 
 interface Props {
   engagements: any[]
@@ -151,6 +165,7 @@ const isCurrentUser = computed(() => {
 const mapContainer = ref<HTMLElement | null>(null)
 const mapInstance = ref<L.Map | null>(null)
 const markersLayer = ref<L.LayerGroup | null>(null)
+const badges = ref<any[]>([])
 
 const uniquePrograms = computed(() => {
   const programMap = new Map()
@@ -278,6 +293,19 @@ function getContactLink(link: string): string {
   return 'https://' + link
 }
 
+async function loadBadges() {
+  const targetUserId = props.userId || userStore.user?.id
+  if (!targetUserId) return
+
+  try {
+    const response = await apiClient.get(`/users/${targetUserId}/badges`)
+    badges.value = response.data
+  } catch (err) {
+    console.error('Failed to load badges', err)
+    badges.value = []
+  }
+}
+
 function initMap() {
   if (!mapContainer.value || mapInstance.value || engagementLocations.value.length === 0) {
     return
@@ -375,12 +403,17 @@ watch(() => props.engagements, async () => {
 }, { deep: true })
 
 onMounted(async () => {
+  await loadBadges()
   await nextTick()
   setTimeout(() => {
     if (engagementLocations.value.length > 0 && mapContainer.value) {
       initMap()
     }
   }, 200)
+})
+
+watch(() => props.userId, () => {
+  loadBadges()
 })
 </script>
 

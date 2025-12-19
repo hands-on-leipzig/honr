@@ -68,12 +68,6 @@ class AdminCountryController extends Controller
             ], 422);
         }
 
-        if ($country->badges()->exists()) {
-            return response()->json([
-                'message' => 'Dieses Land kann nicht gelöscht werden, da noch Badges damit verknüpft sind.'
-            ], 422);
-        }
-
         $country->delete();
 
         return response()->json(['message' => 'Land gelöscht.']);

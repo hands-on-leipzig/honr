@@ -73,12 +73,6 @@ class AdminLevelController extends Controller
             ], 422);
         }
 
-        if ($level->badges()->exists()) {
-            return response()->json([
-                'message' => 'Dieses Level kann nicht gelöscht werden, da noch Badges damit verknüpft sind.'
-            ], 422);
-        }
-
         $level->delete();
 
         return response()->json(['message' => 'Level gelöscht.']);

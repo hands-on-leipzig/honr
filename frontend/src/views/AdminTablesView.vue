@@ -33,8 +33,6 @@
     <AdminCrudRoles v-if="selectedTable === 'roles'" @close="selectedTable = null" />
     <AdminCrudEvents v-if="selectedTable === 'events'" @close="selectedTable = null" />
     <AdminCrudEngagements v-if="selectedTable === 'engagements'" @close="selectedTable = null" />
-    <AdminCrudBadges v-if="selectedTable === 'badges'" @close="selectedTable = null" />
-    <AdminCrudEarnedBadges v-if="selectedTable === 'earned_badges'" @close="selectedTable = null" />
 
     <!-- Generic Table Placeholder -->
     <div v-if="selectedTable && !implementedTables.includes(selectedTable)" class="bg-white rounded-lg shadow p-4">
@@ -61,13 +59,11 @@ import AdminCrudLocations from '@/components/admin/AdminCrudLocations.vue'
 import AdminCrudRoles from '@/components/admin/AdminCrudRoles.vue'
 import AdminCrudEvents from '@/components/admin/AdminCrudEvents.vue'
 import AdminCrudEngagements from '@/components/admin/AdminCrudEngagements.vue'
-import AdminCrudBadges from '@/components/admin/AdminCrudBadges.vue'
-import AdminCrudEarnedBadges from '@/components/admin/AdminCrudEarnedBadges.vue'
 
 const selectedTable = ref<string | null>(null)
 
 // Tables with implemented CRUD components
-const implementedTables = ['users', 'first_programs', 'seasons', 'levels', 'countries', 'locations', 'roles', 'events', 'engagements', 'badges', 'earned_badges']
+const implementedTables = ['users', 'first_programs', 'seasons', 'levels', 'countries', 'locations', 'roles', 'events', 'engagements']
 
 // Pending counts for crowdsourced tables
 const pendingCounts = reactive<Record<string, number>>({
@@ -78,11 +74,9 @@ const pendingCounts = reactive<Record<string, number>>({
   events: 0,
 })
 
-const readOnlyTables = ['earned_badges']
+const readOnlyTables: string[] = []
 
 const tables = [
-  { name: 'badges', label: 'Badges' },
-  { name: 'badge_thresholds', label: 'Badge-Schwellenwerte' },
   { name: 'users', label: 'Benutzer' },
   { name: 'first_programs', label: 'FIRST Programme' },
   { name: 'countries', label: 'Länder' },
@@ -91,7 +85,6 @@ const tables = [
   { name: 'seasons', label: 'Saisons' },
   { name: 'locations', label: 'Standorte' },
   { name: 'events', label: 'Veranstaltungen' },
-  { name: 'earned_badges', label: 'Verdiente Badges' },
   { name: 'engagements', label: 'Volunteer-Einsätze' },
 ]
 

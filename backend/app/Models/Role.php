@@ -16,6 +16,7 @@ class Role extends Model
         'role_category',
         'status',
         'proposed_by_user_id',
+        'logo_path',
     ];
 
     public function firstProgram(): BelongsTo
@@ -31,10 +32,5 @@ class Role extends Model
     public function engagements(): HasMany
     {
         return $this->hasMany(Engagement::class);
-    }
-
-    public function badges(): HasMany
-    {
-        return $this->hasMany(Badge::class);
     }
 }
