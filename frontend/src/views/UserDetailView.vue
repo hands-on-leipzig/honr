@@ -1,18 +1,5 @@
 <template>
   <div class="p-4 pb-32">
-    <!-- Header with Back Button -->
-    <div class="mb-4 flex items-center">
-      <button
-        @click="goBack"
-        class="mr-3 text-gray-600 hover:text-gray-900"
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-        </svg>
-      </button>
-      <h1 class="text-2xl font-bold">{{ user?.nickname || 'Benutzer' }}</h1>
-    </div>
-
     <!-- Summary Tab (Reusing AwardsSummaryTab) -->
     <AwardsSummaryTab
       v-if="user && engagements.length >= 0"
@@ -20,6 +7,7 @@
       :leaderboards="leaderboards"
       :userId="userId"
       :user="user"
+      @back="goBack"
     />
   </div>
 </template>

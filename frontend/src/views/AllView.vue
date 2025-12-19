@@ -1,7 +1,5 @@
 <template>
   <div class="p-4 pb-32">
-    <h1 class="text-2xl font-bold mb-4">Alle Volunteer-Einsätze</h1>
-
     <!-- Navigation Tabs -->
     <TabNavigation
       :tabs="tabs"

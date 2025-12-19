@@ -1,7 +1,5 @@
 <template>
   <div class="p-4 pb-32">
-    <h1 class="text-2xl font-bold mb-4">Personen</h1>
-
     <!-- User List -->
     <div v-if="loading" class="bg-white rounded-lg shadow p-6">
       <p class="text-gray-600 text-center py-8">Laden...</p>

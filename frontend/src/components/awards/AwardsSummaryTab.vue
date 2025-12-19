@@ -1,9 +1,20 @@
 <template>
   <div>
-    <!-- Header: Nickname -->
-    <div class="mb-4">
-      <h1 class="text-2xl font-bold">{{ displayUser?.nickname || 'Auszeichnungen' }}</h1>
-      <p v-if="isCurrentUser" class="text-xs text-gray-500 mt-1">Zum Ändern geh in die Einstellungen</p>
+    <!-- Header: Nickname with Back Button -->
+    <div class="mb-4 flex items-center">
+      <button
+        v-if="!isCurrentUser"
+        @click="handleBack"
+        class="mr-3 text-gray-600 hover:text-gray-900"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+        </svg>
+      </button>
+      <div class="flex-1">
+        <h1 class="text-2xl font-bold">{{ displayUser?.nickname || 'Auszeichnungen' }}</h1>
+        <p v-if="isCurrentUser" class="text-xs text-gray-500 mt-1">Zum Ändern geh in die Einstellungen</p>
+      </div>
     </div>
 
     <!-- Short Bio -->
@@ -94,6 +105,10 @@ interface Props {
 }
 
 const props = defineProps<Props>()
+
+const emit = defineEmits<{
+  (e: 'back'): void
+}>()
 
 const userStore = useUserStore()
 
@@ -215,6 +230,10 @@ function getLogoUrl(logoPath: string | null) {
 function handleImageError(event: Event) {
   const img = event.target as HTMLImageElement
   img.style.display = 'none'
+}
+
+function handleBack() {
+  emit('back')
 }
 
 function initMap() {
