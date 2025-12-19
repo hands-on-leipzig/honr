@@ -25,11 +25,6 @@ const router = createRouter({
           component: () => import('../views/AwardsView.vue'),
         },
         {
-          path: 'engagement',
-          name: 'engagement',
-          component: () => import('../views/EngagementView.vue'),
-        },
-        {
           path: 'all',
           name: 'all',
           component: () => import('../views/AllView.vue'),
