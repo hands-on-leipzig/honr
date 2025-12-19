@@ -199,6 +199,46 @@ class UserController extends Controller
             $query->where('status', $request->status);
         }
 
+        // Filter by role_id - users with recognized engagements in this role
+        if ($request->has('role_id') && $request->role_id) {
+            $query->whereHas('engagements', function ($q) use ($request) {
+                $q->where('role_id', $request->role_id)
+                  ->where('is_recognized', true);
+            });
+        }
+
+        // Filter by first_program_id - users with recognized engagements in this program
+        if ($request->has('first_program_id') && $request->first_program_id) {
+            $query->whereHas('engagements', function ($q) use ($request) {
+                $q->where('is_recognized', true)
+                  ->whereHas('event', function ($eq) use ($request) {
+                      $eq->where('first_program_id', $request->first_program_id);
+                  });
+            });
+        }
+
+        // Filter by season_id - users with recognized engagements in this season
+        if ($request->has('season_id') && $request->season_id) {
+            $query->whereHas('engagements', function ($q) use ($request) {
+                $q->where('is_recognized', true)
+                  ->whereHas('event', function ($eq) use ($request) {
+                      $eq->where('season_id', $request->season_id);
+                  });
+            });
+        }
+
+        // Filter by country_id - users with recognized engagements in this country
+        if ($request->has('country_id') && $request->country_id) {
+            $query->whereHas('engagements', function ($q) use ($request) {
+                $q->where('is_recognized', true)
+                  ->whereHas('event', function ($eq) use ($request) {
+                      $eq->whereHas('location', function ($lq) use ($request) {
+                          $lq->where('country_id', $request->country_id);
+                      });
+                  });
+            });
+        }
+
         $users = $query->orderBy('nickname')
             ->get(['id', 'nickname', 'short_bio', 'status']);
 

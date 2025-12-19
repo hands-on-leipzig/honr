@@ -25,10 +25,11 @@ class BadgeController extends Controller
             ->with('role:id,name,logo_path')
             ->get()
             ->groupBy('role_id')
-            ->map(function ($engagements) {
+            ->map(function ($engagements, $roleId) {
                 return [
                     'count' => $engagements->count(),
                     'role' => $engagements->first()->role,
+                    'role_id' => (int) $roleId,
                 ];
             })
             ->filter(function ($item) {
@@ -41,12 +42,14 @@ class BadgeController extends Controller
         foreach ($engagementCounts as $item) {
             $count = $item['count'];
             $role = $item['role'];
+            $roleId = $item['role_id'];
 
             // Calculate level based on thresholds
             // Level 1: 1 engagement, Level 2: 5, Level 3: 20, Level 4: 50
             $level = $this->calculateLevel($count);
 
             $badges[] = [
+                'role_id' => $roleId,
                 'role_name' => $role->name,
                 'level' => $level,
                 'logo_path' => $role->logo_path,

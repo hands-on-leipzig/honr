@@ -72,6 +72,7 @@
           :logo-path="badge.logo_path"
           :level="badge.level"
           :role-name="badge.role_name"
+          @click="filterByRole(badge.role_id, badge.role_name)"
         />
       </div>
     </div>
@@ -79,42 +80,57 @@
     <!-- Program Logos -->
     <div v-if="programsWithLogos.length > 0" class="bg-white rounded-lg shadow p-4 mb-4">
       <div class="flex flex-wrap gap-3">
-        <img
+        <button
           v-for="program in programsWithLogos"
           :key="program.id"
-          :src="getLogoUrl(program.logo_path)"
-          :alt="program.name"
-          class="w-12 h-12 object-contain"
-          @error="handleImageError"
-        />
+          @click="filterByProgram(program.id, program.name)"
+          class="w-12 h-12 object-contain cursor-pointer hover:opacity-80 transition-opacity"
+        >
+          <img
+            :src="getLogoUrl(program.logo_path)"
+            :alt="program.name"
+            class="w-full h-full object-contain"
+            @error="handleImageError"
+          />
+        </button>
       </div>
     </div>
 
     <!-- Season Logos -->
     <div v-if="seasonsWithLogos.length > 0" class="bg-white rounded-lg shadow p-4 mb-4">
       <div class="flex flex-wrap gap-3">
-        <img
+        <button
           v-for="season in seasonsWithLogos"
           :key="season.id"
-          :src="getLogoUrl(season.logo_path)"
-          :alt="season.name"
-          class="w-12 h-12 object-contain"
-          @error="handleImageError"
-        />
+          @click="filterBySeason(season.id, season.name)"
+          class="w-12 h-12 object-contain cursor-pointer hover:opacity-80 transition-opacity"
+        >
+          <img
+            :src="getLogoUrl(season.logo_path)"
+            :alt="season.name"
+            class="w-full h-full object-contain"
+            @error="handleImageError"
+          />
+        </button>
       </div>
     </div>
 
     <!-- Country Flags & Map -->
     <div v-if="uniqueCountries.length > 0 || engagementLocations.length > 0" class="bg-white rounded-lg shadow p-4 mb-4">
       <div v-if="uniqueCountries.length > 0" class="flex flex-wrap gap-3 mb-4">
-        <img
+        <button
           v-for="country in uniqueCountries"
           :key="country.id"
-          :src="`https://flagcdn.com/w80/${country.iso_code?.toLowerCase()}.png`"
-          :alt="country.name"
-          class="w-6 h-6 object-cover border border-gray-200 rounded"
-          @error="handleImageError"
-        />
+          @click="filterByCountry(country.id, country.name)"
+          class="w-6 h-6 object-cover border border-gray-200 rounded cursor-pointer hover:opacity-80 transition-opacity"
+        >
+          <img
+            :src="`https://flagcdn.com/w80/${country.iso_code?.toLowerCase()}.png`"
+            :alt="country.name"
+            class="w-full h-full object-cover rounded"
+            @error="handleImageError"
+          />
+        </button>
       </div>
       <!-- Mini Map -->
       <div v-if="engagementLocations.length > 0" class="border border-gray-300 rounded-md overflow-hidden" style="height: 200px;">
@@ -126,6 +142,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, nextTick, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import apiClient from '@/api/client'
 import L from 'leaflet'
@@ -149,6 +166,7 @@ const emit = defineEmits<{
   (e: 'back'): void
 }>()
 
+const router = useRouter()
 const userStore = useUserStore()
 
 const displayUser = computed(() => {
@@ -304,6 +322,34 @@ async function loadBadges() {
     console.error('Failed to load badges', err)
     badges.value = []
   }
+}
+
+function filterByRole(roleId: number, roleName: string) {
+  router.push({
+    path: '/people',
+    query: { filter_type: 'role', filter_id: roleId, filter_label: `Rolle ${roleName}` }
+  })
+}
+
+function filterByProgram(programId: number, programName: string) {
+  router.push({
+    path: '/people',
+    query: { filter_type: 'program', filter_id: programId, filter_label: `Programm ${programName}` }
+  })
+}
+
+function filterBySeason(seasonId: number, seasonName: string) {
+  router.push({
+    path: '/people',
+    query: { filter_type: 'season', filter_id: seasonId, filter_label: `Saison ${seasonName}` }
+  })
+}
+
+function filterByCountry(countryId: number, countryName: string) {
+  router.push({
+    path: '/people',
+    query: { filter_type: 'country', filter_id: countryId, filter_label: `Land ${countryName}` }
+  })
 }
 
 function initMap() {

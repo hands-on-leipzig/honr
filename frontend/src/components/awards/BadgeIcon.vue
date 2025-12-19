@@ -1,5 +1,8 @@
 <template>
-  <div class="relative w-12 h-12 flex items-center justify-center">
+  <button
+    @click="$emit('click')"
+    class="relative w-12 h-12 flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity"
+  >
     <!-- Icon with border -->
     <div v-if="logoPath" :class="borderClass" class="w-full h-full rounded-full overflow-hidden border-[6px] flex items-center justify-center bg-white">
       <img
@@ -15,7 +18,7 @@
         {{ roleName }}
       </span>
     </div>
-  </div>
+  </button>
 </template>
 
 <script setup lang="ts">
