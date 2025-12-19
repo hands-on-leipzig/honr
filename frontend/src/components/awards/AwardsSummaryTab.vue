@@ -387,6 +387,20 @@ onMounted(async () => {
 <style scoped>
 .leaflet-container {
   font-family: inherit;
+  z-index: 1;
+}
+
+.leaflet-pane {
+  z-index: 1;
+}
+
+.leaflet-top,
+.leaflet-bottom {
+  z-index: 1;
+}
+
+.leaflet-control {
+  z-index: 2;
 }
 </style>
 

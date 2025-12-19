@@ -6,7 +6,7 @@
     </main>
 
     <!-- Bottom Navigation -->
-    <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-50">
+    <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-[1000]">
       <div class="flex justify-around items-center h-16">
         <RouterLink
           v-for="item in navigationItems"
