@@ -1,7 +1,7 @@
 <template>
   <div class="relative w-12 h-12 flex items-center justify-center">
     <!-- Icon with border -->
-    <div v-if="logoPath" :class="borderClass" class="w-full h-full rounded-lg overflow-hidden border-2 flex items-center justify-center bg-white">
+    <div v-if="logoPath" :class="borderClass" class="w-full h-full rounded-full overflow-hidden border-[6px] flex items-center justify-center bg-white">
       <img
         :src="logoUrl"
         :alt="roleName"
@@ -10,7 +10,7 @@
       />
     </div>
     <!-- Chip fallback with border -->
-    <div v-else :class="borderClass" class="w-full h-full rounded-lg border-2 flex items-center justify-center bg-white">
+    <div v-else :class="borderClass" class="w-full h-full rounded-full border-[6px] flex items-center justify-center bg-white">
       <span class="px-2 py-1 text-gray-700 text-xs font-medium text-center truncate">
         {{ roleName }}
       </span>
