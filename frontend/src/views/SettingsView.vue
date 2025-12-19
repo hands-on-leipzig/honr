@@ -129,44 +129,38 @@
     </div>
 
     <!-- Name Modal -->
-    <div v-if="showNameModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div class="bg-white rounded-lg w-full max-w-sm p-6">
-        <h3 class="text-lg font-semibold mb-4">Name ändern</h3>
-        <form @submit.prevent="updateName">
-          <div class="mb-4">
-            <label class="block text-sm font-medium text-gray-700 mb-1">Name</label>
-            <input v-model="nameForm.nickname" type="text" required class="w-full px-3 py-2 border border-gray-300 rounded-md" />
-          </div>
-          <div v-if="nameError" class="mb-4 text-red-600 text-sm">{{ nameError }}</div>
-          <div class="flex gap-2">
-            <button type="button" @click="showNameModal = false" class="flex-1 px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50">Abbrechen</button>
-            <button type="submit" :disabled="nameLoading" class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50">
-              {{ nameLoading ? 'Speichern...' : 'Speichern' }}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+    <Modal :show="showNameModal" @close="showNameModal = false" title="Name ändern">
+      <form @submit.prevent="updateName">
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-700 mb-1">Name</label>
+          <input v-model="nameForm.nickname" type="text" required class="w-full px-3 py-2 border border-gray-300 rounded-md" />
+        </div>
+        <div v-if="nameError" class="mb-4 text-red-600 text-sm">{{ nameError }}</div>
+        <div class="flex gap-2">
+          <button type="button" @click="showNameModal = false" class="flex-1 px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50">Abbrechen</button>
+          <button type="submit" :disabled="nameLoading" class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50">
+            {{ nameLoading ? 'Speichern...' : 'Speichern' }}
+          </button>
+        </div>
+      </form>
+    </Modal>
 
     <!-- Bio Modal -->
-    <div v-if="showBioModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div class="bg-white rounded-lg w-full max-w-sm p-6">
-        <h3 class="text-lg font-semibold mb-4">Über mich ändern</h3>
-        <form @submit.prevent="updateBio">
-          <div class="mb-4">
-            <label class="block text-sm font-medium text-gray-700 mb-1">Über mich</label>
-            <textarea v-model="bioForm.short_bio" rows="4" class="w-full px-3 py-2 border border-gray-300 rounded-md"></textarea>
-          </div>
-          <div v-if="bioError" class="mb-4 text-red-600 text-sm">{{ bioError }}</div>
-          <div class="flex gap-2">
-            <button type="button" @click="showBioModal = false" class="flex-1 px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50">Abbrechen</button>
-            <button type="submit" :disabled="bioLoading" class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50">
-              {{ bioLoading ? 'Speichern...' : 'Speichern' }}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+    <Modal :show="showBioModal" @close="showBioModal = false" title="Über mich ändern">
+      <form @submit.prevent="updateBio">
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-700 mb-1">Über mich</label>
+          <textarea v-model="bioForm.short_bio" rows="4" class="w-full px-3 py-2 border border-gray-300 rounded-md"></textarea>
+        </div>
+        <div v-if="bioError" class="mb-4 text-red-600 text-sm">{{ bioError }}</div>
+        <div class="flex gap-2">
+          <button type="button" @click="showBioModal = false" class="flex-1 px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50">Abbrechen</button>
+          <button type="submit" :disabled="bioLoading" class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50">
+            {{ bioLoading ? 'Speichern...' : 'Speichern' }}
+          </button>
+        </div>
+      </form>
+    </Modal>
 
     <!-- Regional Partner Modal -->
     <div v-if="showRegionalPartnerModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -249,6 +243,7 @@ import { RouterLink, useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { useAuthStore } from '@/stores/auth'
 import apiClient from '@/api/client'
+import Modal from '@/components/common/Modal.vue'
 
 const router = useRouter()
 const userStore = useUserStore()
