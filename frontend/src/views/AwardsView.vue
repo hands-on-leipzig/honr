@@ -20,7 +20,7 @@
           :key="program.id"
           :src="getLogoUrl(program.logo_path)"
           :alt="program.name"
-          class="h-12 object-contain"
+          class="w-12 h-12 object-contain"
           @error="handleImageError"
         />
       </div>
@@ -34,7 +34,7 @@
           :key="season.id"
           :src="getLogoUrl(season.logo_path)"
           :alt="season.name"
-          class="h-12 object-contain"
+          class="w-12 h-12 object-contain"
           @error="handleImageError"
         />
       </div>
@@ -48,7 +48,7 @@
           :key="country.id"
           :src="`https://flagcdn.com/w80/${country.iso_code?.toLowerCase()}.png`"
           :alt="country.name"
-          class="h-12 object-contain border border-gray-200 rounded"
+          class="w-12 h-12 object-cover border border-gray-200 rounded"
           @error="handleImageError"
         />
       </div>
@@ -112,7 +112,9 @@ const programsWithLogos = computed(() => {
 })
 
 const seasonsWithLogos = computed(() => {
-  return uniqueSeasons.value.filter(s => s.logo_path)
+  return uniqueSeasons.value
+    .filter(s => s.logo_path)
+    .sort((a, b) => (a.start_year || 0) - (b.start_year || 0))
 })
 
 function getLogoUrl(logoPath: string | null) {
