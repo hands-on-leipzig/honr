@@ -75,6 +75,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Leaderboards
     Route::prefix('leaderboard')->group(function () {
+        Route::get('/options', [LeaderboardController::class, 'options']);
         Route::get('/volunteers', [LeaderboardController::class, 'volunteers']);
         Route::get('/regional-partners', [LeaderboardController::class, 'regionalPartners']);
         Route::get('/coaches', [LeaderboardController::class, 'coaches']);

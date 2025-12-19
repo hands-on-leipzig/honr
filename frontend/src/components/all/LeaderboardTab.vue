@@ -1,5 +1,32 @@
 <template>
   <div>
+    <!-- Filters -->
+    <div class="bg-white rounded-lg shadow p-4 mb-4">
+      <div class="grid grid-cols-3 gap-2">
+        <div>
+          <label class="block text-xs font-medium text-gray-500 mb-1">Programm</label>
+          <select v-model="filters.program_id" @change="onProgramChange" class="w-full px-2 py-1 border border-gray-300 rounded text-sm">
+            <option value="">Alle</option>
+            <option v-for="p in filterOptions.programs" :key="p.id" :value="p.id">{{ p.name }}</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-500 mb-1">Saison</label>
+          <select v-model="filters.season_id" class="w-full px-2 py-1 border border-gray-300 rounded text-sm">
+            <option value="">Alle</option>
+            <option v-for="s in filteredSeasons" :key="s.id" :value="s.id">{{ s.name }}</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-500 mb-1">Level</label>
+          <select v-model="filters.level_id" class="w-full px-2 py-1 border border-gray-300 rounded text-sm">
+            <option value="">Alle</option>
+            <option v-for="l in filterOptions.levels" :key="l.id" :value="l.id">{{ l.name }}</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
     <!-- Category Tabs -->
     <div class="flex bg-gray-100 rounded-lg p-1 mb-4">
       <button
@@ -92,7 +119,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted } from 'vue'
+import { ref, watch, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import apiClient from '@/api/client'
 
@@ -101,11 +128,36 @@ const router = useRouter()
 const leaderboardCategory = ref<'volunteers' | 'regional-partners' | 'coaches'>('volunteers')
 const leaderboard = ref<any[]>([])
 const loading = ref(false)
+const filterOptions = ref<{ programs: any[], seasons: any[], levels: any[] }>({ programs: [], seasons: [], levels: [] })
+const filters = ref({ program_id: '', season_id: '', level_id: '' })
+
+const filteredSeasons = computed(() => {
+  if (!filters.value.program_id) return filterOptions.value.seasons
+  return filterOptions.value.seasons.filter((s: any) => s.first_program_id == filters.value.program_id)
+})
+
+function onProgramChange() {
+  filters.value.season_id = ''
+}
+
+async function loadFilterOptions() {
+  try {
+    const response = await apiClient.get('/leaderboard/options')
+    filterOptions.value = response.data
+  } catch (err) {
+    console.error('Failed to load filter options', err)
+  }
+}
 
 async function loadLeaderboard() {
   loading.value = true
   try {
-    const response = await apiClient.get(`/leaderboard/${leaderboardCategory.value}`)
+    const params = new URLSearchParams()
+    if (filters.value.program_id) params.append('program_id', filters.value.program_id)
+    if (filters.value.season_id) params.append('season_id', filters.value.season_id)
+    if (filters.value.level_id) params.append('level_id', filters.value.level_id)
+    
+    const response = await apiClient.get(`/leaderboard/${leaderboardCategory.value}?${params.toString()}`)
     leaderboard.value = response.data
   } catch (err) {
     console.error('Failed to load leaderboard', err)
@@ -123,7 +175,12 @@ watch(leaderboardCategory, () => {
   loadLeaderboard()
 })
 
-onMounted(() => {
+watch(filters, () => {
+  loadLeaderboard()
+}, { deep: true })
+
+onMounted(async () => {
+  await loadFilterOptions()
   loadLeaderboard()
 })
 </script>
