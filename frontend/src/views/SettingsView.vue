@@ -38,6 +38,11 @@
           Über mich ändern
         </button>
         
+        <!-- Kontakt-Link ändern -->
+        <button @click="showContactLinkModal = true" class="w-full px-4 py-3 text-left hover:bg-gray-50">
+          {{ userStore.user?.contact_link ? 'Kontakt-Link ändern' : 'Kontakt-Link hinzufügen' }}
+        </button>
+        
         <!-- Newsletter-Einwilligung -->
         <div class="w-full px-4 py-3 flex items-center justify-between">
           <span>Newsletter-Einwilligung</span>
@@ -213,6 +218,29 @@
       </div>
     </div>
 
+    <!-- Contact Link Modal -->
+    <Modal :show="showContactLinkModal" @close="showContactLinkModal = false" title="Kontakt-Link ändern">
+      <form @submit.prevent="updateContactLink">
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-700 mb-1">Kontakt-Link</label>
+          <input 
+            v-model="contactLinkForm.contact_link" 
+            type="text" 
+            class="w-full px-3 py-2 border border-gray-300 rounded-md" 
+            placeholder="z.B. https://linkedin.com/in/... oder email@example.com"
+          />
+          <p class="mt-1 text-xs text-gray-500">Social media Link oder email-Adresse</p>
+        </div>
+        <div v-if="contactLinkError" class="mb-4 text-red-600 text-sm">{{ contactLinkError }}</div>
+        <div class="flex gap-2">
+          <button type="button" @click="showContactLinkModal = false" class="flex-1 px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50">Abbrechen</button>
+          <button type="submit" :disabled="contactLinkLoading" class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50">
+            {{ contactLinkLoading ? 'Speichern...' : 'Speichern' }}
+          </button>
+        </div>
+      </form>
+    </Modal>
+
     <!-- Delete Account Modal -->
     <div v-if="showDeleteModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div class="bg-white rounded-lg w-full max-w-sm p-6">
@@ -254,6 +282,7 @@ const showEmailModal = ref(false)
 const showPasswordModal = ref(false)
 const showNameModal = ref(false)
 const showBioModal = ref(false)
+const showContactLinkModal = ref(false)
 const showRegionalPartnerModal = ref(false)
 const showDeleteModal = ref(false)
 
@@ -265,6 +294,7 @@ const emailForm = reactive({ new_email: '', password: '' })
 const passwordForm = reactive({ current: '', new: '', confirm: '' })
 const nameForm = reactive({ nickname: '' })
 const bioForm = reactive({ short_bio: '' })
+const contactLinkForm = reactive({ contact_link: '' })
 const regionalPartnerForm = reactive({ name: '' })
 const deleteForm = reactive({ password: '' })
 
@@ -273,6 +303,7 @@ const emailLoading = ref(false)
 const passwordLoading = ref(false)
 const nameLoading = ref(false)
 const bioLoading = ref(false)
+const contactLinkLoading = ref(false)
 const regionalPartnerLoading = ref(false)
 const deleteLoading = ref(false)
 
@@ -282,6 +313,7 @@ const emailSuccess = ref('')
 const passwordError = ref('')
 const nameError = ref('')
 const bioError = ref('')
+const contactLinkError = ref('')
 const regionalPartnerError = ref('')
 const deleteError = ref('')
 
@@ -319,6 +351,7 @@ onMounted(async () => {
     newsletterConsent.value = userStore.user.consent_to_newsletter
     nameForm.nickname = userStore.user.nickname || ''
     bioForm.short_bio = userStore.user.short_bio || ''
+    contactLinkForm.contact_link = userStore.user.contact_link || ''
     regionalPartnerForm.name = userStore.user.regional_partner_name || ''
   }
 })
@@ -390,6 +423,20 @@ async function updateBio() {
     bioError.value = err.response?.data?.message || 'Fehler beim Ändern der Biografie.'
   } finally {
     bioLoading.value = false
+  }
+}
+
+async function updateContactLink() {
+  contactLinkError.value = ''
+  contactLinkLoading.value = true
+  try {
+    await apiClient.put('/user', { contact_link: contactLinkForm.contact_link || null })
+    await userStore.fetchUser()
+    showContactLinkModal.value = false
+  } catch (err: any) {
+    contactLinkError.value = err.response?.data?.message || 'Fehler beim Ändern des Kontakt-Links.'
+  } finally {
+    contactLinkLoading.value = false
   }
 }
 

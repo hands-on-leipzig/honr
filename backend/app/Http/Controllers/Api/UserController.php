@@ -21,14 +21,79 @@ class UserController extends Controller
         $request->validate([
             'nickname' => 'sometimes|string|max:255',
             'short_bio' => 'sometimes|nullable|string|max:1000',
+            'contact_link' => [
+                'sometimes',
+                'nullable',
+                'string',
+                'max:255',
+                function ($attribute, $value, $fail) {
+                    if (empty($value)) {
+                        return; // Allow empty/null
+                    }
+                    
+                    $value = trim($value);
+                    
+                    // Check if it's a valid email
+                    if (filter_var($value, FILTER_VALIDATE_EMAIL)) {
+                        return; // Valid email, will be converted to mailto:
+                    }
+                    
+                    // Check if it's already a valid URL (http, https, mailto, tel)
+                    if (preg_match('/^(https?|mailto|tel):/i', $value)) {
+                        if (!filter_var($value, FILTER_VALIDATE_URL) && !preg_match('/^mailto:/i', $value) && !preg_match('/^tel:/i', $value)) {
+                            $fail('Der Kontakt-Link ist ungültig.');
+                        }
+                        return;
+                    }
+                    
+                    // Check if it could be a URL without protocol
+                    if (preg_match('/^[a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9]\.[a-zA-Z]{2,}/', $value)) {
+                        return; // Looks like a domain, will add https://
+                    }
+                    
+                    $fail('Der Kontakt-Link muss eine gültige URL oder E-Mail-Adresse sein.');
+                },
+            ],
             'regional_partner_name' => 'sometimes|nullable|string|max:255',
             'consent_to_newsletter' => 'sometimes|boolean',
         ]);
 
+        $data = $request->only(['nickname', 'short_bio', 'contact_link', 'regional_partner_name', 'consent_to_newsletter']);
+        
+        // Convert email addresses to mailto: links and normalize URLs
+        if (isset($data['contact_link']) && $data['contact_link']) {
+            $data['contact_link'] = $this->normalizeContactLink($data['contact_link']);
+        }
+
         $user = $request->user();
-        $user->update($request->only(['nickname', 'short_bio', 'regional_partner_name', 'consent_to_newsletter']));
+        $user->update($data);
 
         return response()->json($user);
+    }
+
+    private function normalizeContactLink($link)
+    {
+        $link = trim($link);
+        
+        // If it's already a valid URL with protocol, return as is
+        if (preg_match('/^(https?|mailto|tel):/i', $link)) {
+            return $link;
+        }
+        
+        // If it looks like an email address, convert to mailto:
+        if (filter_var($link, FILTER_VALIDATE_EMAIL)) {
+            return 'mailto:' . $link;
+        }
+        
+        // If it looks like a domain (starts with www. or contains a dot), add https://
+        if (preg_match('/^(www\.|[a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9]\.[a-zA-Z]{2,})/', $link)) {
+            if (strpos($link, 'www.') === 0) {
+                return 'https://' . $link;
+            }
+            return 'https://' . $link;
+        }
+        
+        return $link;
     }
 
     public function requestEmailChange(Request $request)
@@ -149,6 +214,7 @@ class UserController extends Controller
             'id' => $user->id,
             'nickname' => $user->nickname,
             'short_bio' => $user->short_bio,
+            'contact_link' => $user->contact_link,
             'status' => $user->status,
         ]);
     }

@@ -9,6 +9,7 @@ export interface User {
   status: string
   home_location: string | null
   short_bio: string | null
+  contact_link: string | null
   regional_partner_name: string | null
   consent_to_newsletter: boolean
   is_admin: boolean

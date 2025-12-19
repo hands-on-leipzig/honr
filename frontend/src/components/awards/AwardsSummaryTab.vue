@@ -12,7 +12,32 @@
         </svg>
       </button>
       <div class="flex-1">
-        <h1 class="text-2xl font-bold">{{ displayUser?.nickname || 'Auszeichnungen' }}</h1>
+        <div class="flex items-center gap-2">
+          <h1 class="text-2xl font-bold">{{ displayUser?.nickname || 'Auszeichnungen' }}</h1>
+          <!-- Contact Link Icon -->
+          <a
+            v-if="displayUser?.contact_link"
+            :href="getContactLink(displayUser.contact_link)"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="inline-flex items-center text-gray-600 hover:text-blue-600 transition-colors"
+            :title="displayUser.contact_link"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+            </svg>
+          </a>
+          <svg
+            v-else
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-5 w-5 text-gray-300"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+          </svg>
+        </div>
         <p v-if="isCurrentUser" class="text-xs text-gray-500 mt-1">Zum Ändern geh in die Einstellungen</p>
       </div>
     </div>
@@ -234,6 +259,23 @@ function handleImageError(event: Event) {
 
 function handleBack() {
   emit('back')
+}
+
+function getContactLink(link: string): string {
+  if (!link) return '#'
+  
+  // If it's already a valid URL (starts with http, https, mailto, tel), return as is
+  if (/^(https?|mailto|tel):/i.test(link)) {
+    return link
+  }
+  
+  // If it looks like an email address, convert to mailto:
+  if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(link)) {
+    return 'mailto:' + link
+  }
+  
+  // Otherwise, assume it's a web URL and add https://
+  return 'https://' + link
 }
 
 function initMap() {
