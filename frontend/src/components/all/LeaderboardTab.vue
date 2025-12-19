@@ -71,9 +71,12 @@
 
         <!-- Name -->
         <div class="flex-1 ml-3">
-          <div class="font-medium text-gray-900">
+          <button
+            @click="viewUser(entry.id)"
+            class="font-medium text-gray-900 hover:text-blue-600 text-left"
+          >
             {{ entry.display_name || entry.nickname }}
-          </div>
+          </button>
         </div>
 
         <!-- Count -->
@@ -90,7 +93,10 @@
 
 <script setup lang="ts">
 import { ref, watch, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import apiClient from '@/api/client'
+
+const router = useRouter()
 
 const leaderboardCategory = ref<'volunteers' | 'regional-partners' | 'coaches'>('volunteers')
 const leaderboard = ref<any[]>([])
@@ -107,6 +113,10 @@ async function loadLeaderboard() {
   } finally {
     loading.value = false
   }
+}
+
+function viewUser(userId: number) {
+  router.push(`/user/${userId}`)
 }
 
 watch(leaderboardCategory, () => {
