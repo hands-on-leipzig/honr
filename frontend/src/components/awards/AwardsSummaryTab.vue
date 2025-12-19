@@ -2,13 +2,13 @@
   <div>
     <!-- Header: Nickname -->
     <div class="mb-4">
-      <h1 class="text-2xl font-bold">{{ userStore.user?.nickname || 'Meine Auszeichnungen' }}</h1>
+      <h1 class="text-2xl font-bold">{{ displayUser?.nickname || 'Auszeichnungen' }}</h1>
       <p v-if="isCurrentUser" class="text-xs text-gray-500 mt-1">Zum Ändern geh in die Einstellungen</p>
     </div>
 
     <!-- Short Bio -->
-    <div v-if="userStore.user?.short_bio" class="bg-white rounded-lg shadow p-4 mb-4">
-      <p class="text-gray-700">{{ userStore.user.short_bio }}</p>
+    <div v-if="displayUser?.short_bio" class="bg-white rounded-lg shadow p-4 mb-4">
+      <p class="text-gray-700">{{ displayUser.short_bio }}</p>
       <p v-if="isCurrentUser" class="text-xs text-gray-500 mt-2">Zum Ändern geh in die Einstellungen</p>
     </div>
 
@@ -89,20 +89,28 @@ interface Props {
     regionalPartners: any[]
     coaches: any[]
   }
+  userId?: number
+  user?: any
 }
 
 const props = defineProps<Props>()
 
 const userStore = useUserStore()
+
+const displayUser = computed(() => {
+  return props.user || userStore.user
+})
+
+const isCurrentUser = computed(() => {
+  if (props.userId && userStore.user) {
+    return props.userId === userStore.user.id
+  }
+  return !props.userId && !props.user
+})
+
 const mapContainer = ref<HTMLElement | null>(null)
 const mapInstance = ref<L.Map | null>(null)
 const markersLayer = ref<L.LayerGroup | null>(null)
-
-const isCurrentUser = computed(() => {
-  // For now, always true since we're viewing own profile
-  // Later we'll check if viewing another user's profile
-  return true
-})
 
 const uniquePrograms = computed(() => {
   const programMap = new Map()
@@ -151,20 +159,23 @@ const seasonsWithLogos = computed(() => {
 })
 
 const volunteerRank = computed(() => {
-  if (!userStore.user?.id) return null
-  const entry = props.leaderboards.volunteers.find((e: any) => e.id === userStore.user?.id)
+  const targetUserId = props.userId || userStore.user?.id
+  if (!targetUserId) return null
+  const entry = props.leaderboards.volunteers.find((e: any) => e.id === targetUserId)
   return entry?.rank || null
 })
 
 const regionalPartnerRank = computed(() => {
-  if (!userStore.user?.id) return null
-  const entry = props.leaderboards.regionalPartners.find((e: any) => e.id === userStore.user?.id)
+  const targetUserId = props.userId || userStore.user?.id
+  if (!targetUserId) return null
+  const entry = props.leaderboards.regionalPartners.find((e: any) => e.id === targetUserId)
   return entry?.rank || null
 })
 
 const coachRank = computed(() => {
-  if (!userStore.user?.id) return null
-  const entry = props.leaderboards.coaches.find((e: any) => e.id === userStore.user?.id)
+  const targetUserId = props.userId || userStore.user?.id
+  if (!targetUserId) return null
+  const entry = props.leaderboards.coaches.find((e: any) => e.id === targetUserId)
   return entry?.rank || null
 })
 

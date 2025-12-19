@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
+use App\Models\Engagement;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
@@ -115,5 +117,63 @@ class UserController extends Controller
         $user->delete();
 
         return response()->json(['message' => 'Account erfolgreich gelöscht.']);
+    }
+
+    public function index(Request $request)
+    {
+        $query = User::where('status', 'active');
+
+        // Search by nickname
+        if ($request->has('search') && $request->search) {
+            $search = $request->search;
+            $query->where('nickname', 'like', "%{$search}%");
+        }
+
+        // Filter by status if provided
+        if ($request->has('status')) {
+            $query->where('status', $request->status);
+        }
+
+        $users = $query->orderBy('nickname')
+            ->get(['id', 'nickname', 'short_bio', 'status']);
+
+        return response()->json($users);
+    }
+
+    public function show(Request $request, $id)
+    {
+        $user = User::where('status', 'active')
+            ->findOrFail($id);
+
+        return response()->json([
+            'id' => $user->id,
+            'nickname' => $user->nickname,
+            'short_bio' => $user->short_bio,
+            'status' => $user->status,
+        ]);
+    }
+
+    public function getUserEngagements(Request $request, $id)
+    {
+        $user = User::where('status', 'active')
+            ->findOrFail($id);
+
+        $engagements = Engagement::where('user_id', $user->id)
+            ->with([
+                'role:id,name,first_program_id,status',
+                'role.firstProgram:id,name,logo_path',
+                'event:id,date,season_id,level_id,location_id,status,first_program_id',
+                'event.firstProgram:id,name,logo_path',
+                'event.season:id,name,logo_path,start_year',
+                'event.level:id,name',
+                'event.location:id,name,city,country_id,latitude,longitude',
+                'event.location.country:id,name,iso_code',
+            ])
+            ->join('events', 'engagements.event_id', '=', 'events.id')
+            ->orderBy('events.date', 'desc')
+            ->select('engagements.*')
+            ->get();
+
+        return response()->json($engagements);
     }
 }

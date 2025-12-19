@@ -54,6 +54,13 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/email-change', [UserController::class, 'requestEmailChange']);
     });
 
+    // Users - List and view other users
+    Route::prefix('users')->group(function () {
+        Route::get('/', [UserController::class, 'index']);
+        Route::get('/{id}', [UserController::class, 'show']);
+        Route::get('/{id}/engagements', [UserController::class, 'getUserEngagements']);
+    });
+
     // Engagements - Current user's engagements
     Route::prefix('engagements')->group(function () {
         Route::get('/', [EngagementController::class, 'index']);
