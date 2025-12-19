@@ -112,6 +112,10 @@
             </div>
           </div>
           <p v-if="geocodeError" class="text-xs text-red-500 mt-1">{{ geocodeError }}</p>
+          <!-- Mini Map -->
+          <div v-if="form.latitude && form.longitude" class="mt-3 border border-gray-300 rounded-md overflow-hidden" style="height: 200px;">
+            <div ref="miniMapContainer" class="w-full h-full"></div>
+          </div>
         </div>
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">Status *</label>
@@ -163,9 +167,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted, watch, nextTick } from 'vue'
 import { BellIcon, MapPinIcon } from '@heroicons/vue/24/solid'
 import apiClient from '@/api/client'
+import L from 'leaflet'
+import 'leaflet/dist/leaflet.css'
 
 const emit = defineEmits(['close'])
 
@@ -212,6 +218,11 @@ const deleting = ref(false)
 const error = ref('')
 const showDeleteConfirm = ref(false)
 
+// Mini map
+const miniMapContainer = ref<HTMLElement | null>(null)
+const miniMapInstance = ref<L.Map | null>(null)
+const miniMapMarker = ref<L.Marker | null>(null)
+
 // Geocoding
 const geocoding = ref(false)
 const geocodeError = ref('')
@@ -252,6 +263,8 @@ async function geocodeAddress() {
     if (data && data.length > 0) {
       form.latitude = parseFloat(data[0].lat)
       form.longitude = parseFloat(data[0].lon)
+      await nextTick()
+      updateMiniMap()
     } else {
       geocodeError.value = 'Adresse nicht gefunden'
     }
@@ -260,6 +273,41 @@ async function geocodeAddress() {
     geocodeError.value = 'Fehler bei der Berechnung'
   } finally {
     geocoding.value = false
+  }
+}
+
+function updateMiniMap() {
+  if (!form.latitude || !form.longitude) {
+    if (miniMapInstance.value) {
+      miniMapInstance.value.remove()
+      miniMapInstance.value = null
+      miniMapMarker.value = null
+    }
+    return
+  }
+
+  if (!miniMapContainer.value) return
+
+  const lat = parseFloat(form.latitude)
+  const lng = parseFloat(form.longitude)
+
+  if (isNaN(lat) || isNaN(lng)) return
+
+  // Initialize map if not exists
+  if (!miniMapInstance.value) {
+    miniMapInstance.value = L.map(miniMapContainer.value).setView([lat, lng], 13)
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(miniMapInstance.value)
+  } else {
+    miniMapInstance.value.setView([lat, lng], 13)
+  }
+
+  // Update or create marker
+  if (miniMapMarker.value) {
+    miniMapMarker.value.setLatLng([lat, lng])
+  } else {
+    miniMapMarker.value = L.marker([lat, lng]).addTo(miniMapInstance.value)
   }
 }
 
@@ -313,7 +361,7 @@ function addItem() {
   error.value = ''
 }
 
-function editItem(item: any) {
+async function editItem(item: any) {
   editingItem.value = item
   form.name = item.name
   form.country_id = item.country_id
@@ -324,6 +372,8 @@ function editItem(item: any) {
   form.longitude = item.longitude
   form.status = item.status
   error.value = ''
+  await nextTick()
+  updateMiniMap()
 }
 
 async function saveItem() {
@@ -368,6 +418,24 @@ async function deleteItem() {
     deleting.value = false
   }
 }
+
+// Watch for coordinate changes
+watch([() => form.latitude, () => form.longitude], () => {
+  if (editingItem.value) {
+    nextTick(() => {
+      updateMiniMap()
+    })
+  }
+})
+
+// Clean up map when modal closes
+watch(() => editingItem.value, (newVal) => {
+  if (!newVal && miniMapInstance.value) {
+    miniMapInstance.value.remove()
+    miniMapInstance.value = null
+    miniMapMarker.value = null
+  }
+})
 
 onMounted(load)
 </script>
