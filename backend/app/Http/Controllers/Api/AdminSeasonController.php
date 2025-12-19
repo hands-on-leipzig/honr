@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Season;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class AdminSeasonController extends Controller
 {
@@ -90,6 +91,47 @@ class AdminSeasonController extends Controller
         $season->delete();
 
         return response()->json(['message' => 'Saison gelöscht.']);
+    }
+
+    public function uploadLogo(Request $request, Season $season)
+    {
+        $request->validate([
+            'logo' => 'required|image|mimes:png,jpg,jpeg,svg,webp|max:2048',
+        ]);
+
+        // Delete old logo if exists
+        if ($season->logo_path && Storage::disk('public')->exists($season->logo_path)) {
+            Storage::disk('public')->delete($season->logo_path);
+        }
+
+        // Get file extension
+        $extension = $request->file('logo')->getClientOriginalExtension();
+        
+        // Rename to {id}.{ext}
+        $filename = $season->id . '.' . $extension;
+        $path = 'logos/seasons/' . $filename;
+
+        // Store file
+        $request->file('logo')->storeAs('logos/seasons', $filename, 'public');
+
+        // Update database
+        $season->update(['logo_path' => $path]);
+
+        return response()->json([
+            'logo_path' => $path,
+            'logo_url' => Storage::url($path),
+        ]);
+    }
+
+    public function deleteLogo(Season $season)
+    {
+        if ($season->logo_path && Storage::disk('public')->exists($season->logo_path)) {
+            Storage::disk('public')->delete($season->logo_path);
+        }
+
+        $season->update(['logo_path' => null]);
+
+        return response()->json(['message' => 'Logo gelöscht.']);
     }
 }
 

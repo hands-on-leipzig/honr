@@ -34,6 +34,7 @@
         class="px-4 py-3 hover:bg-gray-50 cursor-pointer"
       >
         <div class="flex items-center space-x-3">
+          <img v-if="item.iso_code" :src="`https://flagcdn.com/w40/${item.iso_code.toLowerCase()}.png`" :alt="item.name" class="w-8 h-6 object-cover border border-gray-200 rounded flex-shrink-0" />
           <div class="flex-1 min-w-0">
             <div class="flex items-center space-x-2">
               <span class="font-medium truncate">{{ item.name }}</span>

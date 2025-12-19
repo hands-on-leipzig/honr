@@ -12,6 +12,7 @@ class FirstProgram extends Model
         'sort_order',
         'valid_from',
         'valid_to',
+        'logo_path',
     ];
 
     protected $casts = [

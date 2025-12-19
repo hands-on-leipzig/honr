@@ -26,14 +26,17 @@
         class="px-4 py-3 hover:bg-gray-50 cursor-pointer"
       >
         <div class="flex items-center justify-between">
-          <div class="flex-1 min-w-0">
-            <div class="font-medium truncate">{{ item.name }}</div>
+          <div class="flex items-center space-x-3 flex-1 min-w-0">
+            <img v-if="item.logo_path" :src="getLogoUrl(item.logo_path)" :alt="item.name" class="w-10 h-10 object-contain flex-shrink-0" />
+            <div class="flex-1 min-w-0">
+              <div class="font-medium truncate">{{ item.name }}</div>
             <div class="text-xs text-gray-500">
               {{ item.start_year }}/{{ item.start_year + 1 }} · {{ item.first_program?.name }}
             </div>
             <div class="flex flex-wrap gap-1 mt-1 text-xs">
               <span class="px-2 py-0.5 bg-gray-100 rounded-full">{{ item.events_count }} Veranst.</span>
               <span class="px-2 py-0.5 bg-gray-100 rounded-full">{{ item.badges_count }} Badges</span>
+            </div>
             </div>
           </div>
         </div>
@@ -64,6 +67,24 @@
             <option value="">Bitte wählen...</option>
             <option v-for="prog in programs" :key="prog.id" :value="prog.id">{{ prog.name }}</option>
           </select>
+        </div>
+
+        <!-- Logo Upload -->
+        <div v-if="editingItem.id">
+          <label class="block text-sm font-medium text-gray-700 mb-1">Logo</label>
+          <div v-if="editingItem.logo_path" class="mb-2 flex items-center space-x-3">
+            <img :src="getLogoUrl(editingItem.logo_path)" :alt="editingItem.name" class="w-16 h-16 object-contain border border-gray-200 rounded" />
+            <button type="button" @click="deleteLogo" :disabled="deletingLogo" class="text-sm text-red-600 hover:text-red-800 disabled:opacity-50">
+              {{ deletingLogo ? 'Löschen...' : 'Logo löschen' }}
+            </button>
+          </div>
+          <div class="flex items-center space-x-2">
+            <input ref="logoInput" type="file" accept="image/png,image/jpeg,image/jpg,image/svg+xml,image/webp" @change="handleLogoSelect" class="hidden" />
+            <button type="button" @click="logoInput?.click()" :disabled="uploadingLogo" class="px-3 py-2 border border-gray-300 rounded-md text-sm hover:bg-gray-50 disabled:opacity-50">
+              {{ uploadingLogo ? 'Hochladen...' : editingItem.logo_path ? 'Logo ersetzen' : 'Logo hochladen' }}
+            </button>
+            <span v-if="logoError" class="text-xs text-red-500">{{ logoError }}</span>
+          </div>
         </div>
 
         <div v-if="error" class="text-red-600 text-sm">{{ error }}</div>
@@ -137,6 +158,72 @@ const deleting = ref(false)
 const error = ref('')
 const showDeleteConfirm = ref(false)
 
+// Logo upload
+const logoInput = ref<HTMLInputElement | null>(null)
+const uploadingLogo = ref(false)
+const deletingLogo = ref(false)
+const logoError = ref('')
+
+function getLogoUrl(logoPath: string | null) {
+  if (!logoPath) return ''
+  // Get backend URL (remove /api from baseURL)
+  const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8001/api'
+  const backendUrl = apiUrl.replace('/api', '')
+  return `${backendUrl}/storage/${logoPath}`
+}
+
+async function handleLogoSelect(event: Event) {
+  const target = event.target as HTMLInputElement
+  const file = target.files?.[0]
+  if (!file || !editingItem.value?.id) return
+
+  logoError.value = ''
+  uploadingLogo.value = true
+
+  try {
+    const formData = new FormData()
+    formData.append('logo', file)
+
+    const response = await apiClient.post(`/admin/seasons/${editingItem.value.id}/logo`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    })
+
+    await load()
+    const updatedItem = items.value.find(i => i.id === editingItem.value?.id)
+    if (updatedItem) {
+      editingItem.value = updatedItem
+    }
+
+    if (logoInput.value) {
+      logoInput.value.value = ''
+    }
+  } catch (err: any) {
+    logoError.value = err.response?.data?.message || 'Fehler beim Hochladen.'
+  } finally {
+    uploadingLogo.value = false
+  }
+}
+
+async function deleteLogo() {
+  if (!editingItem.value?.id) return
+
+  deletingLogo.value = true
+  logoError.value = ''
+
+  try {
+    await apiClient.delete(`/admin/seasons/${editingItem.value.id}/logo`)
+    
+    await load()
+    const updatedItem = items.value.find(i => i.id === editingItem.value?.id)
+    if (updatedItem) {
+      editingItem.value = updatedItem
+    }
+  } catch (err: any) {
+    logoError.value = err.response?.data?.message || 'Fehler beim Löschen.'
+  } finally {
+    deletingLogo.value = false
+  }
+}
 
 // Methods
 async function load() {

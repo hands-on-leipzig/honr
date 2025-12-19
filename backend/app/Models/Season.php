@@ -12,6 +12,7 @@ class Season extends Model
         'name',
         'start_year',
         'first_program_id',
+        'logo_path',
     ];
 
     protected $casts = [

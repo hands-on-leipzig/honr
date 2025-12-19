@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\FirstProgram;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class AdminFirstProgramController extends Controller
 {
@@ -94,6 +95,47 @@ class AdminFirstProgramController extends Controller
         $firstProgram->delete();
 
         return response()->json(['message' => 'Programm gelöscht.']);
+    }
+
+    public function uploadLogo(Request $request, FirstProgram $firstProgram)
+    {
+        $request->validate([
+            'logo' => 'required|image|mimes:png,jpg,jpeg,svg,webp|max:2048',
+        ]);
+
+        // Delete old logo if exists
+        if ($firstProgram->logo_path && Storage::disk('public')->exists($firstProgram->logo_path)) {
+            Storage::disk('public')->delete($firstProgram->logo_path);
+        }
+
+        // Get file extension
+        $extension = $request->file('logo')->getClientOriginalExtension();
+        
+        // Rename to {id}.{ext}
+        $filename = $firstProgram->id . '.' . $extension;
+        $path = 'logos/first_programs/' . $filename;
+
+        // Store file
+        $request->file('logo')->storeAs('logos/first_programs', $filename, 'public');
+
+        // Update database
+        $firstProgram->update(['logo_path' => $path]);
+
+        return response()->json([
+            'logo_path' => $path,
+            'logo_url' => Storage::url($path),
+        ]);
+    }
+
+    public function deleteLogo(FirstProgram $firstProgram)
+    {
+        if ($firstProgram->logo_path && Storage::disk('public')->exists($firstProgram->logo_path)) {
+            Storage::disk('public')->delete($firstProgram->logo_path);
+        }
+
+        $firstProgram->update(['logo_path' => null]);
+
+        return response()->json(['message' => 'Logo gelöscht.']);
     }
 }
 

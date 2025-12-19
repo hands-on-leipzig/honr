@@ -91,12 +91,16 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/first-programs/reorder', [AdminFirstProgramController::class, 'reorder']);
         Route::put('/first-programs/{firstProgram}', [AdminFirstProgramController::class, 'update']);
         Route::delete('/first-programs/{firstProgram}', [AdminFirstProgramController::class, 'destroy']);
+        Route::post('/first-programs/{firstProgram}/logo', [AdminFirstProgramController::class, 'uploadLogo']);
+        Route::delete('/first-programs/{firstProgram}/logo', [AdminFirstProgramController::class, 'deleteLogo']);
 
         // Seasons
         Route::get('/seasons', [AdminSeasonController::class, 'index']);
         Route::post('/seasons', [AdminSeasonController::class, 'store']);
         Route::put('/seasons/{season}', [AdminSeasonController::class, 'update']);
         Route::delete('/seasons/{season}', [AdminSeasonController::class, 'destroy']);
+        Route::post('/seasons/{season}/logo', [AdminSeasonController::class, 'uploadLogo']);
+        Route::delete('/seasons/{season}/logo', [AdminSeasonController::class, 'deleteLogo']);
 
         // Levels (crowdsourced)
         Route::get('/levels', [AdminLevelController::class, 'index']);
