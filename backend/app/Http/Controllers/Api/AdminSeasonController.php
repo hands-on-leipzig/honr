@@ -13,7 +13,7 @@ class AdminSeasonController extends Controller
     {
         return response()->json(
             Season::with('firstProgram:id,name')
-                ->withCount(['events', 'badges'])
+                ->withCount('events')
                 ->orderBy('start_year', 'desc')
                 ->get()
         );
