@@ -6,8 +6,8 @@
           <h2 class="text-xl font-semibold">Standorte</h2>
           <button @click="addItem" class="px-3 py-1 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700">+ Neu</button>
           <div v-if="hasPending" class="flex items-center space-x-2">
-            <BellIcon class="w-4 h-4 text-amber-500" />
-            <span class="text-sm text-amber-600 font-medium">{{ pendingCount }}</span>
+            <BellIcon :class="['w-4 h-4', STATUS_WARNING.icon]" />
+            <span :class="['text-sm font-medium', STATUS_WARNING.text]">{{ pendingCount }}</span>
             <label class="relative inline-flex items-center cursor-pointer">
               <input type="checkbox" v-model="filterPending" class="sr-only peer" />
               <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
@@ -37,7 +37,7 @@
           <div class="flex-1 min-w-0">
             <div class="flex items-center space-x-2">
               <span class="font-medium truncate">{{ item.name }}</span>
-              <BellIcon v-if="item.status === 'pending'" class="w-4 h-4 text-amber-500" />
+              <BellIcon v-if="item.status === 'pending'" :class="['w-4 h-4', STATUS_WARNING.icon]" />
               <span :class="statusBadgeClass(item.status)" class="px-2 py-0.5 text-xs rounded-full">
                 {{ statusLabel(item.status) }}
               </span>
@@ -171,6 +171,7 @@ import { ref, reactive, computed, onMounted, watch, nextTick } from 'vue'
 import { BellIcon, MapPinIcon } from '@heroicons/vue/24/solid'
 import apiClient from '@/api/client'
 import L from 'leaflet'
+import { getStatusColorClass, STATUS_WARNING } from '@/constants/uiColors'
 import 'leaflet/dist/leaflet.css'
 
 const emit = defineEmits(['close'])
@@ -322,12 +323,7 @@ const statusLabel = (status: string) => {
 }
 
 const statusBadgeClass = (status: string) => {
-  const classes: Record<string, string> = {
-    pending: 'bg-yellow-100 text-yellow-800',
-    approved: 'bg-green-100 text-green-800',
-    rejected: 'bg-red-100 text-red-800',
-  }
-  return classes[status] || 'bg-gray-100 text-gray-800'
+  return getStatusColorClass(status)
 }
 
 async function load() {

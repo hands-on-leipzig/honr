@@ -17,10 +17,7 @@
           <span
             :class="[
               'inline-flex items-center justify-center w-8 h-8 rounded-full text-sm font-bold',
-              volunteerEntry.rank === 1 ? 'bg-yellow-100 text-yellow-700' :
-              volunteerEntry.rank === 2 ? 'bg-gray-200 text-gray-700' :
-              volunteerEntry.rank === 3 ? 'bg-orange-100 text-orange-700' :
-              'bg-white border border-gray-300 text-gray-600'
+              getRankColorClass(volunteerEntry.rank)
             ]"
           >
             {{ volunteerEntry.rank }}
@@ -32,7 +29,7 @@
         </div>
         <!-- Count -->
         <div class="text-right">
-          <div class="text-lg font-bold text-blue-600">{{ volunteerEntry.engagement_count || 0 }}</div>
+          <div :class="['text-lg font-bold', PRIMARY_COLORS.link]">{{ volunteerEntry.engagement_count || 0 }}</div>
         </div>
       </button>
       <button
@@ -45,10 +42,7 @@
           <span
             :class="[
               'inline-flex items-center justify-center w-8 h-8 rounded-full text-sm font-bold',
-              regionalPartnerEntry.rank === 1 ? 'bg-yellow-100 text-yellow-700' :
-              regionalPartnerEntry.rank === 2 ? 'bg-gray-200 text-gray-700' :
-              regionalPartnerEntry.rank === 3 ? 'bg-orange-100 text-orange-700' :
-              'bg-white border border-gray-300 text-gray-600'
+              getRankColorClass(regionalPartnerEntry.rank)
             ]"
           >
             {{ regionalPartnerEntry.rank }}
@@ -60,7 +54,7 @@
         </div>
         <!-- Count -->
         <div class="text-right">
-          <div class="text-lg font-bold text-blue-600">{{ regionalPartnerEntry.season_count || 0 }}</div>
+          <div :class="['text-lg font-bold', PRIMARY_COLORS.link]">{{ regionalPartnerEntry.season_count || 0 }}</div>
         </div>
       </button>
       <button
@@ -73,10 +67,7 @@
           <span
             :class="[
               'inline-flex items-center justify-center w-8 h-8 rounded-full text-sm font-bold',
-              coachEntry.rank === 1 ? 'bg-yellow-100 text-yellow-700' :
-              coachEntry.rank === 2 ? 'bg-gray-200 text-gray-700' :
-              coachEntry.rank === 3 ? 'bg-orange-100 text-orange-700' :
-              'bg-white border border-gray-300 text-gray-600'
+              getRankColorClass(coachEntry.rank)
             ]"
           >
             {{ coachEntry.rank }}
@@ -88,7 +79,7 @@
         </div>
         <!-- Count -->
         <div class="text-right">
-          <div class="text-lg font-bold text-blue-600">{{ coachEntry.season_count || 0 }}</div>
+          <div :class="['text-lg font-bold', PRIMARY_COLORS.link]">{{ coachEntry.season_count || 0 }}</div>
         </div>
       </button>
     </div>
@@ -178,6 +169,7 @@ import apiClient from '@/api/client'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import BadgeIcon from './BadgeIcon.vue'
+import { getRankColorClass, MAP_COLORS, PRIMARY_COLORS } from '@/constants/uiColors'
 
 interface Props {
   engagements: any[]
@@ -438,8 +430,8 @@ function initMap() {
     engagementLocations.value.forEach(loc => {
       L.circleMarker([loc.latitude, loc.longitude], {
         radius: 6,
-        fillColor: '#3b82f6',
-        color: '#1d4ed8',
+        fillColor: MAP_COLORS.fill,
+        color: MAP_COLORS.border,
         weight: 1,
         opacity: 1,
         fillOpacity: 0.8
@@ -471,8 +463,8 @@ function updateMap() {
   engagementLocations.value.forEach(loc => {
     L.circleMarker([loc.latitude, loc.longitude], {
       radius: 6,
-      fillColor: '#3b82f6',
-      color: '#1d4ed8',
+      fillColor: MAP_COLORS.fill,
+      color: MAP_COLORS.border,
       weight: 1,
       opacity: 1,
       fillOpacity: 0.8

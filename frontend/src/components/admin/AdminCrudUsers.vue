@@ -26,9 +26,9 @@
             <span
               :class="[
                 'px-2 py-1 text-xs rounded-full',
-                user.status === 'active' ? 'bg-green-100 text-green-800' :
-                user.status === 'requested' ? 'bg-yellow-100 text-yellow-800' :
-                user.status === 'disabled' ? 'bg-red-100 text-red-800' :
+                user.status === 'active' ? STATUS_SUCCESS.badge :
+                user.status === 'requested' ? STATUS_WARNING.badge :
+                user.status === 'disabled' ? STATUS_ERROR.badge :
                 'bg-gray-100 text-gray-800'
               ]"
             >
@@ -163,6 +163,7 @@
 import { ref, reactive, computed, watch, onMounted } from 'vue'
 import apiClient from '@/api/client'
 import { useUserStore } from '@/stores/user'
+import { getStatusColorClass, STATUS_SUCCESS, STATUS_WARNING, STATUS_ERROR } from '@/constants/uiColors'
 
 const emit = defineEmits(['close'])
 

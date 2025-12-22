@@ -23,7 +23,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import { getBadgeBorderClass } from '@/constants/badgeColors'
+import { getBadgeBorderClass } from '@/constants/uiColors'
 
 interface Props {
   logoPath: string | null

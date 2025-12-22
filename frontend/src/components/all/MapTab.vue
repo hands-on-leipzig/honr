@@ -44,6 +44,7 @@
 import { ref, watch, onMounted, computed, nextTick } from 'vue'
 import apiClient from '@/api/client'
 import L from 'leaflet'
+import { MAP_COLORS } from '@/constants/uiColors'
 import 'leaflet/dist/leaflet.css'
 // @ts-ignore
 import 'leaflet.heat'
@@ -142,8 +143,8 @@ function updateHeatmap() {
   heatmapData.value.forEach(loc => {
     L.circleMarker([parseFloat(loc.latitude), parseFloat(loc.longitude)], {
       radius: 6,
-      fillColor: '#3b82f6',
-      color: '#1d4ed8',
+      fillColor: MAP_COLORS.fill,
+      color: MAP_COLORS.border,
       weight: 1,
       opacity: 1,
       fillOpacity: 0.8

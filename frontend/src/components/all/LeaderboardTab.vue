@@ -34,8 +34,8 @@
         :class="[
           'flex-1 py-2 text-sm font-medium rounded-md transition-colors',
           leaderboardCategory === 'volunteers'
-            ? 'bg-white shadow text-blue-600'
-            : 'text-gray-600 hover:text-gray-800'
+            ? primaryColors.activeTab
+            : `${neutralColors.text.tertiary} hover:text-gray-800`
         ]"
       >
         Volunteers
@@ -45,8 +45,8 @@
         :class="[
           'flex-1 py-2 text-sm font-medium rounded-md transition-colors',
           leaderboardCategory === 'regional-partners'
-            ? 'bg-white shadow text-blue-600'
-            : 'text-gray-600 hover:text-gray-800'
+            ? primaryColors.activeTab
+            : `${neutralColors.text.tertiary} hover:text-gray-800`
         ]"
       >
         Regional Partner
@@ -56,8 +56,8 @@
         :class="[
           'flex-1 py-2 text-sm font-medium rounded-md transition-colors',
           leaderboardCategory === 'coaches'
-            ? 'bg-white shadow text-blue-600'
-            : 'text-gray-600 hover:text-gray-800'
+            ? primaryColors.activeTab
+            : `${neutralColors.text.tertiary} hover:text-gray-800`
         ]"
       >
         Coaches
@@ -86,10 +86,7 @@
           <span
             :class="[
               'inline-flex items-center justify-center w-8 h-8 rounded-full text-sm font-bold',
-              entry.rank === 1 ? 'bg-yellow-100 text-yellow-700' :
-              entry.rank === 2 ? 'bg-gray-200 text-gray-700' :
-              entry.rank === 3 ? 'bg-orange-100 text-orange-700' :
-              'bg-white border border-gray-300 text-gray-600'
+              getRankColorClass(entry.rank)
             ]"
           >
             {{ entry.rank }}
@@ -108,7 +105,7 @@
 
         <!-- Count -->
         <div class="text-right">
-          <div class="text-lg font-bold text-blue-600">{{ entry.engagement_count || entry.season_count }}</div>
+          <div :class="['text-lg font-bold', primaryColors.link]">{{ entry.engagement_count || entry.season_count }}</div>
           <div class="text-xs text-gray-500">
             {{ leaderboardCategory === 'volunteers' ? 'Einsätze' : 'Saisons' }}
           </div>
@@ -122,6 +119,11 @@
 import { ref, watch, onMounted, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import apiClient from '@/api/client'
+import { getRankColorClass, PRIMARY_COLORS, NEUTRAL_COLORS } from '@/constants/uiColors'
+
+// Make constants available in template
+const primaryColors = PRIMARY_COLORS
+const neutralColors = NEUTRAL_COLORS
 
 const router = useRouter()
 const route = useRoute()

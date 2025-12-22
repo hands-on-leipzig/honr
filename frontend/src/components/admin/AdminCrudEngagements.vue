@@ -6,8 +6,8 @@
           <h2 class="text-xl font-semibold">Volunteer-Einsätze</h2>
           <button @click="addItem" class="px-3 py-1 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700">+ Neu</button>
           <div v-if="hasUnrecognized" class="flex items-center space-x-2">
-            <BellIcon class="w-4 h-4 text-amber-500" />
-            <span class="text-sm text-amber-600 font-medium">{{ unrecognizedCount }}</span>
+            <BellIcon :class="['w-4 h-4', STATUS_WARNING.icon]" />
+            <span :class="['text-sm font-medium', STATUS_WARNING.text]">{{ unrecognizedCount }}</span>
             <label class="relative inline-flex items-center cursor-pointer">
               <input type="checkbox" v-model="filterUnrecognized" class="sr-only peer" />
               <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
@@ -36,8 +36,8 @@
         <div class="flex-1 min-w-0">
           <div class="flex items-center space-x-2">
             <span class="font-medium">{{ item.user?.nickname || item.user?.email }}</span>
-            <BellIcon v-if="!item.is_recognized" class="w-4 h-4 text-amber-500" />
-            <span :class="item.is_recognized ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'" class="px-2 py-0.5 text-xs rounded-full">
+            <BellIcon v-if="!item.is_recognized" :class="['w-4 h-4', STATUS_WARNING.icon]" />
+            <span :class="getStatusColorClass(item.is_recognized ? 'recognized' : 'unrecognized')" class="px-2 py-0.5 text-xs rounded-full">
               {{ item.is_recognized ? 'Anerkannt' : 'Nicht anerkannt' }}
             </span>
           </div>
@@ -96,7 +96,7 @@
 
         <div v-if="editingItem.id" class="text-sm text-gray-500 space-y-1">
           <div>
-            Status: <span :class="editingItem.is_recognized ? 'text-green-600' : 'text-amber-600'">
+            Status: <span :class="editingItem.is_recognized ? STATUS_SUCCESS.text : STATUS_WARNING.text">
               {{ editingItem.is_recognized ? 'Anerkannt' : 'Nicht anerkannt' }}
             </span>
           </div>
@@ -145,6 +145,7 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { BellIcon } from '@heroicons/vue/24/solid'
 import apiClient from '@/api/client'
+import { getStatusColorClass, STATUS_WARNING, STATUS_SUCCESS } from '@/constants/uiColors'
 
 const emit = defineEmits(['close'])
 
