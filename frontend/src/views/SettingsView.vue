@@ -251,21 +251,48 @@
     </Modal>
 
     <!-- Contact Link Modal -->
-    <Modal :show="showContactLinkModal" @close="showContactLinkModal = false" title="Kontakt-Link ändern">
+    <Modal :show="showContactLinkModal" @close="closeContactLinkModal" title="Kontakt-Link ändern">
       <form @submit.prevent="updateContactLink">
         <div class="mb-4">
-          <label class="block text-sm font-medium text-gray-700 mb-1">Kontakt-Link</label>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Typ</label>
+          <div class="flex gap-4">
+            <label class="flex items-center cursor-pointer">
+              <input
+                type="radio"
+                v-model="contactLinkType"
+                value="email"
+                class="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+              />
+              <span class="ml-2 text-sm text-gray-700">E-Mail</span>
+            </label>
+            <label class="flex items-center cursor-pointer">
+              <input
+                type="radio"
+                v-model="contactLinkType"
+                value="link"
+                class="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+              />
+              <span class="ml-2 text-sm text-gray-700">Link</span>
+            </label>
+          </div>
+        </div>
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-700 mb-1">
+            {{ contactLinkType === 'email' ? 'E-Mail-Adresse' : 'Link' }}
+          </label>
           <input 
             v-model="contactLinkForm.contact_link" 
-            type="text" 
+            :type="contactLinkType === 'email' ? 'email' : 'text'"
             class="w-full px-3 py-2 border border-gray-300 rounded-md" 
-            placeholder="z.B. https://linkedin.com/in/... oder email@example.com"
+            :placeholder="contactLinkType === 'email' ? 'email@example.com' : 'z.B. https://linkedin.com/in/...'"
           />
-          <p class="mt-1 text-xs text-gray-500">Social media Link oder email-Adresse</p>
+          <p class="mt-1 text-xs text-gray-500">
+            {{ contactLinkType === 'email' ? 'E-Mail-Adresse' : 'Social media Link oder Website' }}
+          </p>
         </div>
         <div v-if="contactLinkError" class="mb-4 text-red-600 text-sm">{{ contactLinkError }}</div>
         <div class="flex gap-2">
-          <button type="button" @click="showContactLinkModal = false" class="flex-1 px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50">Abbrechen</button>
+          <button type="button" @click="closeContactLinkModal" class="flex-1 px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50">Abbrechen</button>
           <button type="submit" :disabled="contactLinkLoading" class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50">
             {{ contactLinkLoading ? 'Speichern...' : 'Speichern' }}
           </button>
@@ -332,6 +359,7 @@ const passwordForm = reactive({ current: '', new: '', confirm: '' })
 const nameForm = reactive({ nickname: '' })
 const bioForm = reactive({ short_bio: '' })
 const contactLinkForm = reactive({ contact_link: '' })
+const contactLinkType = ref<'email' | 'link'>('link')
 const regionalPartnerForm = reactive({ name: '' })
 const deleteForm = reactive({ password: '' })
 
@@ -400,7 +428,15 @@ onMounted(async () => {
   if (userStore.user) {
     nameForm.nickname = userStore.user.nickname || ''
     bioForm.short_bio = userStore.user.short_bio || ''
-    contactLinkForm.contact_link = userStore.user.contact_link || ''
+    // Strip mailto: prefix when loading for display
+    const contactLink = userStore.user.contact_link || ''
+    if (contactLink.startsWith('mailto:')) {
+      contactLinkForm.contact_link = contactLink.replace(/^mailto:/i, '')
+      contactLinkType.value = 'email'
+    } else {
+      contactLinkForm.contact_link = contactLink
+      contactLinkType.value = 'link'
+    }
     regionalPartnerForm.name = userStore.user.regional_partner_name || ''
     emailPreferences.email_notify_proposals = userStore.user.email_notify_proposals || false
     emailPreferences.email_tool_info = userStore.user.email_tool_info || false
@@ -482,13 +518,41 @@ async function updateContactLink() {
   contactLinkError.value = ''
   contactLinkLoading.value = true
   try {
-    await apiClient.put('/user', { contact_link: contactLinkForm.contact_link || null })
+    let contactLink = contactLinkForm.contact_link.trim()
+    
+    // If email type, add mailto: prefix before saving
+    if (contactLinkType.value === 'email' && contactLink) {
+      // Remove existing mailto: if present (shouldn't be, but just in case)
+      contactLink = contactLink.replace(/^mailto:/i, '')
+      contactLink = 'mailto:' + contactLink
+    }
+    
+    await apiClient.put('/user', { contact_link: contactLink || null })
     await userStore.fetchUser()
     showContactLinkModal.value = false
   } catch (err: any) {
     contactLinkError.value = err.response?.data?.message || 'Fehler beim Ändern des Kontakt-Links.'
   } finally {
     contactLinkLoading.value = false
+  }
+}
+
+function closeContactLinkModal() {
+  showContactLinkModal.value = false
+  contactLinkError.value = ''
+  // Reset form to current user values
+  if (userStore.user) {
+    const contactLink = userStore.user.contact_link || ''
+    if (contactLink.startsWith('mailto:')) {
+      contactLinkForm.contact_link = contactLink.replace(/^mailto:/i, '')
+      contactLinkType.value = 'email'
+    } else {
+      contactLinkForm.contact_link = contactLink
+      contactLinkType.value = 'link'
+    }
+  } else {
+    contactLinkForm.contact_link = ''
+    contactLinkType.value = 'link'
   }
 }
 
