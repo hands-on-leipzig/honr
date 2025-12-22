@@ -11,7 +11,9 @@ export interface User {
   short_bio: string | null
   contact_link: string | null
   regional_partner_name: string | null
-  consent_to_newsletter: boolean
+  email_notify_proposals: boolean
+  email_tool_info: boolean
+  email_volunteer_newsletter: boolean
   is_admin: boolean
 }
 

@@ -27,7 +27,9 @@ class User extends Authenticatable
         'short_bio',
         'contact_link',
         'regional_partner_name',
-        'consent_to_newsletter',
+        'email_notify_proposals',
+        'email_tool_info',
+        'email_volunteer_newsletter',
         'is_admin',
     ];
 
@@ -51,7 +53,9 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
-            'consent_to_newsletter' => 'boolean',
+            'email_notify_proposals' => 'boolean',
+            'email_tool_info' => 'boolean',
+            'email_volunteer_newsletter' => 'boolean',
             'is_admin' => 'boolean',
             'last_login_at' => 'datetime',
         ];

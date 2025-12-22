@@ -43,19 +43,10 @@
           {{ userStore.user?.contact_link ? 'Kontakt-Link ändern' : 'Kontakt-Link hinzufügen' }}
         </button>
         
-        <!-- Newsletter-Einwilligung -->
-        <div class="w-full px-4 py-3 flex items-center justify-between">
-          <span>Newsletter-Einwilligung</span>
-          <label class="relative inline-flex items-center cursor-pointer">
-            <input 
-              type="checkbox" 
-              v-model="newsletterConsent" 
-              @change="updateNewsletter"
-              class="sr-only peer"
-            />
-            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-          </label>
-        </div>
+        <!-- eMail-Einstellungen -->
+        <button @click="showEmailSettingsModal = true" class="w-full px-4 py-3 text-left hover:bg-gray-50">
+          eMail-Einstellungen
+        </button>
         
         <!-- Regionalpartner Name ändern - only show if user is regional partner -->
         <button 
@@ -218,6 +209,47 @@
       </div>
     </div>
 
+    <!-- Email Settings Modal -->
+    <Modal :show="showEmailSettingsModal" @close="closeEmailSettingsModal" title="eMail-Einstellungen">
+      <form @submit.prevent="updateEmailPreferences">
+        <div class="space-y-4 mb-4">
+          <label class="flex items-center cursor-pointer">
+            <input
+              type="checkbox"
+              v-model="emailPreferences.email_notify_proposals"
+              class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+            />
+            <span class="ml-3 text-sm text-gray-700">Benachrichtung zu angenommenen Vorschlägen</span>
+          </label>
+          
+          <label class="flex items-center cursor-pointer">
+            <input
+              type="checkbox"
+              v-model="emailPreferences.email_tool_info"
+              class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+            />
+            <span class="ml-3 text-sm text-gray-700">Informationen zum Tool</span>
+          </label>
+          
+          <label class="flex items-center cursor-pointer">
+            <input
+              type="checkbox"
+              v-model="emailPreferences.email_volunteer_newsletter"
+              class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+            />
+            <span class="ml-3 text-sm text-gray-700">Volunteer-Newsletter von Hands On Technology</span>
+          </label>
+        </div>
+        <div v-if="emailSettingsError" class="mb-4 text-red-600 text-sm">{{ emailSettingsError }}</div>
+        <div class="flex gap-2">
+          <button type="button" @click="closeEmailSettingsModal" class="flex-1 px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50">Abbrechen</button>
+          <button type="submit" :disabled="emailSettingsLoading" class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50">
+            {{ emailSettingsLoading ? 'Speichern...' : 'Speichern' }}
+          </button>
+        </div>
+      </form>
+    </Modal>
+
     <!-- Contact Link Modal -->
     <Modal :show="showContactLinkModal" @close="showContactLinkModal = false" title="Kontakt-Link ändern">
       <form @submit.prevent="updateContactLink">
@@ -283,11 +315,16 @@ const showPasswordModal = ref(false)
 const showNameModal = ref(false)
 const showBioModal = ref(false)
 const showContactLinkModal = ref(false)
+const showEmailSettingsModal = ref(false)
 const showRegionalPartnerModal = ref(false)
 const showDeleteModal = ref(false)
 
-// Newsletter
-const newsletterConsent = ref(false)
+// Email preferences
+const emailPreferences = reactive({
+  email_notify_proposals: false,
+  email_tool_info: false,
+  email_volunteer_newsletter: false,
+})
 
 // Forms
 const emailForm = reactive({ new_email: '', password: '' })
@@ -304,6 +341,7 @@ const passwordLoading = ref(false)
 const nameLoading = ref(false)
 const bioLoading = ref(false)
 const contactLinkLoading = ref(false)
+const emailSettingsLoading = ref(false)
 const regionalPartnerLoading = ref(false)
 const deleteLoading = ref(false)
 
@@ -314,6 +352,7 @@ const passwordError = ref('')
 const nameError = ref('')
 const bioError = ref('')
 const contactLinkError = ref('')
+const emailSettingsError = ref('')
 const regionalPartnerError = ref('')
 const deleteError = ref('')
 
@@ -345,14 +384,27 @@ function closePasswordModal() {
   passwordError.value = ''
 }
 
+function closeEmailSettingsModal() {
+  showEmailSettingsModal.value = false
+  emailSettingsError.value = ''
+  // Reset to current user values
+  if (userStore.user) {
+    emailPreferences.email_notify_proposals = userStore.user.email_notify_proposals || false
+    emailPreferences.email_tool_info = userStore.user.email_tool_info || false
+    emailPreferences.email_volunteer_newsletter = userStore.user.email_volunteer_newsletter || false
+  }
+}
+
 onMounted(async () => {
   await userStore.fetchUser()
   if (userStore.user) {
-    newsletterConsent.value = userStore.user.consent_to_newsletter
     nameForm.nickname = userStore.user.nickname || ''
     bioForm.short_bio = userStore.user.short_bio || ''
     contactLinkForm.contact_link = userStore.user.contact_link || ''
     regionalPartnerForm.name = userStore.user.regional_partner_name || ''
+    emailPreferences.email_notify_proposals = userStore.user.email_notify_proposals || false
+    emailPreferences.email_tool_info = userStore.user.email_tool_info || false
+    emailPreferences.email_volunteer_newsletter = userStore.user.email_volunteer_newsletter || false
   }
 })
 
@@ -440,13 +492,21 @@ async function updateContactLink() {
   }
 }
 
-async function updateNewsletter() {
+async function updateEmailPreferences() {
+  emailSettingsError.value = ''
+  emailSettingsLoading.value = true
   try {
-    await apiClient.put('/user', { consent_to_newsletter: newsletterConsent.value })
+    await apiClient.put('/user', {
+      email_notify_proposals: emailPreferences.email_notify_proposals,
+      email_tool_info: emailPreferences.email_tool_info,
+      email_volunteer_newsletter: emailPreferences.email_volunteer_newsletter,
+    })
     await userStore.fetchUser()
+    showEmailSettingsModal.value = false
   } catch (err: any) {
-    // Revert on error
-    newsletterConsent.value = !newsletterConsent.value
+    emailSettingsError.value = err.response?.data?.message || 'Fehler beim Speichern der E-Mail-Einstellungen.'
+  } finally {
+    emailSettingsLoading.value = false
   }
 }
 

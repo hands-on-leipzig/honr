@@ -55,10 +55,20 @@ class UserController extends Controller
                 },
             ],
             'regional_partner_name' => 'sometimes|nullable|string|max:255',
-            'consent_to_newsletter' => 'sometimes|boolean',
+            'email_notify_proposals' => 'sometimes|boolean',
+            'email_tool_info' => 'sometimes|boolean',
+            'email_volunteer_newsletter' => 'sometimes|boolean',
         ]);
 
-        $data = $request->only(['nickname', 'short_bio', 'contact_link', 'regional_partner_name', 'consent_to_newsletter']);
+        $data = $request->only([
+            'nickname', 
+            'short_bio', 
+            'contact_link', 
+            'regional_partner_name', 
+            'email_notify_proposals',
+            'email_tool_info',
+            'email_volunteer_newsletter',
+        ]);
         
         // Convert email addresses to mailto: links and normalize URLs
         if (isset($data['contact_link']) && $data['contact_link']) {
