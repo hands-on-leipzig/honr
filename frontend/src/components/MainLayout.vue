@@ -1,5 +1,24 @@
 <template>
   <div class="min-h-screen bg-gray-50 flex flex-col">
+    <!-- Top Header Bar -->
+    <header class="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-[999]">
+      <div class="flex items-center justify-between px-4 py-3">
+        <!-- HONR Logo -->
+        <img 
+          src="@/assets/logos/honr-logo.png" 
+          alt="HONR" 
+          class="h-8 object-contain"
+        />
+        
+        <!-- Hands On Technology Logo -->
+        <img 
+          src="@/assets/logos/hands-on-logo.png" 
+          alt="Hands On Technology" 
+          class="h-8 object-contain"
+        />
+      </div>
+    </header>
+
     <!-- Main Content Area -->
     <main class="flex-1 overflow-y-auto pb-20">
       <RouterView />
