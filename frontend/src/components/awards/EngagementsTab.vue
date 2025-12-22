@@ -21,7 +21,20 @@
 
     <!-- Read-Only Simple List -->
     <div v-else-if="props.readOnly" class="bg-white rounded-lg shadow divide-y divide-gray-200">
-      <div v-for="item in displayedEngagements" :key="item.id" class="p-4 grid grid-cols-[auto_1fr_1fr] gap-4 items-center">
+      <div v-for="item in displayedEngagements" :key="item.id" class="p-4 grid grid-cols-[auto_auto_1fr_1fr] gap-4 items-center">
+        <!-- Season Icon -->
+        <div class="flex-shrink-0">
+          <img
+            v-if="item.event?.season?.logo_path"
+            :src="getLogoUrl(item.event.season.logo_path)"
+            :alt="item.event?.season?.name"
+            class="w-8 h-8 object-contain"
+            @error="handleImageError"
+          />
+          <div v-else class="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
+            <span class="text-xs text-gray-500">?</span>
+          </div>
+        </div>
         <!-- Role Icon -->
         <div class="flex-shrink-0">
           <img

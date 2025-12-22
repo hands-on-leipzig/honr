@@ -274,7 +274,7 @@ class UserController extends Controller
 
         $engagements = Engagement::where('user_id', $user->id)
             ->with([
-                'role:id,name,first_program_id,status',
+                'role:id,name,first_program_id,status,logo_path',
                 'role.firstProgram:id,name,logo_path',
                 'event:id,date,season_id,level_id,location_id,status,first_program_id',
                 'event.firstProgram:id,name,logo_path',
