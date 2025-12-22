@@ -31,14 +31,32 @@
           <div class="flex-1 grid grid-cols-2 gap-4">
             <!-- Role Column -->
             <div>
-              <div class="text-xs text-gray-500 uppercase tracking-wide mb-1">Rolle</div>
+              <div class="text-xs text-gray-500 uppercase tracking-wide mb-1 flex items-center gap-2">
+                <img
+                  v-if="item.role?.logo_path"
+                  :src="getLogoUrl(item.role.logo_path)"
+                  :alt="item.role?.name"
+                  class="h-4 w-4 object-contain flex-shrink-0"
+                  @error="handleImageError"
+                />
+                <span>Rolle</span>
+              </div>
               <div class="font-medium">{{ item.role?.name }}</div>
               <div class="text-xs text-gray-500">{{ item.role?.first_program?.name }}</div>
               <div v-if="item.role?.status !== 'approved'" class="text-xs text-amber-600">Von dir vorgeschlagen, noch nicht bestätigt</div>
             </div>
             <!-- Event Column -->
             <div>
-              <div class="text-xs text-gray-500 uppercase tracking-wide mb-1">Veranstaltung</div>
+              <div class="text-xs text-gray-500 uppercase tracking-wide mb-1 flex items-center gap-2">
+                <img
+                  v-if="item.event?.season?.logo_path"
+                  :src="getLogoUrl(item.event.season.logo_path)"
+                  :alt="item.event?.season?.name"
+                  class="h-4 w-4 object-contain flex-shrink-0"
+                  @error="handleImageError"
+                />
+                <span>Veranstaltung</span>
+              </div>
               <div class="font-medium">{{ formatDate(item.event?.date) }}</div>
               <div class="text-xs text-gray-500">{{ item.event?.season?.name }} · {{ item.event?.level?.name }}</div>
               <div class="text-xs text-gray-500">{{ item.event?.location?.name }}<span v-if="item.event?.location?.city">, {{ item.event.location.city }}</span></div>
@@ -438,6 +456,18 @@ const formatDate = (dateStr: string) => {
   return d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' })
 }
 
+function getLogoUrl(logoPath: string | null) {
+  if (!logoPath) return ''
+  const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8001/api'
+  const backendUrl = apiUrl.replace('/api', '')
+  return `${backendUrl}/storage/${logoPath}`
+}
+
+function handleImageError(event: Event) {
+  const img = event.target as HTMLImageElement
+  img.style.display = 'none'
+}
+
 function selectRole(role: any) {
   selectedRole.value = role
   roleSearch.value = ''
@@ -636,4 +666,5 @@ onMounted(() => {
   loadOptions()
 })
 </script>
+
 

@@ -275,3 +275,4 @@ This approach is:
 - ✅ Non-intrusive (icon doesn't take much space)
 - ✅ Extensible (can add link types, multiple links later)
 
+
