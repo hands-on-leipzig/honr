@@ -5,9 +5,18 @@
 @layer base {
   body {
     @apply antialiased;
+    /* Prevent iOS Safari address bar from causing layout shifts */
+    overscroll-behavior: none;
   }
   
   #app {
     @apply min-h-screen;
+    /* Use safe area insets for iOS */
+    min-height: 100dvh; /* Dynamic viewport height accounts for browser chrome */
+  }
+  
+  /* Prevent iOS Safari from showing/hiding address bar on scroll */
+  html {
+    height: -webkit-fill-available;
   }
 }

@@ -1,7 +1,7 @@
 <template>
-  <div class="h-screen bg-gray-50 flex flex-col overflow-hidden">
+  <div class="h-screen bg-gray-50 flex flex-col overflow-hidden" style="height: 100dvh;">
     <!-- Top Header Bar -->
-    <header class="bg-white border-b border-gray-200 shadow-sm z-[999] flex-shrink-0">
+    <header class="bg-white border-b border-gray-200 shadow-sm z-[999] flex-shrink-0" style="padding-top: env(safe-area-inset-top);">
       <div class="flex items-center justify-between px-4 py-3">
         <!-- HONR Logo -->
         <img 
@@ -32,7 +32,7 @@
     </main>
 
     <!-- Bottom Navigation -->
-    <nav class="bg-white border-t border-gray-200 shadow-lg z-50 flex-shrink-0">
+    <nav class="bg-white border-t border-gray-200 shadow-lg z-50 flex-shrink-0" style="padding-bottom: env(safe-area-inset-bottom);">
       <div class="flex justify-around items-center h-16">
         <RouterLink
           v-for="item in navigationItems"

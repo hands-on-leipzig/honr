@@ -99,7 +99,9 @@ class GenerateRoleIcons extends Command
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
   <defs>
     <style>
-      .icon { fill: none; stroke: #1f2937; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+      .icon-stroke { fill: none; stroke: #1f2937; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+      .icon-fill { fill: #1f2937; stroke: none; }
+      .icon-light { fill: #1f2937; opacity: 0.3; }
     </style>
   </defs>
   {$icon}
@@ -111,26 +113,62 @@ SVG;
 
     private function getIconForRole(string $roleName): string
     {
-        // Map role names to SVG icon paths - simple, badge-friendly icons
+        // Map role names to improved, distinctive SVG icons
+        // Icons use filled shapes and clearer symbols for better recognition
         $icons = [
-            'Moderator:in' => '<g class="icon"><circle cx="32" cy="28" r="8"/><path d="M 20 44 Q 32 52 44 44"/><path d="M 24 40 Q 32 46 40 40"/></g>',
-            'Coach:in' => '<g class="icon"><circle cx="32" cy="22" r="7"/><path d="M 18 42 L 22 36 L 32 40 L 42 36 L 46 42"/><path d="M 18 42 L 32 48 L 46 42"/></g>',
-            'Coach:in Challenge' => '<g class="icon"><circle cx="32" cy="22" r="7"/><path d="M 18 42 L 22 36 L 32 40 L 42 36 L 46 42"/><path d="M 18 42 L 32 48 L 46 42"/><rect x="20" y="30" width="24" height="3" rx="1"/></g>',
-            'Coach:in Explore' => '<g class="icon"><circle cx="32" cy="22" r="7"/><path d="M 18 42 L 22 36 L 32 40 L 42 36 L 46 42"/><path d="M 18 42 L 32 48 L 46 42"/><circle cx="32" cy="32" r="5"/></g>',
-            'Juror:in' => '<g class="icon"><path d="M 18 18 L 46 18 L 42 50 L 22 50 Z"/><path d="M 26 28 L 38 28 M 26 36 L 38 36"/></g>',
-            'Juror:in Roboter-Design' => '<g class="icon"><path d="M 18 18 L 46 18 L 42 50 L 22 50 Z"/><rect x="22" y="26" width="20" height="14" rx="1"/><circle cx="28" cy="33" r="2"/><circle cx="36" cy="33" r="2"/><path d="M 24 40 L 40 40"/></g>',
-            'Juror:in Grundwerte' => '<g class="icon"><path d="M 18 18 L 46 18 L 42 50 L 22 50 Z"/><path d="M 26 28 Q 32 24 38 28"/><path d="M 26 36 Q 32 40 38 36"/><circle cx="32" cy="32" r="2" fill="#1f2937"/></g>',
-            'Juror:in Teamwork' => '<g class="icon"><path d="M 18 18 L 46 18 L 42 50 L 22 50 Z"/><circle cx="26" cy="28" r="4"/><circle cx="38" cy="28" r="4"/><path d="M 24 36 Q 32 42 40 36"/></g>',
-            'Juror:in Forschung' => '<g class="icon"><path d="M 18 18 L 46 18 L 42 50 L 22 50 Z"/><path d="M 24 26 L 40 26 M 28 30 L 36 30 M 32 26 L 32 38"/><circle cx="32" cy="32" r="3"/></g>',
-            'Juror:in "SAP Sonderpreis für beste Programmierung"' => '<g class="icon"><path d="M 18 18 L 46 18 L 42 50 L 22 50 Z"/><path d="M 24 26 L 40 26 L 38 38 L 26 38 Z"/><path d="M 28 30 L 36 30 M 30 32 L 34 32"/></g>',
-            'Schiedsrichter:in' => '<g class="icon"><circle cx="32" cy="22" r="9"/><path d="M 20 38 L 18 56 L 32 52 L 46 56 L 44 38"/><path d="M 20 38 L 32 42 L 44 38"/><path d="M 24 32 L 32 36 L 40 32"/></g>',
-            'Ober-Schiedsrichter:in' => '<g class="icon"><circle cx="32" cy="18" r="7"/><path d="M 22 34 L 18 56 L 32 52 L 46 56 L 42 34"/><path d="M 22 34 L 32 38 L 42 34"/><path d="M 26 28 L 32 30 L 38 28"/><circle cx="32" cy="18" r="2" fill="#1f2937"/></g>',
-            'Robot-Checker:in' => '<g class="icon"><rect x="16" y="18" width="32" height="22" rx="2"/><circle cx="26" cy="29" r="3"/><circle cx="38" cy="29" r="3"/><path d="M 20 36 L 44 36"/><path d="M 24 40 L 40 40"/></g>',
-            'Live Challenge Juror' => '<g class="icon"><path d="M 18 18 L 46 18 L 42 50 L 22 50 Z"/><circle cx="32" cy="32" r="7"/><path d="M 26 28 L 38 28 M 26 36 L 38 36"/></g>',
-            'Live Challenge Leiter:in' => '<g class="icon"><circle cx="32" cy="22" r="9"/><path d="M 20 38 L 18 56 L 32 52 L 46 56 L 44 38"/><path d="M 20 38 L 32 42 L 44 38"/><circle cx="32" cy="32" r="5"/></g>',
-            'Jury-Leiter:in' => '<g class="icon"><path d="M 18 18 L 46 18 L 42 50 L 22 50 Z"/><circle cx="32" cy="18" r="2" fill="#1f2937"/><path d="M 26 26 L 38 26 M 28 30 L 36 30 M 26 34 L 38 34"/></g>',
-            'Regional-Partner:in Challenge' => '<g class="icon"><path d="M 32 14 L 42 24 L 38 24 L 38 42 L 26 42 L 26 24 L 22 24 Z"/><circle cx="32" cy="50" r="4"/></g>',
-            'Gutachter:in' => '<g class="icon"><path d="M 18 18 L 46 18 L 42 50 L 22 50 Z"/><path d="M 26 26 L 38 26 M 32 26 L 32 36 M 26 34 L 38 34"/><circle cx="32" cy="30" r="2" fill="#1f2937"/></g>',
+            // Moderator:in - Microphone icon
+            'Moderator:in' => '<g class="icon-fill"><rect x="28" y="12" width="8" height="16" rx="1"/><path d="M 30 28 Q 32 30 34 28"/><path d="M 26 32 Q 26 36 32 36 Q 38 36 38 32"/></g><g class="icon-stroke"><path d="M 24 44 L 24 48 M 28 44 L 28 48 M 36 44 L 36 48 M 40 44 L 40 48"/></g>',
+            
+            // Coach:in - Person with clipboard/coaching board
+            'Coach:in' => '<g class="icon-fill"><circle cx="32" cy="20" r="6"/><path d="M 20 38 Q 20 32 32 32 Q 44 32 44 38 L 44 48 L 20 48 Z"/></g><g class="icon-stroke"><rect x="46" y="24" width="8" height="10" rx="1"/><path d="M 48 26 L 52 26"/></g>',
+            
+            // Coach:in Challenge - Coach with Challenge badge
+            'Coach:in Challenge' => '<g class="icon-fill"><circle cx="32" cy="20" r="6"/><path d="M 20 38 Q 20 32 32 32 Q 44 32 44 38 L 44 48 L 20 48 Z"/></g><g class="icon-stroke"><rect x="46" y="24" width="8" height="10" rx="1"/><path d="M 48 26 L 52 26 M 50 28 L 50 32"/></g><g class="icon-fill"><rect x="47" y="29" width="2" height="2"/></g>',
+            
+            // Coach:in Explore - Coach with Explore circle
+            'Coach:in Explore' => '<g class="icon-fill"><circle cx="32" cy="20" r="6"/><path d="M 20 38 Q 20 32 32 32 Q 44 32 44 38 L 44 48 L 20 48 Z"/></g><g class="icon-stroke"><circle cx="50" cy="29" r="5"/><circle cx="50" cy="29" r="3"/></g>',
+            
+            // Juror:in - Clipboard with checkmark
+            'Juror:in' => '<g class="icon-stroke"><path d="M 20 16 L 44 16 L 44 48 L 20 48 Z"/><path d="M 24 20 L 24 44 M 40 20 L 40 44"/></g><g class="icon-stroke" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M 28 32 L 30 34 L 36 28"/></g>',
+            
+            // Juror:in Roboter-Design - Clipboard with robot
+            'Juror:in Roboter-Design' => '<g class="icon-stroke"><path d="M 20 16 L 44 16 L 44 48 L 20 48 Z"/><path d="M 24 20 L 24 44 M 40 20 L 40 44"/></g><g class="icon-fill"><rect x="26" y="26" width="12" height="10" rx="1"/><circle cx="30" cy="31" r="1.5"/><circle cx="34" cy="31" r="1.5"/></g><g class="icon-stroke" stroke-width="1.5"><path d="M 28 35 L 36 35"/></g>',
+            
+            // Juror:in Grundwerte - Clipboard with heart/values symbol
+            'Juror:in Grundwerte' => '<g class="icon-stroke"><path d="M 20 16 L 44 16 L 44 48 L 20 48 Z"/><path d="M 24 20 L 24 44 M 40 20 L 40 44"/></g><g class="icon-fill"><path d="M 32 28 C 30 26 28 28 28 30 C 28 32 32 36 32 36 C 32 36 36 32 36 30 C 36 28 34 26 32 28 Z"/></g>',
+            
+            // Juror:in Teamwork - Clipboard with people/team symbol
+            'Juror:in Teamwork' => '<g class="icon-stroke"><path d="M 20 16 L 44 16 L 44 48 L 20 48 Z"/><path d="M 24 20 L 24 44 M 40 20 L 40 44"/></g><g class="icon-fill"><circle cx="28" cy="28" r="3"/><circle cx="36" cy="28" r="3"/></g><g class="icon-stroke" stroke-width="2"><path d="M 26 32 Q 32 36 38 32"/></g>',
+            
+            // Juror:in Forschung - Clipboard with lightbulb/research symbol
+            'Juror:in Forschung' => '<g class="icon-stroke"><path d="M 20 16 L 44 16 L 44 48 L 20 48 Z"/><path d="M 24 20 L 24 44 M 40 20 L 40 44"/></g><g class="icon-fill"><path d="M 32 24 C 28 24 26 26 26 30 C 26 32 28 34 30 34 L 34 34 C 36 34 38 32 38 30 C 38 26 36 24 32 24 Z"/><rect x="31" y="34" width="2" height="4"/></g><g class="icon-stroke" stroke-width="1.5"><path d="M 30 38 L 34 38"/></g>',
+            
+            // Juror:in SAP Sonderpreis - Clipboard with code/programming symbol
+            'Juror:in "SAP Sonderpreis für beste Programmierung"' => '<g class="icon-stroke"><path d="M 20 16 L 44 16 L 44 48 L 20 48 Z"/><path d="M 24 20 L 24 44 M 40 20 L 40 44"/></g><g class="icon-fill"><rect x="26" y="28" width="4" height="4"/><rect x="34" y="28" width="4" height="4"/><rect x="26" y="34" width="4" height="4"/><rect x="34" y="34" width="4" height="4"/></g>',
+            
+            // Schiedsrichter:in - Whistle icon
+            'Schiedsrichter:in' => '<g class="icon-fill"><rect x="24" y="20" width="14" height="20" rx="2"/></g><g class="icon-stroke"><circle cx="42" cy="30" r="4"/><path d="M 46 30 L 50 30"/></g><g class="icon-fill"><circle cx="28" cy="24" r="2"/></g>',
+            
+            // Ober-Schiedsrichter:in - Whistle with star/crown
+            'Ober-Schiedsrichter:in' => '<g class="icon-fill"><rect x="24" y="20" width="14" height="20" rx="2"/></g><g class="icon-stroke"><circle cx="42" cy="30" r="4"/><path d="M 46 30 L 50 30"/></g><g class="icon-fill"><circle cx="28" cy="24" r="2"/><path d="M 32 16 L 33 19 L 36 19 L 34 21 L 35 24 L 32 22 L 29 24 L 30 21 L 28 19 L 31 19 Z"/></g>',
+            
+            // Robot-Checker:in - Magnifying glass with robot
+            'Robot-Checker:in' => '<g class="icon-stroke"><circle cx="36" cy="28" r="8"/><path d="M 42 34 L 48 40"/></g><g class="icon-fill"><rect x="28" y="24" width="8" height="6" rx="0.5"/><circle cx="30" cy="27" r="0.8"/><circle cx="34" cy="27" r="0.8"/></g><g class="icon-stroke" stroke-width="1"><path d="M 30 29 L 34 29"/></g>',
+            
+            // Live Challenge Juror - Clipboard with live/streaming symbol
+            'Live Challenge Juror' => '<g class="icon-stroke"><path d="M 20 16 L 44 16 L 44 48 L 20 48 Z"/><path d="M 24 20 L 24 44 M 40 20 L 40 44"/></g><g class="icon-fill"><circle cx="32" cy="30" r="6"/><circle cx="32" cy="30" r="3"/></g><g class="icon-stroke"><path d="M 28 26 L 28 34 M 36 26 L 36 34"/></g>',
+            
+            // Live Challenge Leiter:in - Person with live/streaming symbol
+            'Live Challenge Leiter:in' => '<g class="icon-fill"><circle cx="32" cy="20" r="6"/><path d="M 20 38 Q 20 32 32 32 Q 44 32 44 38 L 44 48 L 20 48 Z"/></g><g class="icon-fill"><circle cx="50" cy="30" r="5"/><circle cx="50" cy="30" r="2.5" fill="#ffffff"/></g><g class="icon-stroke"><path d="M 47 28 L 47 32 M 53 28 L 53 32"/></g>',
+            
+            // Jury-Leiter:in - Clipboard with star/leader symbol
+            'Jury-Leiter:in' => '<g class="icon-stroke"><path d="M 20 16 L 44 16 L 44 48 L 20 48 Z"/><path d="M 24 20 L 24 44 M 40 20 L 40 44"/></g><g class="icon-fill"><path d="M 32 24 L 33 27 L 36 27 L 34 29 L 35 32 L 32 30 L 29 32 L 30 29 L 28 27 L 31 27 Z"/></g>',
+            
+            // Regional-Partner:in Challenge - Map pin with Challenge badge
+            'Regional-Partner:in Challenge' => '<g class="icon-fill"><path d="M 32 14 L 40 26 L 36 26 L 36 40 L 28 40 L 28 26 L 24 26 Z"/></g><g class="icon-stroke"><circle cx="32" cy="48" r="4"/><path d="M 30 46 L 34 46 M 32 44 L 32 48"/></g><g class="icon-fill"><rect x="30" y="30" width="4" height="2"/></g>',
+            
+            // Gutachter:in - Clipboard with magnifying glass
+            'Gutachter:in' => '<g class="icon-stroke"><path d="M 20 16 L 44 16 L 44 48 L 20 48 Z"/><path d="M 24 20 L 24 44 M 40 20 L 40 44"/></g><g class="icon-stroke"><circle cx="30" cy="30" r="4"/><path d="M 33 33 L 36 36"/></g>',
         ];
 
         // Try exact match first
@@ -138,18 +176,63 @@ SVG;
             return $icons[$roleName];
         }
 
-        // Try partial matches
+        // Try partial matches with improved fallbacks
         if (str_contains($roleName, 'Coach')) {
+            if (str_contains($roleName, 'Challenge')) {
+                return $icons['Coach:in Challenge'];
+            }
+            if (str_contains($roleName, 'Explore')) {
+                return $icons['Coach:in Explore'];
+            }
             return $icons['Coach:in'];
         }
         if (str_contains($roleName, 'Juror')) {
+            if (str_contains($roleName, 'Roboter-Design')) {
+                return $icons['Juror:in Roboter-Design'];
+            }
+            if (str_contains($roleName, 'Grundwerte')) {
+                return $icons['Juror:in Grundwerte'];
+            }
+            if (str_contains($roleName, 'Teamwork')) {
+                return $icons['Juror:in Teamwork'];
+            }
+            if (str_contains($roleName, 'Forschung')) {
+                return $icons['Juror:in Forschung'];
+            }
+            if (str_contains($roleName, 'SAP')) {
+                return $icons['Juror:in "SAP Sonderpreis für beste Programmierung"'];
+            }
+            if (str_contains($roleName, 'Live Challenge')) {
+                return $icons['Live Challenge Juror'];
+            }
             return $icons['Juror:in'];
         }
         if (str_contains($roleName, 'Schiedsrichter')) {
+            if (str_contains($roleName, 'Ober-')) {
+                return $icons['Ober-Schiedsrichter:in'];
+            }
             return $icons['Schiedsrichter:in'];
         }
+        if (str_contains($roleName, 'Robot-Checker')) {
+            return $icons['Robot-Checker:in'];
+        }
+        if (str_contains($roleName, 'Live Challenge Leiter')) {
+            return $icons['Live Challenge Leiter:in'];
+        }
+        if (str_contains($roleName, 'Jury-Leiter')) {
+            return $icons['Jury-Leiter:in'];
+        }
+        if (str_contains($roleName, 'Regional-Partner')) {
+            return $icons['Regional-Partner:in Challenge'];
+        }
+        if (str_contains($roleName, 'Gutachter')) {
+            return $icons['Gutachter:in'];
+        }
+        if (str_contains($roleName, 'Moderator')) {
+            return $icons['Moderator:in'];
+        }
 
-        // Default icon
-        return '<g class="icon"><circle cx="32" cy="32" r="20"/><path d="M 32 20 L 32 44 M 20 32 L 44 32"/></g>';
+        // Default icon - improved generic badge
+        return '<g class="icon-fill"><circle cx="32" cy="32" r="16"/></g><g class="icon-stroke" stroke="#ffffff" stroke-width="2"><path d="M 32 24 L 32 40 M 24 32 L 40 32"/></g>';
     }
 }
