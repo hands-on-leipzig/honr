@@ -3,7 +3,6 @@
     <!-- Short Bio -->
     <div v-if="displayUser?.short_bio" class="bg-white rounded-lg shadow p-4 mb-4">
       <p class="text-gray-700">{{ displayUser.short_bio }}</p>
-      <p v-if="isCurrentUser" class="text-xs text-gray-500 mt-2">Zum Ändern geh in die Einstellungen</p>
     </div>
 
     <!-- Leaderboard Ranks -->

@@ -58,7 +58,7 @@
     <!-- Engagements Tab -->
     <EngagementsTab
       v-if="activeTab === 'engagements'"
-      :read-only="true"
+      :userId="userId"
       :engagements="engagements"
     />
   </div>

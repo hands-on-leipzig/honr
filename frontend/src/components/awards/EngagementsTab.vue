@@ -2,7 +2,7 @@
   <div>
     <div class="flex justify-between items-center mb-4">
       <h2 class="text-xl font-bold">Volunteer-Einsätze</h2>
-      <button v-if="!props.readOnly" @click="showAddModal = true" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium">
+      <button v-if="!isReadOnly" @click="showAddModal = true" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium">
         + Hinzufügen
       </button>
     </div>
@@ -15,12 +15,12 @@
     <!-- Empty State -->
     <div v-else-if="displayedEngagements.length === 0" class="bg-white rounded-lg shadow p-6">
       <p class="text-gray-600 text-center py-8">
-        {{ props.readOnly ? 'Noch keine Einsätze vorhanden.' : 'Du hast noch keine Einsätze hinzugefügt.' }}
+        {{ isReadOnly ? 'Noch keine Einsätze vorhanden.' : 'Du hast noch keine Einsätze hinzugefügt.' }}
       </p>
     </div>
 
     <!-- Read-Only Simple List -->
-    <div v-else-if="props.readOnly" class="bg-white rounded-lg shadow divide-y divide-gray-200">
+    <div v-else-if="isReadOnly" class="bg-white rounded-lg shadow divide-y divide-gray-200">
       <div v-for="item in displayedEngagements" :key="item.id" class="p-4 grid grid-cols-[auto_auto_1fr_1fr] gap-4 items-center">
         <!-- Season Icon -->
         <div class="flex-shrink-0">
@@ -115,7 +115,7 @@
           </div>
           <!-- Delete Button -->
           <button
-            v-if="!props.readOnly"
+            v-if="!isReadOnly"
             @click="deleteEngagement(item.id)"
             :disabled="deletingId === item.id"
             class="ml-4 text-red-500 hover:text-red-700 disabled:opacity-50"
@@ -129,7 +129,7 @@
     </div>
 
     <!-- Add Engagement Modal -->
-    <div v-if="!props.readOnly && showAddModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div v-if="!isReadOnly && showAddModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div class="bg-white rounded-lg w-full max-w-md max-h-[90vh] overflow-y-auto">
         <div class="p-4 border-b border-gray-200 flex items-center justify-between sticky top-0 bg-white">
           <h3 class="text-lg font-semibold">Neuer Volunteer-Einsatz</h3>
@@ -245,7 +245,7 @@
     </div>
 
     <!-- Propose Role Modal -->
-    <div v-if="!props.readOnly && showProposeRoleModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div v-if="!isReadOnly && showProposeRoleModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div class="bg-white rounded-lg w-full max-w-md">
         <div class="p-4 border-b border-gray-200 flex items-center justify-between">
           <h3 class="text-lg font-semibold">Fehlende Rolle vorschlagen</h3>
@@ -275,7 +275,7 @@
     </div>
 
     <!-- Propose Event Modal -->
-    <div v-if="!props.readOnly && showProposeEventModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div v-if="!isReadOnly && showProposeEventModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div class="bg-white rounded-lg w-full max-w-md">
         <div class="p-4 border-b border-gray-200 flex items-center justify-between">
           <h3 class="text-lg font-semibold">Fehlende Veranstaltung vorschlagen</h3>
@@ -358,7 +358,7 @@
     </div>
 
     <!-- Propose Location Modal -->
-    <div v-if="!props.readOnly && showProposeLocationModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div v-if="!isReadOnly && showProposeLocationModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div class="bg-white rounded-lg w-full max-w-md">
         <div class="p-4 border-b border-gray-200 flex items-center justify-between">
           <h3 class="text-lg font-semibold">Fehlenden Standort vorschlagen</h3>
@@ -416,14 +416,31 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { CheckCircleIcon, ClockIcon } from '@heroicons/vue/24/solid'
+import { useUserStore } from '@/stores/user'
 import apiClient from '@/api/client'
 
 const router = useRouter()
+const userStore = useUserStore()
 
 const props = defineProps<{
   readOnly?: boolean
   engagements?: any[]
+  userId?: number
 }>()
+
+// Determine if this is read-only based on userId comparison
+const isReadOnly = computed(() => {
+  // If readOnly prop is explicitly set, use it
+  if (props.readOnly !== undefined) {
+    return props.readOnly
+  }
+  // Otherwise, check if viewing another user
+  if (props.userId && userStore.user) {
+    return props.userId !== userStore.user.id
+  }
+  // If no userId prop, assume it's current user (editable)
+  return false
+})
 
 const emit = defineEmits<{
   (e: 'engagements-updated'): void
@@ -603,14 +620,14 @@ function closeModal() {
 
 // Computed: filter to only recognized engagements in read-only mode
 const displayedEngagements = computed(() => {
-  if (props.readOnly) {
+  if (isReadOnly.value) {
     return engagements.value.filter((e: any) => e.is_recognized)
   }
   return engagements.value
 })
 
 async function loadEngagements() {
-  if (props.readOnly) return // Don't load in read-only mode
+  if (isReadOnly.value) return // Don't load in read-only mode
   loading.value = true
   try {
     const response = await apiClient.get('/engagements')
@@ -754,7 +771,7 @@ async function proposeLocation() {
 }
 
 onMounted(() => {
-  if (!props.readOnly) {
+  if (!isReadOnly.value) {
     loadEngagements()
     loadOptions()
   } else {
