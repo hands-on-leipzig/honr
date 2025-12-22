@@ -50,7 +50,11 @@
 
     <!-- Leaderboard Ranks -->
     <div v-if="hasAnyRank" class="bg-white rounded-lg shadow divide-y divide-gray-100">
-      <div v-if="volunteerEntry" class="flex items-center p-4">
+      <button
+        v-if="volunteerEntry"
+        @click="navigateToLeaderboard('volunteers')"
+        class="w-full flex items-center p-4 hover:bg-gray-50 transition-colors text-left"
+      >
         <!-- Rank -->
         <div class="w-10 text-center">
           <span
@@ -66,7 +70,7 @@
           </span>
         </div>
         <!-- Label -->
-        <div class="flex-1 ml-3">
+        <div class="flex-1 ml-3 text-left">
           <span class="font-medium text-gray-900">Volunteer</span>
         </div>
         <!-- Count -->
@@ -74,8 +78,12 @@
           <div class="text-lg font-bold text-blue-600">{{ volunteerEntry.engagement_count || 0 }}</div>
           <div class="text-xs text-gray-500">Einsätze</div>
         </div>
-      </div>
-      <div v-if="regionalPartnerEntry" class="flex items-center p-4">
+      </button>
+      <button
+        v-if="regionalPartnerEntry"
+        @click="navigateToLeaderboard('regional-partners')"
+        class="w-full flex items-center p-4 hover:bg-gray-50 transition-colors text-left"
+      >
         <!-- Rank -->
         <div class="w-10 text-center">
           <span
@@ -91,7 +99,7 @@
           </span>
         </div>
         <!-- Label -->
-        <div class="flex-1 ml-3">
+        <div class="flex-1 ml-3 text-left">
           <span class="font-medium text-gray-900">Regional-Partner</span>
         </div>
         <!-- Count -->
@@ -99,8 +107,12 @@
           <div class="text-lg font-bold text-blue-600">{{ regionalPartnerEntry.season_count || 0 }}</div>
           <div class="text-xs text-gray-500">Einsätze</div>
         </div>
-      </div>
-      <div v-if="coachEntry" class="flex items-center p-4">
+      </button>
+      <button
+        v-if="coachEntry"
+        @click="navigateToLeaderboard('coaches')"
+        class="w-full flex items-center p-4 hover:bg-gray-50 transition-colors text-left"
+      >
         <!-- Rank -->
         <div class="w-10 text-center">
           <span
@@ -116,7 +128,7 @@
           </span>
         </div>
         <!-- Label -->
-        <div class="flex-1 ml-3">
+        <div class="flex-1 ml-3 text-left">
           <span class="font-medium text-gray-900">Coach</span>
         </div>
         <!-- Count -->
@@ -124,7 +136,7 @@
           <div class="text-lg font-bold text-blue-600">{{ coachEntry.season_count || 0 }}</div>
           <div class="text-xs text-gray-500">Einsätze</div>
         </div>
-      </div>
+      </button>
     </div>
 
     <!-- Badges -->
@@ -433,6 +445,16 @@ function filterByCountry(countryId: number, countryName: string, isoCode: string
       filter_label: countryName,
       filter_icon_type: 'flag',
       filter_icon_code: isoCode || ''
+    }
+  })
+}
+
+function navigateToLeaderboard(category: 'volunteers' | 'regional-partners' | 'coaches') {
+  router.push({
+    path: '/all',
+    query: {
+      tab: 'leaderboard',
+      category: category
     }
   })
 }

@@ -120,12 +120,15 @@
 
 <script setup lang="ts">
 import { ref, watch, onMounted, computed } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import apiClient from '@/api/client'
 
 const router = useRouter()
+const route = useRoute()
 
-const leaderboardCategory = ref<'volunteers' | 'regional-partners' | 'coaches'>('volunteers')
+const leaderboardCategory = ref<'volunteers' | 'regional-partners' | 'coaches'>(
+  (route.query.category as 'volunteers' | 'regional-partners' | 'coaches') || 'volunteers'
+)
 const leaderboard = ref<any[]>([])
 const loading = ref(false)
 const filterOptions = ref<{ programs: any[], seasons: any[], levels: any[] }>({ programs: [], seasons: [], levels: [] })
@@ -178,6 +181,13 @@ watch(leaderboardCategory, () => {
 watch(filters, () => {
   loadLeaderboard()
 }, { deep: true })
+
+// Watch for route query changes to update category
+watch(() => route.query.category, (newCategory) => {
+  if (newCategory && ['volunteers', 'regional-partners', 'coaches'].includes(newCategory as string)) {
+    leaderboardCategory.value = newCategory as 'volunteers' | 'regional-partners' | 'coaches'
+  }
+})
 
 onMounted(async () => {
   await loadFilterOptions()
