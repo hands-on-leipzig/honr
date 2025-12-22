@@ -23,6 +23,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import { getBadgeBorderClass } from '@/constants/badgeColors'
 
 interface Props {
   logoPath: string | null
@@ -40,18 +41,7 @@ const logoUrl = computed(() => {
 })
 
 const borderClass = computed(() => {
-  switch (props.level) {
-    case 1:
-      return 'border-transparent' // No border for level 1
-    case 2:
-      return 'border-[#CD7F32]' // Bronze
-    case 3:
-      return 'border-[#C0C0C0]' // Silver
-    case 4:
-      return 'border-[#FFD700]' // Gold
-    default:
-      return 'border-transparent'
-  }
+  return getBadgeBorderClass(props.level)
 })
 
 function handleImageError(event: Event) {

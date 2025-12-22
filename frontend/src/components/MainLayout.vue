@@ -25,7 +25,7 @@
 <script setup lang="ts">
 import { RouterLink, RouterView, useRoute } from 'vue-router'
 import { TrophyIcon, GlobeAltIcon, UserGroupIcon, Cog6ToothIcon } from '@heroicons/vue/24/outline'
-import { TrophyIcon as TrophyIconSolid, GlobeAltIcon as GlobeAltIconSolid, UserGroupIcon as UserGroupIconSolid, Cog6ToothIcon as Cog6ToothIconSolid } from '@heroicons/vue/24/solid'
+import { GlobeAltIcon as GlobeAltIconSolid, UserGroupIcon as UserGroupIconSolid, Cog6ToothIcon as Cog6ToothIconSolid } from '@heroicons/vue/24/solid'
 
 const route = useRoute()
 
@@ -34,7 +34,7 @@ const navigationItems = [
     name: 'awards',
     path: '/awards',
     iconOutline: TrophyIcon,
-    iconSolid: TrophyIconSolid,
+    iconSolid: TrophyIcon,
   },
   {
     name: 'all',
