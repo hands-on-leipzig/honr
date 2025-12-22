@@ -11,11 +11,18 @@
         />
         
         <!-- Hands On Technology Logo -->
-        <img 
-          src="@/assets/logos/hands-on-logo.png" 
-          alt="Hands On Technology" 
-          class="h-8 object-contain"
-        />
+        <a 
+          href="https://www.hands-on-technology.org/de/engagement" 
+          target="_blank" 
+          rel="noopener noreferrer"
+          class="inline-block hover:opacity-80 transition-opacity"
+        >
+          <img 
+            src="@/assets/logos/hands-on-logo.png" 
+            alt="Hands On Technology" 
+            class="h-8 object-contain"
+          />
+        </a>
       </div>
     </header>
 
