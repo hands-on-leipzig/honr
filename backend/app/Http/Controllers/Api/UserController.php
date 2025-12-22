@@ -239,6 +239,14 @@ class UserController extends Controller
             });
         }
 
+        // Filter by event_id - users with recognized engagements at this event
+        if ($request->has('event_id') && $request->event_id) {
+            $query->whereHas('engagements', function ($q) use ($request) {
+                $q->where('event_id', $request->event_id)
+                  ->where('is_recognized', true);
+            });
+        }
+
         $users = $query->orderBy('nickname')
             ->get(['id', 'nickname', 'short_bio', 'status']);
 

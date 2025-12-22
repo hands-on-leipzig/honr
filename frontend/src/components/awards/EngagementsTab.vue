@@ -57,9 +57,14 @@
                 />
                 <span>Veranstaltung</span>
               </div>
-              <div class="font-medium">{{ formatDate(item.event?.date) }}</div>
-              <div class="text-xs text-gray-500">{{ item.event?.season?.name }} · {{ item.event?.level?.name }}</div>
-              <div class="text-xs text-gray-500">{{ item.event?.location?.name }}<span v-if="item.event?.location?.city">, {{ item.event.location.city }}</span></div>
+              <button
+                @click="filterByEvent(item.event)"
+                class="text-left hover:opacity-80 transition-opacity w-full"
+              >
+                <div class="font-medium">{{ formatDate(item.event?.date) }}</div>
+                <div class="text-xs text-gray-500">{{ item.event?.season?.name }} · {{ item.event?.level?.name }}</div>
+                <div class="text-xs text-gray-500">{{ item.event?.location?.name }}<span v-if="item.event?.location?.city">, {{ item.event.location.city }}</span></div>
+              </button>
               <div v-if="item.event?.status !== 'approved'" class="text-xs text-amber-600">Von dir vorgeschlagen, noch nicht bestätigt</div>
             </div>
           </div>
@@ -363,8 +368,11 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { CheckCircleIcon, ClockIcon } from '@heroicons/vue/24/solid'
 import apiClient from '@/api/client'
+
+const router = useRouter()
 
 const emit = defineEmits<{
   (e: 'engagements-updated'): void
@@ -466,6 +474,23 @@ function getLogoUrl(logoPath: string | null) {
 function handleImageError(event: Event) {
   const img = event.target as HTMLImageElement
   img.style.display = 'none'
+}
+
+function filterByEvent(event: any) {
+  if (!event) return
+  
+  const filterLabel = `${formatDate(event.date)} · ${event.location?.name || ''}`.replace(/^ · | · $/g, '').trim()
+  
+  router.push({
+    path: '/people',
+    query: {
+      filter_type: 'event',
+      filter_id: event.id,
+      filter_label: filterLabel,
+      filter_icon_type: 'logo',
+      filter_icon_path: event.season?.logo_path || '',
+    }
+  })
 }
 
 function selectRole(role: any) {

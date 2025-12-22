@@ -85,14 +85,14 @@ function getLogoUrl(logoPath: string | null) {
   return `${backendUrl}/storage/${logoPath}`
 }
 
-function getFilterIconUrl() {
+function getFilterIconUrl(): string | undefined {
   if (filterIconType.value === 'logo' && filterIconPath.value) {
     return getLogoUrl(filterIconPath.value)
   }
   if (filterIconType.value === 'flag' && filterIconCode.value) {
     return `https://flagcdn.com/w80/${filterIconCode.value.toLowerCase()}.png`
   }
-  return null
+  return undefined
 }
 
 async function loadUsers() {
@@ -111,6 +111,8 @@ async function loadUsers() {
         params.append('season_id', filterId.value.toString())
       } else if (filterType.value === 'country') {
         params.append('country_id', filterId.value.toString())
+      } else if (filterType.value === 'event') {
+        params.append('event_id', filterId.value.toString())
       }
     }
     

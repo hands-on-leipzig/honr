@@ -330,7 +330,7 @@ function filterByRole(roleId: number, roleName: string, logoPath: string | null)
     query: {
       filter_type: 'role',
       filter_id: roleId,
-      filter_label: `Rolle ${roleName}`,
+      filter_label: roleName,
       filter_icon_type: 'logo',
       filter_icon_path: logoPath || ''
     }
@@ -343,7 +343,7 @@ function filterByProgram(programId: number, programName: string, logoPath: strin
     query: {
       filter_type: 'program',
       filter_id: programId,
-      filter_label: `Programm ${programName}`,
+      filter_label: programName,
       filter_icon_type: 'logo',
       filter_icon_path: logoPath || ''
     }
@@ -356,7 +356,7 @@ function filterBySeason(seasonId: number, seasonName: string, logoPath: string |
     query: {
       filter_type: 'season',
       filter_id: seasonId,
-      filter_label: `Saison ${seasonName}`,
+      filter_label: seasonName,
       filter_icon_type: 'logo',
       filter_icon_path: logoPath || ''
     }
@@ -369,7 +369,7 @@ function filterByCountry(countryId: number, countryName: string, isoCode: string
     query: {
       filter_type: 'country',
       filter_id: countryId,
-      filter_label: `Land ${countryName}`,
+      filter_label: countryName,
       filter_icon_type: 'flag',
       filter_icon_code: isoCode || ''
     }
