@@ -31,6 +31,7 @@ class User extends Authenticatable
         'email_tool_info',
         'email_volunteer_newsletter',
         'is_admin',
+        'last_login_at',
     ];
 
     /**
