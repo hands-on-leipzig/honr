@@ -6,7 +6,7 @@
     </div>
 
     <!-- Leaderboard Ranks -->
-    <div v-if="hasAnyRank" class="bg-white rounded-lg shadow divide-y divide-gray-100">
+    <div v-if="hasAnyRank" class="bg-white rounded-lg shadow divide-y divide-gray-100 mb-4">
       <button
         v-if="volunteerEntry"
         @click="navigateToLeaderboard('volunteers')"
@@ -33,7 +33,6 @@
         <!-- Count -->
         <div class="text-right">
           <div class="text-lg font-bold text-blue-600">{{ volunteerEntry.engagement_count || 0 }}</div>
-          <div class="text-xs text-gray-500">Einsätze</div>
         </div>
       </button>
       <button
@@ -62,7 +61,6 @@
         <!-- Count -->
         <div class="text-right">
           <div class="text-lg font-bold text-blue-600">{{ regionalPartnerEntry.season_count || 0 }}</div>
-          <div class="text-xs text-gray-500">Einsätze</div>
         </div>
       </button>
       <button
@@ -91,7 +89,6 @@
         <!-- Count -->
         <div class="text-right">
           <div class="text-lg font-bold text-blue-600">{{ coachEntry.season_count || 0 }}</div>
-          <div class="text-xs text-gray-500">Einsätze</div>
         </div>
       </button>
     </div>
@@ -255,7 +252,9 @@ const uniqueCountries = computed(() => {
 })
 
 const programsWithLogos = computed(() => {
-  return uniquePrograms.value.filter(p => p.logo_path)
+  return uniquePrograms.value
+    .filter(p => p.logo_path)
+    .sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
 })
 
 const seasonsWithLogos = computed(() => {
