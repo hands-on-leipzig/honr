@@ -2,7 +2,7 @@
   <div>
     <div class="flex justify-between items-center mb-4">
       <h2 class="text-xl font-bold">Volunteer-Einsätze</h2>
-      <button @click="showAddModal = true" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium">
+      <button v-if="!props.readOnly" @click="showAddModal = true" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium">
         + Hinzufügen
       </button>
     </div>
@@ -13,15 +13,47 @@
     </div>
 
     <!-- Empty State -->
-    <div v-else-if="engagements.length === 0" class="bg-white rounded-lg shadow p-6">
+    <div v-else-if="displayedEngagements.length === 0" class="bg-white rounded-lg shadow p-6">
       <p class="text-gray-600 text-center py-8">
-        Du hast noch keine Einsätze hinzugefügt.
+        {{ props.readOnly ? 'Noch keine Einsätze vorhanden.' : 'Du hast noch keine Einsätze hinzugefügt.' }}
       </p>
     </div>
 
-    <!-- Engagements List -->
+    <!-- Read-Only Simple List -->
+    <div v-else-if="props.readOnly" class="bg-white rounded-lg shadow divide-y divide-gray-200">
+      <div v-for="item in displayedEngagements" :key="item.id" class="p-4 grid grid-cols-[auto_1fr_1fr] gap-4 items-center">
+        <!-- Role Icon -->
+        <div class="flex-shrink-0">
+          <img
+            v-if="item.role?.logo_path"
+            :src="getLogoUrl(item.role.logo_path)"
+            :alt="item.role?.name"
+            class="w-8 h-8 object-contain"
+            @error="handleImageError"
+          />
+          <div v-else class="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
+            <span class="text-xs text-gray-500">?</span>
+          </div>
+        </div>
+        <!-- Date -->
+        <div>
+          <button
+            @click="filterByEvent(item.event)"
+            class="text-left hover:opacity-80 transition-opacity"
+          >
+            <div class="font-medium text-gray-900">{{ formatDate(item.event?.date) }}</div>
+          </button>
+        </div>
+        <!-- Location -->
+        <div class="text-right">
+          <div class="text-sm text-gray-700">{{ item.event?.location?.name }}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Editable Engagements List -->
     <div v-else class="bg-white rounded-lg shadow divide-y divide-gray-200">
-      <div v-for="item in engagements" :key="item.id" class="p-4">
+      <div v-for="item in displayedEngagements" :key="item.id" class="p-4">
         <div class="flex items-start justify-between">
           <!-- Status Icon -->
           <div class="mr-3 pt-1">
@@ -70,6 +102,7 @@
           </div>
           <!-- Delete Button -->
           <button
+            v-if="!props.readOnly"
             @click="deleteEngagement(item.id)"
             :disabled="deletingId === item.id"
             class="ml-4 text-red-500 hover:text-red-700 disabled:opacity-50"
@@ -83,7 +116,7 @@
     </div>
 
     <!-- Add Engagement Modal -->
-    <div v-if="showAddModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div v-if="!props.readOnly && showAddModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div class="bg-white rounded-lg w-full max-w-md max-h-[90vh] overflow-y-auto">
         <div class="p-4 border-b border-gray-200 flex items-center justify-between sticky top-0 bg-white">
           <h3 class="text-lg font-semibold">Neuer Volunteer-Einsatz</h3>
@@ -199,7 +232,7 @@
     </div>
 
     <!-- Propose Role Modal -->
-    <div v-if="showProposeRoleModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div v-if="!props.readOnly && showProposeRoleModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div class="bg-white rounded-lg w-full max-w-md">
         <div class="p-4 border-b border-gray-200 flex items-center justify-between">
           <h3 class="text-lg font-semibold">Fehlende Rolle vorschlagen</h3>
@@ -229,7 +262,7 @@
     </div>
 
     <!-- Propose Event Modal -->
-    <div v-if="showProposeEventModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div v-if="!props.readOnly && showProposeEventModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div class="bg-white rounded-lg w-full max-w-md">
         <div class="p-4 border-b border-gray-200 flex items-center justify-between">
           <h3 class="text-lg font-semibold">Fehlende Veranstaltung vorschlagen</h3>
@@ -312,7 +345,7 @@
     </div>
 
     <!-- Propose Location Modal -->
-    <div v-if="showProposeLocationModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div v-if="!props.readOnly && showProposeLocationModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div class="bg-white rounded-lg w-full max-w-md">
         <div class="p-4 border-b border-gray-200 flex items-center justify-between">
           <h3 class="text-lg font-semibold">Fehlenden Standort vorschlagen</h3>
@@ -367,20 +400,25 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { CheckCircleIcon, ClockIcon } from '@heroicons/vue/24/solid'
 import apiClient from '@/api/client'
 
 const router = useRouter()
 
+const props = defineProps<{
+  readOnly?: boolean
+  engagements?: any[]
+}>()
+
 const emit = defineEmits<{
   (e: 'engagements-updated'): void
 }>()
 
 // State
-const engagements = ref<any[]>([])
-const loading = ref(true)
+const engagements = ref<any[]>(props.engagements || [])
+const loading = ref(!props.readOnly)
 const showAddModal = ref(false)
 const roles = ref<any[]>([])
 const events = ref<any[]>([])
@@ -550,7 +588,16 @@ function closeModal() {
   error.value = ''
 }
 
+// Computed: filter to only recognized engagements in read-only mode
+const displayedEngagements = computed(() => {
+  if (props.readOnly) {
+    return engagements.value.filter((e: any) => e.is_recognized)
+  }
+  return engagements.value
+})
+
 async function loadEngagements() {
+  if (props.readOnly) return // Don't load in read-only mode
   loading.value = true
   try {
     const response = await apiClient.get('/engagements')
@@ -561,6 +608,13 @@ async function loadEngagements() {
     loading.value = false
   }
 }
+
+// Watch for prop changes
+watch(() => props.engagements, (newEngagements) => {
+  if (newEngagements) {
+    engagements.value = newEngagements
+  }
+}, { immediate: true })
 
 async function loadOptions() {
   try {
@@ -687,8 +741,12 @@ async function proposeLocation() {
 }
 
 onMounted(() => {
-  loadEngagements()
-  loadOptions()
+  if (!props.readOnly) {
+    loadEngagements()
+    loadOptions()
+  } else {
+    loading.value = false
+  }
 })
 </script>
 

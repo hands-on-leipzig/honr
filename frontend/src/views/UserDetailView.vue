@@ -1,13 +1,26 @@
 <template>
   <div class="p-4 pb-32">
-    <!-- Summary Tab (Reusing AwardsSummaryTab) -->
+    <!-- Navigation Tabs -->
+    <TabNavigation
+      :tabs="tabs"
+      v-model="activeTab"
+    />
+
+    <!-- Summary Tab -->
     <AwardsSummaryTab
-      v-if="user && engagements.length >= 0"
+      v-if="activeTab === 'summary' && user && engagements.length >= 0"
       :engagements="engagements"
       :leaderboards="leaderboards"
       :userId="userId"
       :user="user"
       @back="goBack"
+    />
+
+    <!-- Engagements Tab -->
+    <EngagementsTab
+      v-if="activeTab === 'engagements'"
+      :read-only="true"
+      :engagements="engagements"
     />
   </div>
 </template>
@@ -16,18 +29,26 @@
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import apiClient from '@/api/client'
+import TabNavigation from '@/components/common/TabNavigation.vue'
 import AwardsSummaryTab from '@/components/awards/AwardsSummaryTab.vue'
+import EngagementsTab from '@/components/awards/EngagementsTab.vue'
 
 const route = useRoute()
 const router = useRouter()
 const userId = parseInt(route.params.id as string)
 const user = ref<any>(null)
+const activeTab = ref<'summary' | 'engagements'>('summary')
 const engagements = ref<any[]>([])
 const leaderboards = ref({
   volunteers: [] as any[],
   regionalPartners: [] as any[],
   coaches: [] as any[]
 })
+
+const tabs = [
+  { id: 'summary', label: 'Zusammenfassung' },
+  { id: 'engagements', label: 'Einsätze' }
+]
 
 async function loadUser() {
   try {
