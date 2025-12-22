@@ -49,16 +49,80 @@
     </div>
 
     <!-- Leaderboard Ranks -->
-    <div v-if="hasAnyRank" class="bg-white rounded-lg shadow p-4 mb-4">
-      <div class="space-y-2">
-        <div v-if="volunteerRank" class="text-sm">
-          <span class="font-medium">Volunteer Rang {{ volunteerRank }}</span>
+    <div v-if="hasAnyRank" class="bg-white rounded-lg shadow divide-y divide-gray-100">
+      <div v-if="volunteerEntry" class="flex items-center p-4">
+        <!-- Rank -->
+        <div class="w-10 text-center">
+          <span
+            :class="[
+              'inline-flex items-center justify-center w-8 h-8 rounded-full text-sm font-bold',
+              volunteerEntry.rank === 1 ? 'bg-yellow-100 text-yellow-700' :
+              volunteerEntry.rank === 2 ? 'bg-gray-200 text-gray-700' :
+              volunteerEntry.rank === 3 ? 'bg-orange-100 text-orange-700' :
+              'bg-gray-100 text-gray-600'
+            ]"
+          >
+            {{ volunteerEntry.rank }}
+          </span>
         </div>
-        <div v-if="regionalPartnerRank" class="text-sm">
-          <span class="font-medium">Regional-Partner Rang {{ regionalPartnerRank }}</span>
+        <!-- Label -->
+        <div class="flex-1 ml-3">
+          <span class="font-medium text-gray-900">Volunteer</span>
         </div>
-        <div v-if="coachRank" class="text-sm">
-          <span class="font-medium">Coach Rang {{ coachRank }}</span>
+        <!-- Count -->
+        <div class="text-right">
+          <div class="text-lg font-bold text-blue-600">{{ volunteerEntry.engagement_count || 0 }}</div>
+          <div class="text-xs text-gray-500">Einsätze</div>
+        </div>
+      </div>
+      <div v-if="regionalPartnerEntry" class="flex items-center p-4">
+        <!-- Rank -->
+        <div class="w-10 text-center">
+          <span
+            :class="[
+              'inline-flex items-center justify-center w-8 h-8 rounded-full text-sm font-bold',
+              regionalPartnerEntry.rank === 1 ? 'bg-yellow-100 text-yellow-700' :
+              regionalPartnerEntry.rank === 2 ? 'bg-gray-200 text-gray-700' :
+              regionalPartnerEntry.rank === 3 ? 'bg-orange-100 text-orange-700' :
+              'bg-gray-100 text-gray-600'
+            ]"
+          >
+            {{ regionalPartnerEntry.rank }}
+          </span>
+        </div>
+        <!-- Label -->
+        <div class="flex-1 ml-3">
+          <span class="font-medium text-gray-900">Regional-Partner</span>
+        </div>
+        <!-- Count -->
+        <div class="text-right">
+          <div class="text-lg font-bold text-blue-600">{{ regionalPartnerEntry.season_count || 0 }}</div>
+          <div class="text-xs text-gray-500">Einsätze</div>
+        </div>
+      </div>
+      <div v-if="coachEntry" class="flex items-center p-4">
+        <!-- Rank -->
+        <div class="w-10 text-center">
+          <span
+            :class="[
+              'inline-flex items-center justify-center w-8 h-8 rounded-full text-sm font-bold',
+              coachEntry.rank === 1 ? 'bg-yellow-100 text-yellow-700' :
+              coachEntry.rank === 2 ? 'bg-gray-200 text-gray-700' :
+              coachEntry.rank === 3 ? 'bg-orange-100 text-orange-700' :
+              'bg-gray-100 text-gray-600'
+            ]"
+          >
+            {{ coachEntry.rank }}
+          </span>
+        </div>
+        <!-- Label -->
+        <div class="flex-1 ml-3">
+          <span class="font-medium text-gray-900">Coach</span>
+        </div>
+        <!-- Count -->
+        <div class="text-right">
+          <div class="text-lg font-bold text-blue-600">{{ coachEntry.season_count || 0 }}</div>
+          <div class="text-xs text-gray-500">Einsätze</div>
         </div>
       </div>
     </div>
@@ -231,29 +295,26 @@ const seasonsWithLogos = computed(() => {
     .sort((a, b) => (a.start_year || 0) - (b.start_year || 0))
 })
 
-const volunteerRank = computed(() => {
+const volunteerEntry = computed(() => {
   const targetUserId = props.userId || userStore.user?.id
   if (!targetUserId) return null
-  const entry = props.leaderboards.volunteers.find((e: any) => e.id === targetUserId)
-  return entry?.rank || null
+  return props.leaderboards.volunteers.find((e: any) => e.id === targetUserId) || null
 })
 
-const regionalPartnerRank = computed(() => {
+const regionalPartnerEntry = computed(() => {
   const targetUserId = props.userId || userStore.user?.id
   if (!targetUserId) return null
-  const entry = props.leaderboards.regionalPartners.find((e: any) => e.id === targetUserId)
-  return entry?.rank || null
+  return props.leaderboards.regionalPartners.find((e: any) => e.id === targetUserId) || null
 })
 
-const coachRank = computed(() => {
+const coachEntry = computed(() => {
   const targetUserId = props.userId || userStore.user?.id
   if (!targetUserId) return null
-  const entry = props.leaderboards.coaches.find((e: any) => e.id === targetUserId)
-  return entry?.rank || null
+  return props.leaderboards.coaches.find((e: any) => e.id === targetUserId) || null
 })
 
 const hasAnyRank = computed(() => {
-  return volunteerRank.value !== null || regionalPartnerRank.value !== null || coachRank.value !== null
+  return volunteerEntry.value !== null || regionalPartnerEntry.value !== null || coachEntry.value !== null
 })
 
 const engagementLocations = computed(() => {
