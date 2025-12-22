@@ -423,23 +423,34 @@ const router = useRouter()
 const userStore = useUserStore()
 
 const props = defineProps<{
-  readOnly?: boolean
   engagements?: any[]
   userId?: number
 }>()
 
-// Determine if this is read-only based on userId comparison
+// Determine if this is read-only based on userId prop and current user comparison
+// Simple logic:
+// - If userId prop is provided and different from current user → read-only (viewing another user)
+// - If userId prop is provided and same as current user → editable (viewing yourself via /user/1)
+// - If userId prop is NOT provided → editable (viewing yourself via /awards)
 const isReadOnly = computed(() => {
-  // If readOnly prop is explicitly set, use it
-  if (props.readOnly !== undefined) {
-    return props.readOnly
+  // If no userId prop, we're viewing ourselves (editable)
+  if (!props.userId) {
+    return false
   }
-  // Otherwise, check if viewing another user
-  if (props.userId && userStore.user) {
-    return props.userId !== userStore.user.id
+  
+  // Get current user ID from store
+  const currentUserId = userStore.user?.id
+  
+  // If current user is not loaded yet, assume read-only (safe default)
+  if (!currentUserId) {
+    return true
   }
-  // If no userId prop, assume it's current user (editable)
-  return false
+  
+  // Compare: if userId prop matches current user, it's editable
+  // Otherwise, it's read-only (viewing another user)
+  const viewingUserId = Number(props.userId)
+  const currentUserIdNum = Number(currentUserId)
+  return viewingUserId !== currentUserIdNum
 })
 
 const emit = defineEmits<{
@@ -448,7 +459,7 @@ const emit = defineEmits<{
 
 // State
 const engagements = ref<any[]>(props.engagements || [])
-const loading = ref(!props.readOnly)
+const loading = ref(false)
 const showAddModal = ref(false)
 const roles = ref<any[]>([])
 const events = ref<any[]>([])
@@ -627,7 +638,10 @@ const displayedEngagements = computed(() => {
 })
 
 async function loadEngagements() {
-  if (isReadOnly.value) return // Don't load in read-only mode
+  // Never load in read-only mode - use engagements from props instead
+  if (isReadOnly.value) {
+    return
+  }
   loading.value = true
   try {
     const response = await apiClient.get('/engagements')
@@ -641,10 +655,27 @@ async function loadEngagements() {
 
 // Watch for prop changes
 watch(() => props.engagements, (newEngagements) => {
-  if (newEngagements) {
+  if (newEngagements !== undefined) {
     engagements.value = newEngagements
   }
 }, { immediate: true })
+
+// Watch for userStore.user changes to ensure isReadOnly updates correctly
+watch(() => userStore.user?.id, (newId) => {
+  console.log('UserStore user ID changed:', { newId, propsUserId: props.userId, isReadOnly: isReadOnly.value })
+  // When userStore.user loads/changes, ensure we're using the correct engagements
+  if (isReadOnly.value && props.engagements) {
+    engagements.value = props.engagements
+  }
+}, { immediate: true })
+
+// Watch props.userId changes
+watch(() => props.userId, () => {
+  // When userId prop changes, update engagements if in read-only mode
+  if (isReadOnly.value && props.engagements) {
+    engagements.value = props.engagements
+  }
+})
 
 async function loadOptions() {
   try {
@@ -770,12 +801,25 @@ async function proposeLocation() {
   }
 }
 
-onMounted(() => {
-  if (!isReadOnly.value) {
+onMounted(async () => {
+  // Ensure userStore.user is loaded before determining isReadOnly
+  await userStore.fetchUser()
+  
+  // If userId prop is provided, always use engagements from props
+  // (whether it's current user or another user)
+  if (props.userId) {
+    loading.value = false
+    if (props.engagements) {
+      engagements.value = props.engagements
+    }
+    // Only load options if editable (for proposing new items)
+    if (!isReadOnly.value) {
+      loadOptions()
+    }
+  } else {
+    // No userId prop: this is current user's own view, load from API
     loadEngagements()
     loadOptions()
-  } else {
-    loading.value = false
   }
 })
 </script>

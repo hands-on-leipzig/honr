@@ -8,7 +8,7 @@
     <!-- Leaderboard Ranks -->
     <div v-if="hasAnyRank" class="bg-white rounded-lg shadow divide-y divide-gray-100 mb-4">
       <button
-        v-if="volunteerEntry"
+        v-if="volunteerEntry && (volunteerEntry.engagement_count || 0) > 0"
         @click="navigateToLeaderboard('volunteers')"
         class="w-full flex items-center p-4 hover:bg-gray-50 transition-colors text-left"
       >
@@ -20,7 +20,7 @@
               volunteerEntry.rank === 1 ? 'bg-yellow-100 text-yellow-700' :
               volunteerEntry.rank === 2 ? 'bg-gray-200 text-gray-700' :
               volunteerEntry.rank === 3 ? 'bg-orange-100 text-orange-700' :
-              'bg-gray-100 text-gray-600'
+              'bg-white border border-gray-300 text-gray-600'
             ]"
           >
             {{ volunteerEntry.rank }}
@@ -36,7 +36,7 @@
         </div>
       </button>
       <button
-        v-if="regionalPartnerEntry"
+        v-if="regionalPartnerEntry && (regionalPartnerEntry.season_count || 0) > 0"
         @click="navigateToLeaderboard('regional-partners')"
         class="w-full flex items-center p-4 hover:bg-gray-50 transition-colors text-left"
       >
@@ -48,7 +48,7 @@
               regionalPartnerEntry.rank === 1 ? 'bg-yellow-100 text-yellow-700' :
               regionalPartnerEntry.rank === 2 ? 'bg-gray-200 text-gray-700' :
               regionalPartnerEntry.rank === 3 ? 'bg-orange-100 text-orange-700' :
-              'bg-gray-100 text-gray-600'
+              'bg-white border border-gray-300 text-gray-600'
             ]"
           >
             {{ regionalPartnerEntry.rank }}
@@ -64,7 +64,7 @@
         </div>
       </button>
       <button
-        v-if="coachEntry"
+        v-if="coachEntry && (coachEntry.season_count || 0) > 0"
         @click="navigateToLeaderboard('coaches')"
         class="w-full flex items-center p-4 hover:bg-gray-50 transition-colors text-left"
       >
@@ -76,7 +76,7 @@
               coachEntry.rank === 1 ? 'bg-yellow-100 text-yellow-700' :
               coachEntry.rank === 2 ? 'bg-gray-200 text-gray-700' :
               coachEntry.rank === 3 ? 'bg-orange-100 text-orange-700' :
-              'bg-gray-100 text-gray-600'
+              'bg-white border border-gray-300 text-gray-600'
             ]"
           >
             {{ coachEntry.rank }}
@@ -282,7 +282,9 @@ const coachEntry = computed(() => {
 })
 
 const hasAnyRank = computed(() => {
-  return volunteerEntry.value !== null || regionalPartnerEntry.value !== null || coachEntry.value !== null
+  return (volunteerEntry.value && (volunteerEntry.value.engagement_count || 0) > 0) ||
+         (regionalPartnerEntry.value && (regionalPartnerEntry.value.season_count || 0) > 0) ||
+         (coachEntry.value && (coachEntry.value.season_count || 0) > 0)
 })
 
 const engagementLocations = computed(() => {
