@@ -1,5 +1,14 @@
 <template>
-  <div class="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+  <div class="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
+    <!-- HONR Logo at Top -->
+    <div class="mb-8">
+      <img 
+        src="@/assets/logos/honr-logo.png" 
+        alt="HONR" 
+        class="h-12 object-contain"
+      />
+    </div>
+
     <div class="w-full max-w-sm">
       <div class="bg-white rounded-lg shadow-lg p-6">
         <!-- Login Form -->
@@ -189,6 +198,22 @@
           </div>
         </template>
       </div>
+    </div>
+
+    <!-- Hands On Technology Logo at Bottom -->
+    <div class="mt-8">
+      <a 
+        href="https://www.hands-on-technology.org/de/engagement" 
+        target="_blank" 
+        rel="noopener noreferrer"
+        class="inline-block hover:opacity-80 transition-opacity"
+      >
+        <img 
+          src="@/assets/logos/hands-on-logo.png" 
+          alt="Hands On Technology" 
+          class="h-10 object-contain"
+        />
+      </a>
     </div>
   </div>
 </template>
