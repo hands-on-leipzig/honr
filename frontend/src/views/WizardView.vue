@@ -17,7 +17,11 @@
 
       <!-- Step 1: Welcome -->
       <div v-if="currentStep === 1" class="space-y-4">
-        <h2 class="text-2xl font-bold mb-4">Willkommen zu HONR</h2>
+        <!-- HONR Logo -->
+        <div class="flex justify-center mb-4">
+          <img src="@/assets/logos/honr-logo.png" alt="HONR Logo" class="h-16" />
+        </div>
+        <h2 class="text-2xl font-bold mb-4">Willkommen zu <u>H</u>ands <u>On</u> Technology <u>R</u>ecognition</h2>
         <p class="text-gray-700">
           Wir bei Hands on Technology freuen uns über dein Engagement und darüber, dass du es hier mit anderen teilst.
         </p>
@@ -34,10 +38,8 @@
 
       <!-- Step 2: Name -->
       <div v-if="currentStep === 2" class="space-y-4">
-        <h2 class="text-2xl font-bold mb-4">Name</h2>
-        <p class="text-sm text-gray-600 mb-4">Der Name muss eindeutig sein.</p>
+        <h2 class="text-2xl font-bold mb-4">Dein Name in HONR</h2>
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Name</label>
           <input
             v-model="wizardData.nickname"
             type="text"
@@ -53,7 +55,7 @@
         </div>
         <button
           @click="nextStep"
-          :disabled="!wizardData.nickname || nicknameError || nicknameChecking"
+          :disabled="!wizardData.nickname || !!nicknameError || nicknameChecking"
           class="w-full mt-6 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           Weiter
@@ -65,7 +67,6 @@
         <h2 class="text-2xl font-bold mb-4">Über dich</h2>
         <p class="text-sm text-gray-600 mb-4">Dieser Text erscheint unter deinem Namen</p>
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Über mich</label>
           <textarea
             v-model="wizardData.short_bio"
             rows="4"
@@ -115,9 +116,6 @@
               <span class="ml-2 text-sm text-gray-700">Link</span>
             </label>
           </div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">
-            {{ contactLinkType === 'email' ? 'E-Mail-Adresse' : 'Link' }}
-          </label>
           <input
             v-model="wizardData.contact_link"
             :type="contactLinkType === 'email' ? 'email' : 'text'"
@@ -147,6 +145,7 @@
       <!-- Step 5: Email Settings -->
       <div v-if="currentStep === 5" class="space-y-4">
         <h2 class="text-2xl font-bold mb-4">eMail-Einstellungen</h2>
+        <p class="text-sm text-gray-700 mb-4">Erlaubst Du uns, dir eMails zu schicken?</p>
         <div class="space-y-4">
           <label class="flex items-center cursor-pointer">
             <input
@@ -154,7 +153,7 @@
               v-model="wizardData.email_notify_proposals"
               class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
             />
-            <span class="ml-3 text-sm text-gray-700">Benachrichtung zu angenommenen Vorschlägen</span>
+            <span class="ml-3 text-sm text-gray-700">Benachrichtungen wenn deine Vorschlägen für weitere Veranstaltungen oder Rollen angenommen wurden.</span>
           </label>
           
           <label class="flex items-center cursor-pointer">
@@ -163,7 +162,7 @@
               v-model="wizardData.email_tool_info"
               class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
             />
-            <span class="ml-3 text-sm text-gray-700">Informationen zum Tool</span>
+            <span class="ml-3 text-sm text-gray-700">Informationen zum Tool, deinen Badges und dem Leaderboard</span>
           </label>
           
           <label class="flex items-center cursor-pointer">
@@ -185,7 +184,7 @@
 
       <!-- Step 6: Finish -->
       <div v-if="currentStep === 6" class="space-y-4">
-        <h2 class="text-2xl font-bold mb-4">Fertig</h2>
+        <h2 class="text-2xl font-bold mb-4">Das war's zu deinem Profil</h2>
         <p class="text-gray-700">
           Du kannst deine Eingaben jederzeit in den Einstellungen ändern.
         </p>
