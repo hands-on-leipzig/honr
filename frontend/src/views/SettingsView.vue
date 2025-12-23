@@ -43,9 +43,9 @@
           {{ userStore.user?.contact_link ? 'Kontakt-Link ändern' : 'Kontakt-Link hinzufügen' }}
         </button>
         
-        <!-- eMail-Einstellungen -->
+        <!-- E-Mail-Einstellungen -->
         <button @click="showEmailSettingsModal = true" class="w-full px-4 py-3 text-left hover:bg-gray-50">
-          eMail-Einstellungen
+          E-Mail-Einstellungen
         </button>
         
         <!-- Regionalpartner Name ändern - only show if user is regional partner -->
@@ -216,7 +216,7 @@
       </div>
     </div>
 
-    <!-- Email Modal -->
+    <!-- E-Mail Modal -->
     <div v-if="showEmailModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div class="bg-white rounded-lg w-full max-w-sm p-6">
         <h3 class="text-lg font-semibold mb-4">E-Mail ändern</h3>
@@ -247,8 +247,8 @@
       </div>
     </div>
 
-    <!-- Email Settings Modal -->
-    <Modal :show="showEmailSettingsModal" @close="closeEmailSettingsModal" title="eMail-Einstellungen">
+    <!-- E-Mail-Einstellungen Modal -->
+    <Modal :show="showEmailSettingsModal" @close="closeEmailSettingsModal" title="E-Mail-Einstellungen">
       <form @submit.prevent="updateEmailPreferences">
         <div class="space-y-4 mb-4">
           <label class="flex items-center cursor-pointer">
@@ -401,7 +401,7 @@ const showRegionalPartnerModal = ref(false)
 const showDeleteModal = ref(false)
 const showQrModal = ref(false)
 
-// Email preferences
+// E-Mail-Einstellungen
 const emailPreferences = reactive({
   email_notify_proposals: false,
   email_tool_info: false,

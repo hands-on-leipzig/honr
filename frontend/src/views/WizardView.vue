@@ -142,10 +142,10 @@
         </div>
       </div>
 
-      <!-- Step 5: Email Settings -->
+      <!-- Step 5: E-Mail-Einstellungen -->
       <div v-if="currentStep === 5" class="space-y-4">
-        <h2 class="text-2xl font-bold mb-4">eMail-Einstellungen</h2>
-        <p class="text-sm text-gray-700 mb-4">Erlaubst Du uns, dir eMails zu schicken?</p>
+        <h2 class="text-2xl font-bold mb-4">E-Mail-Einstellungen</h2>
+        <p class="text-sm text-gray-700 mb-4">Erlaubst Du uns, dir E-Mails zu schicken?</p>
         <div class="space-y-4">
           <label class="flex items-center cursor-pointer">
             <input
