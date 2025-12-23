@@ -163,35 +163,52 @@
     </div>
 
     <!-- Name Modal -->
-    <Modal :show="showNameModal" @close="showNameModal = false" title="Name ändern">
+    <Modal :show="showNameModal" @close="showNameModal = false" title="Dein Name in HONR">
       <form @submit.prevent="updateName">
-        <div class="mb-4">
-          <label class="block text-sm font-medium text-gray-700 mb-1">Name</label>
-          <input v-model="nameForm.nickname" type="text" required class="w-full px-3 py-2 border border-gray-300 rounded-md" />
-        </div>
-        <div v-if="nameError" class="mb-4 text-red-600 text-sm">{{ nameError }}</div>
-        <div class="flex gap-2">
-          <button type="button" @click="showNameModal = false" class="flex-1 px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50">Abbrechen</button>
-          <button type="submit" :disabled="nameLoading" class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50">
-            {{ nameLoading ? 'Speichern...' : 'Speichern' }}
-          </button>
+        <div class="space-y-4">
+          <div>
+            <input
+              v-model="nameForm.nickname"
+              type="text"
+              required
+              class="w-full px-3 py-2 border border-gray-300 rounded-md"
+              placeholder="Dein Name"
+            />
+            <p v-if="nameError" class="mt-1 text-sm text-red-600">{{ nameError }}</p>
+            <p v-else class="mt-1 text-sm text-gray-500">
+              Dein Name muss einzigartig sein.
+            </p>
+          </div>
+          <div class="flex gap-2">
+            <button type="button" @click="showNameModal = false" class="flex-1 px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50">Abbrechen</button>
+            <button type="submit" :disabled="nameLoading || !nameForm.nickname || !!nameError" class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed">
+              {{ nameLoading ? 'Speichern...' : 'Speichern' }}
+            </button>
+          </div>
         </div>
       </form>
     </Modal>
 
     <!-- Bio Modal -->
-    <Modal :show="showBioModal" @close="showBioModal = false" title="Über mich ändern">
+    <Modal :show="showBioModal" @close="showBioModal = false" title="Über dich">
       <form @submit.prevent="updateBio">
-        <div class="mb-4">
-          <label class="block text-sm font-medium text-gray-700 mb-1">Über mich</label>
-          <textarea v-model="bioForm.short_bio" rows="4" class="w-full px-3 py-2 border border-gray-300 rounded-md"></textarea>
-        </div>
-        <div v-if="bioError" class="mb-4 text-red-600 text-sm">{{ bioError }}</div>
-        <div class="flex gap-2">
-          <button type="button" @click="showBioModal = false" class="flex-1 px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50">Abbrechen</button>
-          <button type="submit" :disabled="bioLoading" class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50">
-            {{ bioLoading ? 'Speichern...' : 'Speichern' }}
-          </button>
+        <div class="space-y-4">
+          <p class="text-sm text-gray-600">Dieser Text erscheint unter deinem Namen</p>
+          <div>
+            <textarea
+              v-model="bioForm.short_bio"
+              rows="4"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md"
+              placeholder="Optional: Erzähle etwas über dich..."
+            ></textarea>
+          </div>
+          <div v-if="bioError" class="text-red-600 text-sm">{{ bioError }}</div>
+          <div class="flex gap-2">
+            <button type="button" @click="showBioModal = false" class="flex-1 px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50">Abbrechen</button>
+            <button type="submit" :disabled="bioLoading" class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50">
+              {{ bioLoading ? 'Speichern...' : 'Speichern' }}
+            </button>
+          </div>
         </div>
       </form>
     </Modal>
@@ -250,90 +267,91 @@
     <!-- E-Mail-Einstellungen Modal -->
     <Modal :show="showEmailSettingsModal" @close="closeEmailSettingsModal" title="E-Mail-Einstellungen">
       <form @submit.prevent="updateEmailPreferences">
-        <div class="space-y-4 mb-4">
-          <label class="flex items-center cursor-pointer">
-            <input
-              type="checkbox"
-              v-model="emailPreferences.email_notify_proposals"
-              class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-            />
-            <span class="ml-3 text-sm text-gray-700">Benachrichtung zu angenommenen Vorschlägen</span>
-          </label>
-          
-          <label class="flex items-center cursor-pointer">
-            <input
-              type="checkbox"
-              v-model="emailPreferences.email_tool_info"
-              class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-            />
-            <span class="ml-3 text-sm text-gray-700">Informationen zum Tool</span>
-          </label>
-          
-          <label class="flex items-center cursor-pointer">
-            <input
-              type="checkbox"
-              v-model="emailPreferences.email_volunteer_newsletter"
-              class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-            />
-            <span class="ml-3 text-sm text-gray-700">Volunteer-Newsletter von Hands On Technology</span>
-          </label>
-        </div>
-        <div v-if="emailSettingsError" class="mb-4 text-red-600 text-sm">{{ emailSettingsError }}</div>
-        <div class="flex gap-2">
-          <button type="button" @click="closeEmailSettingsModal" class="flex-1 px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50">Abbrechen</button>
-          <button type="submit" :disabled="emailSettingsLoading" class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50">
-            {{ emailSettingsLoading ? 'Speichern...' : 'Speichern' }}
-          </button>
+        <div class="space-y-4">
+          <p class="text-sm text-gray-700">Erlaubst Du uns, dir E-Mails zu schicken?</p>
+          <div class="space-y-4">
+            <label class="flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                v-model="emailPreferences.email_notify_proposals"
+                class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+              />
+              <span class="ml-3 text-sm text-gray-700">Benachrichtungen wenn deine Vorschlägen für weitere Veranstaltungen oder Rollen angenommen wurden.</span>
+            </label>
+            
+            <label class="flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                v-model="emailPreferences.email_tool_info"
+                class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+              />
+              <span class="ml-3 text-sm text-gray-700">Informationen zum Tool, deinen Badges und dem Leaderboard</span>
+            </label>
+            
+            <label class="flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                v-model="emailPreferences.email_volunteer_newsletter"
+                class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+              />
+              <span class="ml-3 text-sm text-gray-700">Volunteer-Newsletter von Hands On Technology</span>
+            </label>
+          </div>
+          <div v-if="emailSettingsError" class="text-red-600 text-sm">{{ emailSettingsError }}</div>
+          <div class="flex gap-2">
+            <button type="button" @click="closeEmailSettingsModal" class="flex-1 px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50">Abbrechen</button>
+            <button type="submit" :disabled="emailSettingsLoading" class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50">
+              {{ emailSettingsLoading ? 'Speichern...' : 'Speichern' }}
+            </button>
+          </div>
         </div>
       </form>
     </Modal>
 
     <!-- Contact Link Modal -->
-    <Modal :show="showContactLinkModal" @close="closeContactLinkModal" title="Kontakt-Link ändern">
+    <Modal :show="showContactLinkModal" @close="closeContactLinkModal" title="Kontakt-Link">
       <form @submit.prevent="updateContactLink">
-        <div class="mb-4">
-          <label class="block text-sm font-medium text-gray-700 mb-2">Typ</label>
-          <div class="flex gap-4">
-            <label class="flex items-center cursor-pointer">
-              <input
-                type="radio"
-                v-model="contactLinkType"
-                value="email"
-                class="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
-              />
-              <span class="ml-2 text-sm text-gray-700">E-Mail</span>
-            </label>
-            <label class="flex items-center cursor-pointer">
-              <input
-                type="radio"
-                v-model="contactLinkType"
-                value="link"
-                class="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
-              />
-              <span class="ml-2 text-sm text-gray-700">Link</span>
-            </label>
+        <div class="space-y-4">
+          <p class="text-sm text-gray-600">Dieser Link erscheint neben deinem Namen</p>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Typ</label>
+            <div class="flex gap-4 mb-4">
+              <label class="flex items-center cursor-pointer">
+                <input
+                  type="radio"
+                  v-model="contactLinkType"
+                  value="email"
+                  class="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                />
+                <span class="ml-2 text-sm text-gray-700">E-Mail</span>
+              </label>
+              <label class="flex items-center cursor-pointer">
+                <input
+                  type="radio"
+                  v-model="contactLinkType"
+                  value="link"
+                  class="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                />
+                <span class="ml-2 text-sm text-gray-700">Link</span>
+              </label>
+            </div>
+            <input
+              v-model="contactLinkForm.contact_link"
+              :type="contactLinkType === 'email' ? 'email' : 'text'"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md"
+              :placeholder="contactLinkType === 'email' ? 'email@example.com' : 'z.B. https://linkedin.com/in/...'"
+            />
+            <p class="mt-1 text-xs text-gray-500">
+              {{ contactLinkType === 'email' ? 'E-Mail-Adresse' : 'Social-Media-Link oder Website' }}
+            </p>
           </div>
-        </div>
-        <div class="mb-4">
-          <label class="block text-sm font-medium text-gray-700 mb-1">
-            {{ contactLinkType === 'email' ? 'E-Mail-Adresse' : 'Link' }}
-          </label>
-          <input 
-            v-model="contactLinkForm.contact_link" 
-            :type="contactLinkType === 'email' ? 'email' : 'text'"
-            class="w-full px-3 py-2 border border-gray-300 rounded-md" 
-            :placeholder="contactLinkType === 'email' ? 'email@example.com' : 'z.B. https://linkedin.com/in/...'"
-          />
-          <p class="mt-1 text-xs text-gray-500">
-            {{ contactLinkType === 'email' ? 'E-Mail-Adresse' : 'Social media Link oder Website' }}
-          </p>
-        </div>
-        <div v-if="contactLinkError" class="mb-4 text-red-600 text-sm">{{ contactLinkError }}</div>
-        <div class="flex gap-2">
-          <button type="button" @click="closeContactLinkModal" class="flex-1 px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50">Abbrechen</button>
-          <button type="submit" :disabled="contactLinkLoading" class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50">
-            {{ contactLinkLoading ? 'Speichern...' : 'Speichern' }}
-          </button>
+          <div v-if="contactLinkError" class="text-red-600 text-sm">{{ contactLinkError }}</div>
+          <div class="flex gap-2">
+            <button type="button" @click="closeContactLinkModal" class="flex-1 px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50">Abbrechen</button>
+            <button type="submit" :disabled="contactLinkLoading" class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50">
+              {{ contactLinkLoading ? 'Speichern...' : 'Speichern' }}
+            </button>
+          </div>
         </div>
       </form>
     </Modal>
