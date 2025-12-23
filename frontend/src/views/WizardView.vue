@@ -49,13 +49,24 @@
             placeholder="Dein Name"
           />
           <p v-if="nicknameError" class="mt-1 text-sm text-red-600">{{ nicknameError }}</p>
-          <p v-else-if="wizardData.nickname && !nicknameChecking" class="mt-1 text-sm text-gray-500">
-            Dein Name muss einzigartig sein.
+          <p v-else-if="nicknameStatusText" :class="[
+            'mt-1 text-sm',
+            !wizardData.nickname.trim()
+              ? 'text-red-600'
+              : nicknameChecking
+                ? 'text-gray-500'
+                : nicknameAvailable === false 
+                  ? 'text-red-600' 
+                  : nicknameAvailable === true 
+                    ? 'text-green-600' 
+                    : 'text-gray-500'
+          ]">
+            {{ nicknameStatusText }}
           </p>
         </div>
         <button
           @click="nextStep"
-          :disabled="!wizardData.nickname || !!nicknameError || nicknameChecking"
+          :disabled="!isNameStepValid || nicknameChecking"
           class="w-full mt-6 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           Weiter
@@ -204,7 +215,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import apiClient from '@/api/client'
@@ -217,6 +228,7 @@ const currentStep = ref(1)
 const completing = ref(false)
 const nicknameChecking = ref(false)
 const nicknameError = ref('')
+const nicknameAvailable = ref<boolean | null>(null) // null = not checked, true = available, false = taken
 const contactLinkType = ref<'email' | 'link'>('email')
 
 const wizardData = reactive({
@@ -253,26 +265,85 @@ onMounted(async () => {
   }
 })
 
+let nicknameValidationTimeout: ReturnType<typeof setTimeout> | null = null
+
 async function checkNicknameAvailability() {
-  if (!wizardData.nickname) {
+  const nickname = wizardData.nickname.trim()
+  
+  if (!nickname) {
+    nicknameAvailable.value = null
+    nicknameChecking.value = false
     nicknameError.value = ''
     return
   }
   
   nicknameChecking.value = true
   nicknameError.value = ''
+  nicknameAvailable.value = null
   
   try {
-    const response = await apiClient.post('/auth/check-nickname', { nickname: wizardData.nickname })
+    const response = await apiClient.post('/auth/check-nickname', { nickname })
+    nicknameAvailable.value = response.data.available
     if (!response.data.available) {
       nicknameError.value = 'Dieser Name ist schon vergeben.'
     }
   } catch (err) {
+    nicknameAvailable.value = null
     nicknameError.value = ''
   } finally {
     nicknameChecking.value = false
   }
 }
+
+// Computed property for nickname status text
+const nicknameStatusText = computed(() => {
+  const nickname = wizardData.nickname.trim()
+  
+  if (!nickname) {
+    return 'Der Name darf nicht leer sein'
+  }
+  
+  if (nicknameChecking.value) {
+    return 'Prüfe...'
+  }
+  
+  if (nicknameAvailable.value === false) {
+    return 'Dieser Name ist schon vergeben'
+  }
+  
+  if (nicknameAvailable.value === true) {
+    return 'Dieser Name ist zurzeit noch verfügbar'
+  }
+  
+  return ''
+})
+
+// Computed property to check if name step is valid
+const isNameStepValid = computed(() => {
+  const nickname = wizardData.nickname.trim()
+  return nickname.length > 0 && nicknameAvailable.value === true
+})
+
+// Watch nickname input and validate with debounce
+watch(() => wizardData.nickname, (newValue, oldValue) => {
+  // Clear previous timeout
+  if (nicknameValidationTimeout) {
+    clearTimeout(nicknameValidationTimeout)
+  }
+  
+  const nickname = newValue.trim()
+  
+  // Fast local check for empty (no debounce needed)
+  if (!nickname) {
+    checkNicknameAvailability() // This will handle the empty case
+    return
+  }
+  
+  // Debounce API calls (wait 500ms after user stops typing)
+  nicknameValidationTimeout = setTimeout(() => {
+    checkNicknameAvailability()
+  }, 500)
+})
 
 function nextStep() {
   if (currentStep.value < totalSteps) {
