@@ -38,10 +38,11 @@
           v-for="item in navigationItems"
           :key="item.name"
           :to="item.path"
-          class="flex items-center justify-center flex-1 h-full text-gray-600 hover:text-blue-600 transition-colors"
+          class="flex flex-col items-center justify-center flex-1 h-full text-gray-600 hover:text-blue-600 transition-colors"
           :class="{ 'text-blue-600': isActive(item.name) }"
         >
           <component :is="isActive(item.name) ? item.iconSolid : item.iconOutline" class="w-7 h-7" />
+          <span class="text-xs mt-0.5">{{ item.label }}</span>
         </RouterLink>
       </div>
     </nav>
@@ -61,24 +62,28 @@ const navigationItems = [
     path: '/awards',
     iconOutline: TrophyIcon,
     iconSolid: TrophyIconSolid,
+    label: 'Deine Erfolge',
   },
   {
     name: 'all',
     path: '/all',
     iconOutline: GlobeAltIcon,
     iconSolid: GlobeAltIconSolid,
+    label: 'Bestenliste',
   },
   {
     name: 'people',
     path: '/people',
     iconOutline: UserGroupIcon,
     iconSolid: UserGroupIconSolid,
+    label: 'Volunteers',
   },
   {
     name: 'settings',
     path: '/settings',
     iconOutline: Cog6ToothIcon,
     iconSolid: Cog6ToothIconSolid,
+    label: 'Einstellungen',
   },
 ]
 
