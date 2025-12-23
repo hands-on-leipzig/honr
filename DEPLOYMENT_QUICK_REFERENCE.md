@@ -79,17 +79,40 @@ Copy example files and configure:
 - `backend/env.tst.example` → `/var/www/honr/shared/.env.tst`
 - `backend/env.prd.example` → `/var/www/honr/shared/.env.prd`
 
-## Quick Checklist
+## Initial vs Subsequent Deployments
 
-### Before TST Deployment
+### Initial Deployment Checklist
+
+**DEV → TST (Initial):**
+- [ ] Local DEV database prepared with data
+- [ ] Code committed and pushed
+- [ ] GitHub Actions creates deployment package
+- [ ] Deploy code to TST server
+- [ ] Copy database from DEV to TST (`copy-database-tst.sh`)
+- [ ] Verify TST environment
+
+**TST → PRD (Initial):**
+- [ ] TST tested and verified
+- [ ] Code deployment package ready
+- [ ] Deploy code to PRD server
+- [ ] Copy database from TST to PRD (`copy-database-prd.sh`)
+- [ ] Verify PRD environment
+
+### Subsequent Deployment Checklist
+
+**DEV → TST (Subsequent):**
 - [ ] Code tested locally
 - [ ] Committed and pushed to `main`/`master`
 - [ ] GitHub Actions workflow runs successfully
+- [ ] Deploy code (migrations run automatically)
+- [ ] **No database copy** - only code and migrations
 
-### Before PRD Deployment
+**TST → PRD (Subsequent):**
 - [ ] TST tested and verified
 - [ ] PRD database backed up
 - [ ] Deployment window scheduled
+- [ ] Deploy code (migrations run automatically)
+- [ ] **No database copy** - only code and migrations
 - [ ] Rollback plan ready
 
 ### After Deployment

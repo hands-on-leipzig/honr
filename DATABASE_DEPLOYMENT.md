@@ -8,23 +8,105 @@ HOTR uses MySQL/MariaDB 9.5+ with Laravel migrations for schema management.
 
 ## Database Strategy
 
+### Initial Deployment vs Subsequent Deployments
+
+**Initial Deployment:**
+- **Copies entire database** from source environment (DEV → TST, TST → PRD)
+- Includes all tables, data, and schema
+- **Skips migrations** (database already has complete schema)
+- Use `copy-database-tst.sh` or `copy-database-prd.sh` scripts
+
+**Subsequent Deployments:**
+- **Only runs migrations** to update schema
+- Preserves all existing data
+- Does NOT copy database
+- Migrations run automatically during code deployment
+
 ### DEV (Development)
 - **Database**: Local MySQL or SQLite
 - **Purpose**: Development and testing
 - **Migrations**: Run manually as needed
 - **Seeders**: Use seeders for test data
+- **Initial Copy**: Source for TST initial deployment
 
 ### TST (Test/Staging)
 - **Database**: Hosted MySQL/MariaDB (`honr_tst`)
 - **Purpose**: Pre-production testing
-- **Migrations**: Run automatically during deployment
+- **Initial Copy**: Receives database from DEV on first deployment
+- **Migrations**: Run automatically during subsequent deployments
 - **Seeders**: Optional (for consistent test data)
+- **Subsequent Deployments**: Only migrations, no database copy
 
 ### PRD (Production)
 - **Database**: Hosted MySQL/MariaDB (`honr_prd`)
 - **Purpose**: Live production data
-- **Migrations**: Run automatically during deployment (with backups)
+- **Initial Copy**: Receives database from TST on first deployment
+- **Migrations**: Run automatically during subsequent deployments (with backups)
 - **Seeders**: **NEVER** run seeders in production
+- **Subsequent Deployments**: Only migrations, no database copy
+
+## Initial Database Copy
+
+### Copying Database: DEV → TST
+
+For the **first deployment** to TST, copy your local DEV database:
+
+```bash
+# From your local DEV machine
+cd /path/to/honr
+
+# Set environment variables
+export DEV_DB_NAME=honr
+export DEV_DB_USER=root
+export DEV_DB_PASS=  # Leave empty if no password
+export TST_HOST=your-tst-server.com
+export TST_SSH_USER=deploy
+export TST_DB_NAME=honr_tst
+export TST_DB_USER=honr_tst_user
+export TST_DB_PASS=your_password
+
+# Run copy script
+bash scripts/copy-database-tst.sh
+```
+
+**What it does:**
+1. Exports your local DEV database to SQL file
+2. Uploads SQL file to TST server
+3. Backs up existing TST database (if exists)
+4. Imports DEV database to TST
+5. Cleans up temporary files
+
+### Copying Database: TST → PRD
+
+For the **first deployment** to PRD, copy TST database:
+
+```bash
+# From a machine with access to both TST and PRD
+cd /path/to/honr
+
+# Set environment variables
+export TST_HOST=your-tst-server.com
+export TST_SSH_USER=deploy
+export TST_DB_NAME=honr_tst
+export TST_DB_USER=honr_tst_user
+export TST_DB_PASS=tst_password
+export PRD_HOST=your-prd-server.com
+export PRD_SSH_USER=deploy
+export PRD_DB_NAME=honr_prd
+export PRD_DB_USER=honr_prd_user
+export PRD_DB_PASS=prd_password
+
+# Run copy script
+bash scripts/copy-database-prd.sh
+```
+
+**What it does:**
+1. Exports TST database to SQL file
+2. Backs up existing PRD database (if exists)
+3. Imports TST database to PRD
+4. Cleans up temporary files
+
+**⚠️ Warning**: This replaces ALL data in PRD database. Only use for initial deployment!
 
 ## Initial Database Setup
 
@@ -80,9 +162,17 @@ DB_PASSWORD=secure_password_here
 
 ### During Deployment
 
-Migrations run automatically during backend deployment via `deploy-backend.sh`:
+Migrations run automatically during backend deployment via `deploy-backend.sh`, but **only on subsequent deployments**:
+
+- **Initial deployment**: Migrations are **skipped** (database already copied with complete schema)
+- **Subsequent deployments**: Migrations run automatically to update schema
+
+The script detects if it's an initial deployment by checking if the `migrations` table exists:
+- If `migrations` table exists → Run migrations (subsequent deployment)
+- If `migrations` table doesn't exist → Skip migrations (initial deployment)
 
 ```bash
+# This runs automatically in deploy-backend.sh
 php artisan migrate --force
 ```
 

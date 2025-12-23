@@ -24,21 +24,52 @@ This document describes the deployment process for HOTR across three environment
 
 ## Deployment Workflow
 
-### DEV → TST
+### Initial Deployment vs Subsequent Deployments
+
+**Initial Deployment:**
+- Copies entire database from source environment (DEV → TST, TST → PRD)
+- Sets up complete environment from scratch
+- Skips migrations (database already has schema and data)
+
+**Subsequent Deployments:**
+- Only deploys code changes
+- Runs database migrations to update schema
+- Does NOT copy database (preserves existing data)
+
+### Initial Deployment: DEV → TST
+
+1. **Prepare local DEV database** with initial data (seeders, test data, etc.)
+2. **Commit and push** code to `main` or `master` branch
+3. **GitHub Actions** creates deployment package
+4. **Deploy code** to TST server
+5. **Copy database** from DEV to TST using `scripts/copy-database-tst.sh`
+6. **Verify** TST environment is working
+
+### Initial Deployment: TST → PRD
+
+1. **Test thoroughly** in TST environment
+2. **GitHub Actions** creates deployment package (manual trigger)
+3. **Deploy code** to PRD server
+4. **Copy database** from TST to PRD using `scripts/copy-database-prd.sh`
+5. **Verify** PRD environment is working
+
+### Subsequent Deployments: DEV → TST
 
 1. **Development** happens on local DEV environment
 2. **Commit and push** changes to `main` or `master` branch
 3. **GitHub Actions** automatically triggers TST deployment workflow
 4. **Deployment package** is created and uploaded as artifact
-5. **Manual step**: Download artifact and deploy to TST server (or configure automatic deployment)
+5. **Deploy code** to TST server (migrations run automatically)
+6. **No database copy** - only code and migrations
 
-### TST → PRD
+### Subsequent Deployments: TST → PRD
 
 1. **Testing** completed in TST environment
 2. **Manual trigger**: Go to GitHub Actions → "Deploy to PRD" → Run workflow
 3. **Confirmation**: Type "deploy" to confirm production deployment
 4. **Deployment package** is created and uploaded as artifact
-5. **Manual step**: Download artifact and deploy to PRD server (or configure automatic deployment)
+5. **Deploy code** to PRD server (migrations run automatically)
+6. **No database copy** - only code and migrations
 
 ## GitHub Actions Setup
 
@@ -99,9 +130,95 @@ cd /var/www/honr/current/backend
 php artisan key:generate
 ```
 
+## Initial Deployment Process
+
+### Initial Deployment: DEV → TST
+
+For the **first time** deploying to TST:
+
+1. **Prepare your local DEV database**:
+   ```bash
+   # Make sure your local database has the data you want to copy
+   cd backend
+   php artisan migrate
+   php artisan db:seed  # Optional: seed initial data
+   ```
+
+2. **Deploy code**:
+   ```bash
+   # Download deployment package from GitHub Actions
+   # Upload to TST server and extract
+   scp deploy-tst.tar.gz user@tst-server:/tmp/
+   ssh user@tst-server
+   cd /tmp
+   tar -xzf deploy-tst.tar.gz
+   cd deploy-tst
+   bash scripts/deploy-full.sh tst /var/www/honr
+   ```
+
+3. **Copy database from DEV to TST**:
+   ```bash
+   # From your local DEV machine
+   cd /path/to/honr
+   # Configure database credentials in the script or via environment variables
+   export DEV_DB_NAME=honr
+   export DEV_DB_USER=root
+   export TST_HOST=your-tst-server.com
+   export TST_SSH_USER=deploy
+   export TST_DB_NAME=honr_tst
+   export TST_DB_USER=honr_tst_user
+   export TST_DB_PASS=your_password
+   
+   bash scripts/copy-database-tst.sh
+   ```
+
+   Or use the combined initial deployment script:
+   ```bash
+   bash scripts/initial-deployment.sh tst /var/www/honr
+   ```
+
+### Initial Deployment: TST → PRD
+
+For the **first time** deploying to PRD:
+
+1. **Deploy code**:
+   ```bash
+   # Download deployment package from GitHub Actions
+   # Upload to PRD server and extract
+   scp deploy-prd.tar.gz user@prd-server:/tmp/
+   ssh user@prd-server
+   cd /tmp
+   tar -xzf deploy-prd.tar.gz
+   cd deploy-prd
+   bash scripts/deploy-full.sh prd /var/www/honr
+   ```
+
+2. **Copy database from TST to PRD**:
+   ```bash
+   # From a machine with access to both TST and PRD
+   # Configure credentials
+   export TST_HOST=your-tst-server.com
+   export TST_SSH_USER=deploy
+   export TST_DB_NAME=honr_tst
+   export TST_DB_USER=honr_tst_user
+   export TST_DB_PASS=tst_password
+   export PRD_HOST=your-prd-server.com
+   export PRD_SSH_USER=deploy
+   export PRD_DB_NAME=honr_prd
+   export PRD_DB_USER=honr_prd_user
+   export PRD_DB_PASS=prd_password
+   
+   bash scripts/copy-database-prd.sh
+   ```
+
+   Or use the combined initial deployment script:
+   ```bash
+   bash scripts/initial-deployment.sh prd /var/www/honr
+   ```
+
 ## Deployment Process
 
-### Option 1: Manual Deployment (Current Setup)
+### Option 1: Manual Deployment (Subsequent Deployments)
 
 1. **GitHub Actions creates deployment package**
    - Workflow runs and creates a `.tar.gz` artifact
@@ -135,6 +252,61 @@ Modify GitHub Actions workflows to automatically:
 See workflow files for SSH-based deployment examples.
 
 ## Database Deployment
+
+### Initial Database Copy
+
+**Important**: Initial deployments copy the entire database. Subsequent deployments only run migrations.
+
+#### Copying Database: DEV → TST
+
+Use the `copy-database-tst.sh` script from your local DEV machine:
+
+```bash
+# Set environment variables
+export DEV_DB_NAME=honr
+export DEV_DB_USER=root
+export DEV_DB_PASS=  # Leave empty if no password
+export TST_HOST=your-tst-server.com
+export TST_SSH_USER=deploy
+export TST_DB_NAME=honr_tst
+export TST_DB_USER=honr_tst_user
+export TST_DB_PASS=your_password
+
+# Run script
+bash scripts/copy-database-tst.sh
+```
+
+This will:
+1. Export your local DEV database
+2. Upload to TST server
+3. Backup existing TST database (if exists)
+4. Import DEV database to TST
+
+#### Copying Database: TST → PRD
+
+Use the `copy-database-prd.sh` script:
+
+```bash
+# Set environment variables
+export TST_HOST=your-tst-server.com
+export TST_SSH_USER=deploy
+export TST_DB_NAME=honr_tst
+export TST_DB_USER=honr_tst_user
+export TST_DB_PASS=tst_password
+export PRD_HOST=your-prd-server.com
+export PRD_SSH_USER=deploy
+export PRD_DB_NAME=honr_prd
+export PRD_DB_USER=honr_prd_user
+export PRD_DB_PASS=prd_password
+
+# Run script
+bash scripts/copy-database-prd.sh
+```
+
+This will:
+1. Export TST database
+2. Backup existing PRD database (if exists)
+3. Import TST database to PRD
 
 ### Initial Database Setup
 

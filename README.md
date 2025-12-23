@@ -49,6 +49,7 @@ cd frontend && npm run dev
 
 - [INSTALLATION.md](INSTALLATION.md) - Complete installation guide
 - [DEPLOYMENT.md](DEPLOYMENT.md) - Deployment guide for DEV → TST → PRD
+- [INITIAL_DEPLOYMENT.md](INITIAL_DEPLOYMENT.md) - **First-time deployment guide** (includes database copy)
 - [DATABASE_DEPLOYMENT.md](DATABASE_DEPLOYMENT.md) - Database deployment and migration guide
 - [DATABASE_SCHEMA.md](DATABASE_SCHEMA.md) - Database structure
 - [ARCHITECTURE_NOTES.md](ARCHITECTURE_NOTES.md) - Architecture decisions
@@ -75,7 +76,13 @@ The project uses a three-environment deployment strategy:
 - **TST**: Hosted test/staging environment (auto-deploy from `main`/`master`)
 - **PRD**: Hosted production environment (manual deploy from TST)
 
-See [DEPLOYMENT.md](DEPLOYMENT.md) for complete deployment instructions.
+### Deployment Types
+
+- **Initial Deployment**: Copies entire database from source (DEV → TST, TST → PRD)
+- **Subsequent Deployments**: Only deploys code and runs migrations
+
+See [INITIAL_DEPLOYMENT.md](INITIAL_DEPLOYMENT.md) for first-time deployment instructions.  
+See [DEPLOYMENT.md](DEPLOYMENT.md) for ongoing deployment process.
 
 ## Development
 

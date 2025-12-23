@@ -60,9 +60,23 @@ php artisan route:cache
 php artisan view:cache
 php artisan storage:link
 
-# Run database migrations
-echo "📊 Running database migrations..."
-php artisan migrate --force
+# Run database migrations (only on subsequent deployments, not initial)
+echo "📊 Checking database migration status..."
+# Check if migrations table exists using Laravel's database connection
+MIGRATIONS_EXIST=$(php artisan tinker --execute="try { DB::table('migrations')->count(); echo 'true'; } catch (Exception \$e) { echo 'false'; }" 2>/dev/null | tail -1)
+
+if [ "$MIGRATIONS_EXIST" = "true" ]; then
+    echo "📊 Running database migrations (subsequent deployment)..."
+    php artisan migrate --force
+else
+    echo "⚠️  Migrations table not found. This appears to be an initial deployment."
+    echo "⚠️  Skipping migrations. Database should be copied from source environment."
+    echo "⚠️  If this is not an initial deployment, check your database connection."
+    echo ""
+    echo "To manually run migrations later:"
+    echo "  cd ${RELEASE_DIR}/backend"
+    echo "  php artisan migrate --force"
+fi
 
 # Clear and cache config
 php artisan config:clear
