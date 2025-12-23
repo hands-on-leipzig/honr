@@ -19,10 +19,10 @@
       <div v-if="currentStep === 1" class="space-y-4">
         <h2 class="text-2xl font-bold mb-4">Willkommen zu HONR</h2>
         <p class="text-gray-700">
-          Wie bei Hands on Technology freuen wir uns über dein Engagement und darüber, dass du es hier mit anderen teilst.
+          Wir bei Hands on Technology freuen uns über dein Engagement und darüber, dass du es hier mit anderen teilst.
         </p>
         <p class="text-gray-700">
-          Mit den nächsten Schritten erstellst du dein User-Profile. Du entscheidest selbst, wie viel Du über dich verrätst.
+          Mit den nächsten Schritten erstellst du dein Profil. Du entscheidest selbst, wie viel du über dich verrätst.
         </p>
         <button
           @click="nextStep"
@@ -125,7 +125,7 @@
             :placeholder="contactLinkType === 'email' ? 'email@example.com' : 'z.B. https://linkedin.com/in/...'"
           />
           <p class="mt-1 text-xs text-gray-500">
-            {{ contactLinkType === 'email' ? 'E-Mail-Adresse' : 'Social media Link oder Website' }}
+            {{ contactLinkType === 'email' ? 'E-Mail-Adresse' : 'Social-Media-Link oder Website' }}
           </p>
         </div>
         <div class="flex gap-2">
@@ -190,7 +190,7 @@
           Du kannst deine Eingaben jederzeit in den Einstellungen ändern.
         </p>
         <p class="text-gray-700">
-          Weiter geht's damit, dass du eingibst, was du als Volunteer schon alles gemacht hast.
+          Weiter geht's: Du gibst ein, was du als Volunteer schon alles gemacht hast.
         </p>
         <button
           @click="completeWizard"
