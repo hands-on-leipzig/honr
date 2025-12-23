@@ -93,6 +93,7 @@
           :logo-path="badge.logo_path"
           :level="badge.level"
           :role-name="badge.role_name"
+          :engagement-count="badge.engagement_count"
           @click="filterByRole(badge.role_id, badge.role_name, badge.logo_path)"
         />
       </div>

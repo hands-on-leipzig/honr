@@ -53,6 +53,7 @@ class BadgeController extends Controller
                 'role_name' => $role->name,
                 'level' => $level,
                 'logo_path' => $role->logo_path,
+                'engagement_count' => $count,
             ];
         }
 

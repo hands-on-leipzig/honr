@@ -20,6 +20,17 @@
         {{ roleName }}
       </span>
     </div>
+    <!-- Engagement count badge in bottom right corner - positioned outside to be in front -->
+    <div
+      v-if="engagementCount !== undefined && engagementCount !== null"
+      :class="[smallCircleSize, borderClass, borderWidthClass, borderStyleClass]"
+      class="absolute rounded-full bg-white flex items-center justify-center z-20"
+      :style="smallCirclePosition"
+    >
+      <span :class="[smallCircleTextSize, borderTextColorClass]" class="font-bold leading-none">
+        {{ engagementCount }}
+      </span>
+    </div>
   </button>
 </template>
 
@@ -32,6 +43,7 @@ interface Props {
   level: number
   roleName: string
   size?: 'md' | 'lg'
+  engagementCount?: number | null
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -68,6 +80,41 @@ const paddingClass = computed(() => {
 
 const textClass = computed(() => {
   return props.size === 'lg' ? 'text-sm' : 'text-xs'
+})
+
+// Small circle is 1/3 of badge diameter
+const smallCircleSize = computed(() => {
+  return props.size === 'lg' ? 'w-8 h-8' : 'w-4 h-4'
+})
+
+const smallCircleTextSize = computed(() => {
+  return props.size === 'lg' ? 'text-xs' : 'text-[8px]'
+})
+
+// Text color matches border color
+const borderTextColorClass = computed(() => {
+  switch (props.level) {
+    case 1:
+      return 'text-gray-400'
+    case 2:
+      return 'text-[#CD7F32]' // Bronze
+    case 3:
+      return 'text-[#C0C0C0]' // Silver
+    case 4:
+      return 'text-[#FFD700]' // Gold
+    default:
+      return 'text-gray-400'
+  }
+})
+
+// Position small circle in bottom right corner, overlapping the badge
+// Small circle diameter is 1/3 of badge, so offset by 1/6 to center it on the edge
+const smallCirclePosition = computed(() => {
+  const offset = props.size === 'lg' ? '-8px' : '-4px' // Negative offset to overlap
+  return {
+    bottom: offset,
+    right: offset,
+  }
 })
 
 function handleImageError(event: Event) {
