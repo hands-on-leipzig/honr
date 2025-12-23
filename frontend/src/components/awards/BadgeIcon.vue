@@ -23,11 +23,11 @@
     <!-- Engagement count badge in bottom right corner - positioned outside to be in front -->
     <div
       v-if="engagementCount !== undefined && engagementCount !== null"
-      :class="[smallCircleSize, borderClass, borderWidthClass, borderStyleClass]"
-      class="absolute rounded-full bg-white flex items-center justify-center z-20"
+      :class="[smallCircleSize, smallCircleBorderClass, borderWidthClass, smallCircleBorderStyleClass, smallCircleFillClass]"
+      class="absolute rounded-full flex items-center justify-center z-20"
       :style="smallCirclePosition"
     >
-      <span :class="[smallCircleTextSize, borderTextColorClass]" class="font-bold leading-none">
+      <span :class="[smallCircleTextSize, smallCircleTextColorClass]" class="font-bold leading-none">
         {{ engagementCount }}
       </span>
     </div>
@@ -82,35 +82,56 @@ const textClass = computed(() => {
   return props.size === 'lg' ? 'text-sm' : 'text-xs'
 })
 
-// Small circle is 1/3 of badge diameter
+// Small circle is 1/2 of badge diameter
 const smallCircleSize = computed(() => {
-  return props.size === 'lg' ? 'w-8 h-8' : 'w-4 h-4'
+  return props.size === 'lg' ? 'w-12 h-12' : 'w-6 h-6'
 })
 
 const smallCircleTextSize = computed(() => {
-  return props.size === 'lg' ? 'text-xs' : 'text-[8px]'
+  return props.size === 'lg' ? 'text-sm' : 'text-[10px]'
 })
 
-// Text color matches border color
-const borderTextColorClass = computed(() => {
+// Small circle border: white for levels 2-4, gray for level 1
+const smallCircleBorderClass = computed(() => {
+  if (props.level === 1) {
+    return 'border-gray-300'
+  }
+  return 'border-white'
+})
+
+// Small circle border style: dashed for level 1, solid for 2-4
+const smallCircleBorderStyleClass = computed(() => {
+  return props.level === 1 ? 'border-dashed' : 'border-solid'
+})
+
+// Small circle fill: badge level color for 2-4, white for level 1
+const smallCircleFillClass = computed(() => {
   switch (props.level) {
     case 1:
-      return 'text-gray-400'
+      return 'bg-white'
     case 2:
-      return 'text-[#CD7F32]' // Bronze
+      return 'bg-[#CD7F32]' // Bronze
     case 3:
-      return 'text-[#C0C0C0]' // Silver
+      return 'bg-[#C0C0C0]' // Silver
     case 4:
-      return 'text-[#FFD700]' // Gold
+      return 'bg-[#FFD700]' // Gold
     default:
-      return 'text-gray-400'
+      return 'bg-white'
   }
 })
 
+// Small circle text color: white for levels 2-4, gray for level 1
+const smallCircleTextColorClass = computed(() => {
+  if (props.level === 1) {
+    return 'text-gray-400'
+  }
+  return 'text-white'
+})
+
 // Position small circle in bottom right corner, overlapping the badge
-// Small circle diameter is 1/3 of badge, so offset by 1/6 to center it on the edge
+// Small circle diameter is 1/2 of badge, so offset by 1/4 to center it on the edge
 const smallCirclePosition = computed(() => {
-  const offset = props.size === 'lg' ? '-8px' : '-4px' // Negative offset to overlap
+  const offset = props.size === 'lg' ? '-12px' : '-6px' // Negative offset to overlap
   return {
     bottom: offset,
     right: offset,
