@@ -55,14 +55,18 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import apiClient from '@/api/client'
 import TabNavigation from '@/components/common/TabNavigation.vue'
 import AwardsSummaryTab from '@/components/awards/AwardsSummaryTab.vue'
 import EngagementsTab from '@/components/awards/EngagementsTab.vue'
 
+const route = useRoute()
 const userStore = useUserStore()
-const activeTab = ref<'summary' | 'engagements'>('summary')
+const activeTab = ref<'summary' | 'engagements'>(
+  (route.query.tab as 'summary' | 'engagements') || 'summary'
+)
 
 const tabs = [
   { id: 'summary', label: 'Zusammenfassung' },

@@ -58,6 +58,7 @@ class UserController extends Controller
             'email_notify_proposals' => 'sometimes|boolean',
             'email_tool_info' => 'sometimes|boolean',
             'email_volunteer_newsletter' => 'sometimes|boolean',
+            'wizard_completed' => 'sometimes|boolean',
         ]);
 
         $data = $request->only([
@@ -68,6 +69,7 @@ class UserController extends Controller
             'email_notify_proposals',
             'email_tool_info',
             'email_volunteer_newsletter',
+            'wizard_completed',
         ]);
         
         // Convert email addresses to mailto: links and normalize URLs

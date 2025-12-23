@@ -15,6 +15,7 @@ export interface User {
   email_tool_info: boolean
   email_volunteer_newsletter: boolean
   is_admin: boolean
+  wizard_completed: boolean
 }
 
 export const useUserStore = defineStore('user', () => {

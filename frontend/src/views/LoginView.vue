@@ -254,8 +254,18 @@ async function handleLogin() {
   error.value = ''
   
   try {
-    await authStore.login(email.value, password.value)
-    router.push('/awards')
+    const user = await authStore.login(email.value, password.value)
+    // Fetch user to check wizard status
+    const { useUserStore } = await import('@/stores/user')
+    const userStore = useUserStore()
+    await userStore.fetchUser()
+    
+    // Redirect to wizard if not completed, otherwise to awards
+    if (userStore.user && !userStore.user.wizard_completed) {
+      router.push('/wizard')
+    } else {
+      router.push('/awards')
+    }
   } catch (err: any) {
     error.value = err.response?.data?.message || 'Anmeldung fehlgeschlagen.'
   } finally {

@@ -1,0 +1,97 @@
+name: Deploy to TST
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch:  # Allow manual trigger
+
+jobs:
+  deploy:
+    name: Deploy to Test Environment
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: pdo, pdo_mysql, mbstring, xml, curl, zip
+          coverage: none
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install Composer dependencies
+        working-directory: ./backend
+        run: composer install --no-dev --optimize-autoloader --no-interaction
+
+      - name: Build frontend
+        working-directory: ./frontend
+        env:
+          VITE_API_URL: ${{ secrets.TST_API_URL }}
+        run: |
+          npm ci
+          npm run build
+
+      - name: Create deployment package
+        run: |
+          mkdir -p deploy-tst
+          cp -r backend deploy-tst/
+          cp -r frontend/dist deploy-tst/frontend-dist
+          # Exclude unnecessary files
+          rm -rf deploy-tst/backend/vendor
+          rm -rf deploy-tst/backend/node_modules
+          rm -rf deploy-tst/backend/tests
+          rm -rf deploy-tst/backend/.git
+          tar -czf deploy-tst.tar.gz deploy-tst/
+
+      - name: Upload deployment artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: tst-deployment
+          path: deploy-tst.tar.gz
+          retention-days: 7
+
+      - name: Deploy to TST server
+        env:
+          TST_HOST: ${{ secrets.TST_HOST }}
+          TST_USER: ${{ secrets.TST_USER }}
+          TST_SSH_KEY: ${{ secrets.TST_SSH_KEY }}
+          TST_DEPLOY_PATH: ${{ secrets.TST_DEPLOY_PATH }}
+        run: |
+          echo "$TST_SSH_KEY" > deploy_key
+          chmod 600 deploy_key
+          ssh -i deploy_key -o StrictHostKeyChecking=no $TST_USER@$TST_HOST << 'EOF'
+            # Create deployment directory
+            mkdir -p $TST_DEPLOY_PATH/releases/$(date +%Y%m%d%H%M%S)
+            RELEASE_DIR="$TST_DEPLOY_PATH/releases/$(date +%Y%m%d%H%M%S)"
+            
+            # Extract deployment package
+            cd $RELEASE_DIR
+            # Note: You'll need to transfer the artifact first or use a different method
+            # This is a template - adjust based on your hosting setup
+          EOF
+          rm -f deploy_key
+
+      - name: Deployment summary
+        run: |
+          echo "## 🚀 TST Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "- **Status**: ✅ Deployment package created" >> $GITHUB_STEP_SUMMARY
+          echo "- **Branch**: ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit**: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Time**: $(date)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Next Steps" >> $GITHUB_STEP_SUMMARY
+          echo "1. Download the deployment artifact" >> $GITHUB_STEP_SUMMARY
+          echo "2. Upload to TST server" >> $GITHUB_STEP_SUMMARY
+          echo "3. Run deployment script on server" >> $GITHUB_STEP_SUMMARY
+

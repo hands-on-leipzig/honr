@@ -48,6 +48,8 @@ cd frontend && npm run dev
 ## Documentation
 
 - [INSTALLATION.md](INSTALLATION.md) - Complete installation guide
+- [DEPLOYMENT.md](DEPLOYMENT.md) - Deployment guide for DEV → TST → PRD
+- [DATABASE_DEPLOYMENT.md](DATABASE_DEPLOYMENT.md) - Database deployment and migration guide
 - [DATABASE_SCHEMA.md](DATABASE_SCHEMA.md) - Database structure
 - [ARCHITECTURE_NOTES.md](ARCHITECTURE_NOTES.md) - Architecture decisions
 - [APP_UI_STRUCTURE.md](APP_UI_STRUCTURE.md) - UI/UX documentation
@@ -60,8 +62,20 @@ cd frontend && npm run dev
 honr/
 ├── backend/          # Laravel 11 API
 ├── frontend/         # Vue 3 SPA
+├── scripts/          # Deployment scripts
+├── .github/          # GitHub Actions workflows
 └── docs/            # Documentation files
 ```
+
+## Deployment
+
+The project uses a three-environment deployment strategy:
+
+- **DEV**: Local development on MacBook/developer machines
+- **TST**: Hosted test/staging environment (auto-deploy from `main`/`master`)
+- **PRD**: Hosted production environment (manual deploy from TST)
+
+See [DEPLOYMENT.md](DEPLOYMENT.md) for complete deployment instructions.
 
 ## Development
 

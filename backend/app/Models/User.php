@@ -32,6 +32,7 @@ class User extends Authenticatable
         'email_volunteer_newsletter',
         'is_admin',
         'last_login_at',
+        'wizard_completed',
     ];
 
     /**
@@ -59,6 +60,7 @@ class User extends Authenticatable
             'email_volunteer_newsletter' => 'boolean',
             'is_admin' => 'boolean',
             'last_login_at' => 'datetime',
+            'wizard_completed' => 'boolean',
         ];
     }
 
