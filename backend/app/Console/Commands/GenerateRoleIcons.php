@@ -93,18 +93,18 @@ class GenerateRoleIcons extends Command
     private function generateSvgForRole(Role $role): ?string
     {
         // Generate SVG based on role name and description
-        $icon = $this->getIconForRole($role->name);
+        $iconData = $this->getIconForRole($role->name);
         
         $svg = <<<SVG
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
   <defs>
     <style>
-      .icon-stroke { fill: none; stroke: #1f2937; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-      .icon-fill { fill: #1f2937; stroke: none; }
-      .icon-light { fill: #1f2937; opacity: 0.3; }
+      .icon-stroke { fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+      .icon-fill { stroke: none; }
+      .icon-light { opacity: 0.3; }
     </style>
   </defs>
-  {$icon}
+  {$iconData}
 </svg>
 SVG;
 
@@ -113,62 +113,62 @@ SVG;
 
     private function getIconForRole(string $roleName): string
     {
-        // Map role names to improved, distinctive SVG icons
-        // Icons use filled shapes and clearer symbols for better recognition
+        // Map role names to colorful, distinctive SVG icons
+        // Icons use colors and detailed shapes for immediate recognition
         $icons = [
-            // Moderator:in - Microphone icon
-            'Moderator:in' => '<g class="icon-fill"><rect x="28" y="12" width="8" height="16" rx="1"/><path d="M 30 28 Q 32 30 34 28"/><path d="M 26 32 Q 26 36 32 36 Q 38 36 38 32"/></g><g class="icon-stroke"><path d="M 24 44 L 24 48 M 28 44 L 28 48 M 36 44 L 36 48 M 40 44 L 40 48"/></g>',
+            // Moderator:in - Colorful microphone (Red/Orange for communication)
+            'Moderator:in' => '<defs><linearGradient id="micGrad" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" style="stop-color:#EF4444;stop-opacity:1" /><stop offset="100%" style="stop-color:#F97316;stop-opacity:1" /></linearGradient></defs><g class="icon-fill" fill="url(#micGrad)"><rect x="26" y="10" width="12" height="20" rx="2"/><ellipse cx="32" cy="30" rx="10" ry="6"/></g><g class="icon-fill" fill="#ffffff" opacity="0.3"><rect x="28" y="14" width="8" height="2" rx="0.5"/><rect x="28" y="18" width="8" height="2" rx="0.5"/><rect x="28" y="22" width="8" height="2" rx="0.5"/></g><g class="icon-fill" fill="#DC2626"><rect x="30" y="36" width="4" height="8" rx="1"/></g><g class="icon-stroke" stroke="#DC2626" stroke-width="2"><path d="M 24 44 L 24 50 M 28 44 L 28 50 M 36 44 L 36 50 M 40 44 L 40 50"/></g>',
             
-            // Coach:in - Person with clipboard/coaching board
-            'Coach:in' => '<g class="icon-fill"><circle cx="32" cy="20" r="6"/><path d="M 20 38 Q 20 32 32 32 Q 44 32 44 38 L 44 48 L 20 48 Z"/></g><g class="icon-stroke"><rect x="46" y="24" width="8" height="10" rx="1"/><path d="M 48 26 L 52 26"/></g>',
+            // Coach:in - Person with clipboard (Blue for guidance/teaching)
+            'Coach:in' => '<defs><linearGradient id="coachGrad" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" style="stop-color:#3B82F6;stop-opacity:1" /><stop offset="100%" style="stop-color:#1E40AF;stop-opacity:1" /></linearGradient></defs><g class="icon-fill" fill="url(#coachGrad)"><circle cx="32" cy="18" r="7"/><path d="M 18 36 Q 18 30 32 30 Q 46 30 46 36 L 46 50 L 18 50 Z"/></g><g class="icon-fill" fill="#ffffff" opacity="0.2"><circle cx="32" cy="18" r="4"/></g><g class="icon-fill" fill="#1E3A8A"><rect x="48" y="22" width="10" height="12" rx="1.5"/></g><g class="icon-stroke" stroke="#ffffff" stroke-width="1.5"><path d="M 50 25 L 56 25"/></g>',
             
             // Coach:in Challenge - Coach with Challenge badge
-            'Coach:in Challenge' => '<g class="icon-fill"><circle cx="32" cy="20" r="6"/><path d="M 20 38 Q 20 32 32 32 Q 44 32 44 38 L 44 48 L 20 48 Z"/></g><g class="icon-stroke"><rect x="46" y="24" width="8" height="10" rx="1"/><path d="M 48 26 L 52 26 M 50 28 L 50 32"/></g><g class="icon-fill"><rect x="47" y="29" width="2" height="2"/></g>',
+            'Coach:in Challenge' => '<defs><linearGradient id="coachChalGrad" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" style="stop-color:#3B82F6;stop-opacity:1" /><stop offset="100%" style="stop-color:#1E40AF;stop-opacity:1" /></linearGradient></defs><g class="icon-fill" fill="url(#coachChalGrad)"><circle cx="32" cy="18" r="7"/><path d="M 18 36 Q 18 30 32 30 Q 46 30 46 36 L 46 50 L 18 50 Z"/></g><g class="icon-fill" fill="#ffffff" opacity="0.2"><circle cx="32" cy="18" r="4"/></g><g class="icon-fill" fill="#DC2626"><rect x="48" y="22" width="10" height="12" rx="1.5"/></g><g class="icon-stroke" stroke="#ffffff" stroke-width="1.5"><path d="M 50 25 L 56 25 M 53 25 L 53 30"/></g><g class="icon-fill" fill="#ffffff"><rect x="51" y="27" width="2" height="2"/></g>',
             
             // Coach:in Explore - Coach with Explore circle
-            'Coach:in Explore' => '<g class="icon-fill"><circle cx="32" cy="20" r="6"/><path d="M 20 38 Q 20 32 32 32 Q 44 32 44 38 L 44 48 L 20 48 Z"/></g><g class="icon-stroke"><circle cx="50" cy="29" r="5"/><circle cx="50" cy="29" r="3"/></g>',
+            'Coach:in Explore' => '<defs><linearGradient id="coachExpGrad" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" style="stop-color:#3B82F6;stop-opacity:1" /><stop offset="100%" style="stop-color:#1E40AF;stop-opacity:1" /></linearGradient></defs><g class="icon-fill" fill="url(#coachExpGrad)"><circle cx="32" cy="18" r="7"/><path d="M 18 36 Q 18 30 32 30 Q 46 30 46 36 L 46 50 L 18 50 Z"/></g><g class="icon-fill" fill="#ffffff" opacity="0.2"><circle cx="32" cy="18" r="4"/></g><g class="icon-stroke" stroke="#10B981" stroke-width="2.5"><circle cx="52" cy="28" r="6"/><circle cx="52" cy="28" r="4"/></g><g class="icon-fill" fill="#10B981" opacity="0.2"><circle cx="52" cy="28" r="3"/></g>',
             
-            // Juror:in - Clipboard with checkmark
-            'Juror:in' => '<g class="icon-stroke"><path d="M 20 16 L 44 16 L 44 48 L 20 48 Z"/><path d="M 24 20 L 24 44 M 40 20 L 40 44"/></g><g class="icon-stroke" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M 28 32 L 30 34 L 36 28"/></g>',
+            // Juror:in - Clipboard with checkmark (Green for evaluation)
+            'Juror:in' => '<defs><linearGradient id="jurorGrad" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" style="stop-color:#10B981;stop-opacity:1" /><stop offset="100%" style="stop-color:#059669;stop-opacity:1" /></linearGradient></defs><g class="icon-fill" fill="url(#jurorGrad)"><path d="M 18 14 L 46 14 L 46 50 L 18 50 Z" rx="2"/></g><g class="icon-stroke" stroke="#ffffff" stroke-width="2"><path d="M 22 18 L 22 46 M 42 18 L 42 46"/></g><g class="icon-stroke" stroke="#ffffff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="M 26 32 L 30 36 L 38 26"/></g>',
             
-            // Juror:in Roboter-Design - Clipboard with robot
-            'Juror:in Roboter-Design' => '<g class="icon-stroke"><path d="M 20 16 L 44 16 L 44 48 L 20 48 Z"/><path d="M 24 20 L 24 44 M 40 20 L 40 44"/></g><g class="icon-fill"><rect x="26" y="26" width="12" height="10" rx="1"/><circle cx="30" cy="31" r="1.5"/><circle cx="34" cy="31" r="1.5"/></g><g class="icon-stroke" stroke-width="1.5"><path d="M 28 35 L 36 35"/></g>',
+            // Juror:in Roboter-Design - Clipboard with robot (Teal for technical)
+            'Juror:in Roboter-Design' => '<defs><linearGradient id="jurorRobGrad" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" style="stop-color:#10B981;stop-opacity:1" /><stop offset="100%" style="stop-color:#059669;stop-opacity:1" /></linearGradient></defs><g class="icon-fill" fill="url(#jurorRobGrad)"><path d="M 18 14 L 46 14 L 46 50 L 18 50 Z" rx="2"/></g><g class="icon-stroke" stroke="#ffffff" stroke-width="2"><path d="M 22 18 L 22 46 M 42 18 L 42 46"/></g><g class="icon-fill" fill="#1F2937"><rect x="24" y="24" width="16" height="12" rx="1.5"/></g><g class="icon-fill" fill="#3B82F6"><circle cx="30" cy="30" r="2.5"/><circle cx="34" cy="30" r="2.5"/></g><g class="icon-stroke" stroke="#ffffff" stroke-width="2"><path d="M 26 36 L 38 36"/></g>',
             
-            // Juror:in Grundwerte - Clipboard with heart/values symbol
-            'Juror:in Grundwerte' => '<g class="icon-stroke"><path d="M 20 16 L 44 16 L 44 48 L 20 48 Z"/><path d="M 24 20 L 24 44 M 40 20 L 40 44"/></g><g class="icon-fill"><path d="M 32 28 C 30 26 28 28 28 30 C 28 32 32 36 32 36 C 32 36 36 32 36 30 C 36 28 34 26 32 28 Z"/></g>',
+            // Juror:in Grundwerte - Clipboard with heart/values symbol (Pink for values)
+            'Juror:in Grundwerte' => '<defs><linearGradient id="jurorGradGrad" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" style="stop-color:#10B981;stop-opacity:1" /><stop offset="100%" style="stop-color:#059669;stop-opacity:1" /></linearGradient></defs><g class="icon-fill" fill="url(#jurorGradGrad)"><path d="M 18 14 L 46 14 L 46 50 L 18 50 Z" rx="2"/></g><g class="icon-stroke" stroke="#ffffff" stroke-width="2"><path d="M 22 18 L 22 46 M 42 18 L 42 46"/></g><g class="icon-fill" fill="#EC4899"><path d="M 32 26 C 30 24 28 26 28 28 C 28 30 32 34 32 34 C 32 34 36 30 36 28 C 36 26 34 24 32 26 Z"/></g>',
             
-            // Juror:in Teamwork - Clipboard with people/team symbol
-            'Juror:in Teamwork' => '<g class="icon-stroke"><path d="M 20 16 L 44 16 L 44 48 L 20 48 Z"/><path d="M 24 20 L 24 44 M 40 20 L 40 44"/></g><g class="icon-fill"><circle cx="28" cy="28" r="3"/><circle cx="36" cy="28" r="3"/></g><g class="icon-stroke" stroke-width="2"><path d="M 26 32 Q 32 36 38 32"/></g>',
+            // Juror:in Teamwork - Clipboard with people/team symbol (Purple for collaboration)
+            'Juror:in Teamwork' => '<defs><linearGradient id="jurorTeamGrad" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" style="stop-color:#10B981;stop-opacity:1" /><stop offset="100%" style="stop-color:#059669;stop-opacity:1" /></linearGradient></defs><g class="icon-fill" fill="url(#jurorTeamGrad)"><path d="M 18 14 L 46 14 L 46 50 L 18 50 Z" rx="2"/></g><g class="icon-stroke" stroke="#ffffff" stroke-width="2"><path d="M 22 18 L 22 46 M 42 18 L 42 46"/></g><g class="icon-fill" fill="#8B5CF6"><circle cx="26" cy="26" r="4"/><circle cx="38" cy="26" r="4"/></g><g class="icon-fill" fill="#6D28D9"><path d="M 24 32 Q 32 38 40 32" stroke="#6D28D9" stroke-width="2" fill="none"/></g><g class="icon-fill" fill="#A78BFA" opacity="0.5"><path d="M 24 32 Q 32 38 40 32"/></g>',
             
-            // Juror:in Forschung - Clipboard with lightbulb/research symbol
-            'Juror:in Forschung' => '<g class="icon-stroke"><path d="M 20 16 L 44 16 L 44 48 L 20 48 Z"/><path d="M 24 20 L 24 44 M 40 20 L 40 44"/></g><g class="icon-fill"><path d="M 32 24 C 28 24 26 26 26 30 C 26 32 28 34 30 34 L 34 34 C 36 34 38 32 38 30 C 38 26 36 24 32 24 Z"/><rect x="31" y="34" width="2" height="4"/></g><g class="icon-stroke" stroke-width="1.5"><path d="M 30 38 L 34 38"/></g>',
+            // Juror:in Forschung - Clipboard with lightbulb/research symbol (Yellow for research)
+            'Juror:in Forschung' => '<defs><linearGradient id="jurorForschGrad" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" style="stop-color:#10B981;stop-opacity:1" /><stop offset="100%" style="stop-color:#059669;stop-opacity:1" /></linearGradient></defs><g class="icon-fill" fill="url(#jurorForschGrad)"><path d="M 18 14 L 46 14 L 46 50 L 18 50 Z" rx="2"/></g><g class="icon-stroke" stroke="#ffffff" stroke-width="2"><path d="M 22 18 L 22 46 M 42 18 L 42 46"/></g><g class="icon-fill" fill="#FBBF24"><path d="M 32 22 C 28 22 26 24 26 28 C 26 30 28 32 30 32 L 34 32 C 36 32 38 30 38 28 C 38 24 36 22 32 22 Z"/></g><g class="icon-fill" fill="#F59E0B"><rect x="31" y="32" width="2" height="6" rx="1"/></g><g class="icon-stroke" stroke="#92400E" stroke-width="1.5"><path d="M 30 38 L 34 38"/></g>',
             
-            // Juror:in SAP Sonderpreis - Clipboard with code/programming symbol
-            'Juror:in "SAP Sonderpreis für beste Programmierung"' => '<g class="icon-stroke"><path d="M 20 16 L 44 16 L 44 48 L 20 48 Z"/><path d="M 24 20 L 24 44 M 40 20 L 40 44"/></g><g class="icon-fill"><rect x="26" y="28" width="4" height="4"/><rect x="34" y="28" width="4" height="4"/><rect x="26" y="34" width="4" height="4"/><rect x="34" y="34" width="4" height="4"/></g>',
+            // Juror:in SAP Sonderpreis - Clipboard with code/programming symbol (Orange for tech)
+            'Juror:in "SAP Sonderpreis für beste Programmierung"' => '<defs><linearGradient id="jurorSAPGrad" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" style="stop-color:#10B981;stop-opacity:1" /><stop offset="100%" style="stop-color:#059669;stop-opacity:1" /></linearGradient></defs><g class="icon-fill" fill="url(#jurorSAPGrad)"><path d="M 18 14 L 46 14 L 46 50 L 18 50 Z" rx="2"/></g><g class="icon-stroke" stroke="#ffffff" stroke-width="2"><path d="M 22 18 L 22 46 M 42 18 L 42 46"/></g><g class="icon-fill" fill="#F97316"><rect x="24" y="26" width="6" height="6" rx="0.5"/><rect x="34" y="26" width="6" height="6" rx="0.5"/><rect x="24" y="34" width="6" height="6" rx="0.5"/><rect x="34" y="34" width="6" height="6" rx="0.5"/></g>',
             
-            // Schiedsrichter:in - Whistle icon
-            'Schiedsrichter:in' => '<g class="icon-fill"><rect x="24" y="20" width="14" height="20" rx="2"/></g><g class="icon-stroke"><circle cx="42" cy="30" r="4"/><path d="M 46 30 L 50 30"/></g><g class="icon-fill"><circle cx="28" cy="24" r="2"/></g>',
+            // Schiedsrichter:in - Whistle icon (Yellow/Orange for referee)
+            'Schiedsrichter:in' => '<defs><linearGradient id="refGrad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" style="stop-color:#FBBF24;stop-opacity:1" /><stop offset="100%" style="stop-color:#F59E0B;stop-opacity:1" /></linearGradient></defs><g class="icon-fill" fill="url(#refGrad)"><rect x="22" y="18" width="16" height="22" rx="2.5"/></g><g class="icon-fill" fill="#ffffff" opacity="0.3"><rect x="24" y="22" width="12" height="2" rx="0.5"/><rect x="24" y="26" width="12" height="2" rx="0.5"/></g><g class="icon-stroke" stroke="#92400E" stroke-width="2.5"><circle cx="44" cy="28" r="5"/><path d="M 49 28 L 54 28"/></g><g class="icon-fill" fill="#DC2626"><circle cx="26" cy="22" r="2.5"/></g>',
             
             // Ober-Schiedsrichter:in - Whistle with star/crown
-            'Ober-Schiedsrichter:in' => '<g class="icon-fill"><rect x="24" y="20" width="14" height="20" rx="2"/></g><g class="icon-stroke"><circle cx="42" cy="30" r="4"/><path d="M 46 30 L 50 30"/></g><g class="icon-fill"><circle cx="28" cy="24" r="2"/><path d="M 32 16 L 33 19 L 36 19 L 34 21 L 35 24 L 32 22 L 29 24 L 30 21 L 28 19 L 31 19 Z"/></g>',
+            'Ober-Schiedsrichter:in' => '<defs><linearGradient id="refOberGrad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" style="stop-color:#FBBF24;stop-opacity:1" /><stop offset="100%" style="stop-color:#F59E0B;stop-opacity:1" /></linearGradient></defs><g class="icon-fill" fill="url(#refOberGrad)"><rect x="22" y="18" width="16" height="22" rx="2.5"/></g><g class="icon-fill" fill="#ffffff" opacity="0.3"><rect x="24" y="22" width="12" height="2" rx="0.5"/><rect x="24" y="26" width="12" height="2" rx="0.5"/></g><g class="icon-stroke" stroke="#92400E" stroke-width="2.5"><circle cx="44" cy="28" r="5"/><path d="M 49 28 L 54 28"/></g><g class="icon-fill" fill="#DC2626"><circle cx="26" cy="22" r="2.5"/></g><g class="icon-fill" fill="#FCD34D"><path d="M 32 12 L 33 16 L 37 16 L 34 18 L 35 22 L 32 20 L 29 22 L 30 18 L 27 16 L 31 16 Z"/></g>',
             
-            // Robot-Checker:in - Magnifying glass with robot
-            'Robot-Checker:in' => '<g class="icon-stroke"><circle cx="36" cy="28" r="8"/><path d="M 42 34 L 48 40"/></g><g class="icon-fill"><rect x="28" y="24" width="8" height="6" rx="0.5"/><circle cx="30" cy="27" r="0.8"/><circle cx="34" cy="27" r="0.8"/></g><g class="icon-stroke" stroke-width="1"><path d="M 30 29 L 34 29"/></g>',
+            // Robot-Checker:in - Magnifying glass with robot (Purple for technical)
+            'Robot-Checker:in' => '<defs><linearGradient id="checkGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#8B5CF6;stop-opacity:1" /><stop offset="100%" style="stop-color:#6D28D9;stop-opacity:1" /></linearGradient></defs><g class="icon-stroke" stroke="url(#checkGrad)" stroke-width="3"><circle cx="36" cy="26" r="9"/><path d="M 43 33 L 50 40"/></g><g class="icon-fill" fill="#1F2937"><rect x="26" y="22" width="10" height="8" rx="1"/></g><g class="icon-fill" fill="#3B82F6"><circle cx="30" cy="26" r="2"/><circle cx="32" cy="26" r="2"/></g><g class="icon-stroke" stroke="#ffffff" stroke-width="1.5"><path d="M 28 29 L 34 29"/></g>',
             
-            // Live Challenge Juror - Clipboard with live/streaming symbol
-            'Live Challenge Juror' => '<g class="icon-stroke"><path d="M 20 16 L 44 16 L 44 48 L 20 48 Z"/><path d="M 24 20 L 24 44 M 40 20 L 40 44"/></g><g class="icon-fill"><circle cx="32" cy="30" r="6"/><circle cx="32" cy="30" r="3"/></g><g class="icon-stroke"><path d="M 28 26 L 28 34 M 36 26 L 36 34"/></g>',
+            // Live Challenge Juror - Clipboard with live/streaming symbol (Red for live)
+            'Live Challenge Juror' => '<defs><linearGradient id="liveJurorGrad" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" style="stop-color:#10B981;stop-opacity:1" /><stop offset="100%" style="stop-color:#059669;stop-opacity:1" /></linearGradient></defs><g class="icon-fill" fill="url(#liveJurorGrad)"><path d="M 18 14 L 46 14 L 46 50 L 18 50 Z" rx="2"/></g><g class="icon-stroke" stroke="#ffffff" stroke-width="2"><path d="M 22 18 L 22 46 M 42 18 L 42 46"/></g><g class="icon-fill" fill="#DC2626"><circle cx="32" cy="28" r="7"/><circle cx="32" cy="28" r="4" fill="#ffffff"/></g><g class="icon-stroke" stroke="#ffffff" stroke-width="2"><path d="M 28 24 L 28 32 M 36 24 L 36 32"/></g>',
             
-            // Live Challenge Leiter:in - Person with live/streaming symbol
-            'Live Challenge Leiter:in' => '<g class="icon-fill"><circle cx="32" cy="20" r="6"/><path d="M 20 38 Q 20 32 32 32 Q 44 32 44 38 L 44 48 L 20 48 Z"/></g><g class="icon-fill"><circle cx="50" cy="30" r="5"/><circle cx="50" cy="30" r="2.5" fill="#ffffff"/></g><g class="icon-stroke"><path d="M 47 28 L 47 32 M 53 28 L 53 32"/></g>',
+            // Live Challenge Leiter:in - Person with live/streaming symbol (Blue + Red)
+            'Live Challenge Leiter:in' => '<defs><linearGradient id="liveLeitGrad" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" style="stop-color:#3B82F6;stop-opacity:1" /><stop offset="100%" style="stop-color:#1E40AF;stop-opacity:1" /></linearGradient></defs><g class="icon-fill" fill="url(#liveLeitGrad)"><circle cx="32" cy="18" r="7"/><path d="M 18 36 Q 18 30 32 30 Q 46 30 46 36 L 46 50 L 18 50 Z"/></g><g class="icon-fill" fill="#DC2626"><circle cx="52" cy="28" r="6"/><circle cx="52" cy="28" r="3.5" fill="#ffffff"/></g><g class="icon-stroke" stroke="#ffffff" stroke-width="2"><path d="M 49 26 L 49 30 M 55 26 L 55 30"/></g>',
             
-            // Jury-Leiter:in - Clipboard with star/leader symbol
-            'Jury-Leiter:in' => '<g class="icon-stroke"><path d="M 20 16 L 44 16 L 44 48 L 20 48 Z"/><path d="M 24 20 L 24 44 M 40 20 L 40 44"/></g><g class="icon-fill"><path d="M 32 24 L 33 27 L 36 27 L 34 29 L 35 32 L 32 30 L 29 32 L 30 29 L 28 27 L 31 27 Z"/></g>',
+            // Jury-Leiter:in - Clipboard with star/leader symbol (Gold for leadership)
+            'Jury-Leiter:in' => '<defs><linearGradient id="juryLeitGrad" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" style="stop-color:#10B981;stop-opacity:1" /><stop offset="100%" style="stop-color:#059669;stop-opacity:1" /></linearGradient></defs><g class="icon-fill" fill="url(#juryLeitGrad)"><path d="M 18 14 L 46 14 L 46 50 L 18 50 Z" rx="2"/></g><g class="icon-stroke" stroke="#ffffff" stroke-width="2"><path d="M 22 18 L 22 46 M 42 18 L 42 46"/></g><g class="icon-fill" fill="#FCD34D"><path d="M 32 22 L 33 26 L 37 26 L 34 28 L 35 32 L 32 30 L 29 32 L 30 28 L 27 26 L 31 26 Z"/></g>',
             
-            // Regional-Partner:in Challenge - Map pin with Challenge badge
-            'Regional-Partner:in Challenge' => '<g class="icon-fill"><path d="M 32 14 L 40 26 L 36 26 L 36 40 L 28 40 L 28 26 L 24 26 Z"/></g><g class="icon-stroke"><circle cx="32" cy="48" r="4"/><path d="M 30 46 L 34 46 M 32 44 L 32 48"/></g><g class="icon-fill"><rect x="30" y="30" width="4" height="2"/></g>',
+            // Regional-Partner:in Challenge - Map pin with Challenge badge (Teal for organization)
+            'Regional-Partner:in Challenge' => '<defs><linearGradient id="regGrad" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" style="stop-color:#14B8A6;stop-opacity:1" /><stop offset="100%" style="stop-color:#0D9488;stop-opacity:1" /></linearGradient></defs><g class="icon-fill" fill="url(#regGrad)"><path d="M 32 12 L 42 24 L 38 24 L 38 44 L 26 44 L 26 24 L 22 24 Z"/></g><g class="icon-fill" fill="#ffffff" opacity="0.3"><path d="M 30 20 L 34 20 L 34 24 L 30 24 Z"/></g><g class="icon-stroke" stroke="#ffffff" stroke-width="2"><circle cx="32" cy="50" r="5"/><path d="M 30 48 L 34 48 M 32 46 L 32 50"/></g><g class="icon-fill" fill="#DC2626"><rect x="30" y="32" width="4" height="2.5" rx="0.5"/></g>',
             
-            // Gutachter:in - Clipboard with magnifying glass
-            'Gutachter:in' => '<g class="icon-stroke"><path d="M 20 16 L 44 16 L 44 48 L 20 48 Z"/><path d="M 24 20 L 24 44 M 40 20 L 40 44"/></g><g class="icon-stroke"><circle cx="30" cy="30" r="4"/><path d="M 33 33 L 36 36"/></g>',
+            // Gutachter:in - Clipboard with magnifying glass (Indigo for assessment)
+            'Gutachter:in' => '<defs><linearGradient id="gutGrad" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" style="stop-color:#10B981;stop-opacity:1" /><stop offset="100%" style="stop-color:#059669;stop-opacity:1" /></linearGradient></defs><g class="icon-fill" fill="url(#gutGrad)"><path d="M 18 14 L 46 14 L 46 50 L 18 50 Z" rx="2"/></g><g class="icon-stroke" stroke="#ffffff" stroke-width="2"><path d="M 22 18 L 22 46 M 42 18 L 42 46"/></g><g class="icon-stroke" stroke="#4F46E5" stroke-width="3"><circle cx="28" cy="28" r="5"/><path d="M 32 32 L 36 36"/></g>',
         ];
 
         // Try exact match first
@@ -232,7 +232,7 @@ SVG;
             return $icons['Moderator:in'];
         }
 
-        // Default icon - improved generic badge
-        return '<g class="icon-fill"><circle cx="32" cy="32" r="16"/></g><g class="icon-stroke" stroke="#ffffff" stroke-width="2"><path d="M 32 24 L 32 40 M 24 32 L 40 32"/></g>';
+        // Default icon - colorful generic badge
+        return '<defs><linearGradient id="defaultGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#6B7280;stop-opacity:1" /><stop offset="100%" style="stop-color:#4B5563;stop-opacity:1" /></linearGradient></defs><g class="icon-fill" fill="url(#defaultGrad)"><circle cx="32" cy="32" r="18"/></g><g class="icon-stroke" stroke="#ffffff" stroke-width="2.5"><path d="M 32 24 L 32 40 M 24 32 L 40 32"/></g>';
     }
 }

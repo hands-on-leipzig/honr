@@ -14,10 +14,12 @@
     "type-check": "vue-tsc --build"
   },
   "dependencies": {
+    "@types/qrcode": "^1.5.6",
     "axios": "^1.13.2",
     "leaflet": "^1.9.4",
     "leaflet.heat": "^0.2.0",
     "pinia": "^3.0.4",
+    "qrcode": "^1.5.4",
     "vue": "^3.5.25",
     "vue-router": "^4.6.3"
   },

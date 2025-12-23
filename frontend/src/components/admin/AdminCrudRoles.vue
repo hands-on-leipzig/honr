@@ -44,6 +44,21 @@
       >
         <div class="flex items-center space-x-3">
           <span class="text-gray-400 cursor-grab">⋮⋮</span>
+          <!-- Role Icon -->
+          <div class="flex-shrink-0">
+            <img 
+              v-if="item.logo_path" 
+              :src="getLogoUrl(item.logo_path)" 
+              :alt="item.name" 
+              class="w-8 h-8 object-contain"
+            />
+            <div 
+              v-else 
+              class="w-8 h-8 bg-gray-200 rounded flex items-center justify-center"
+            >
+              <span class="text-gray-400 text-xs">—</span>
+            </div>
+          </div>
           <div class="flex-1 min-w-0">
             <div class="flex items-center space-x-2">
               <span class="font-medium truncate">{{ item.name }}</span>

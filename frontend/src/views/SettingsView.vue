@@ -69,6 +69,44 @@
       </div>
     </div>
 
+    <!-- Invite Others -->
+    <div class="bg-white rounded-lg shadow mb-4">
+      <div class="p-4 border-b border-gray-200">
+        <h2 class="font-semibold">Andere zu HONR einladen</h2>
+      </div>
+      <div class="px-4 py-3 space-y-3">
+        <!-- Link Line -->
+        <div class="flex items-center space-x-2">
+          <a
+            :href="inviteLink"
+            target="_blank"
+            class="text-blue-600 hover:underline break-all"
+          >
+            {{ inviteLink }}
+          </a>
+          <button
+            @click="copyInviteLink"
+            class="flex-shrink-0 p-1 text-gray-600 hover:text-gray-900 transition-colors"
+            title="Link kopieren"
+          >
+            <ClipboardDocumentIcon class="w-5 h-5" />
+          </button>
+        </div>
+        <p v-if="copySuccess" class="text-sm text-green-600">Link wurde kopiert!</p>
+        
+        <!-- QR Code Line -->
+        <div class="flex items-center">
+          <button
+            @click="showQrModal = true"
+            class="flex-shrink-0"
+            title="QR-Code anzeigen"
+          >
+            <img :src="qrCodeDataUrl" alt="QR Code" class="w-16 h-16 border border-gray-200 rounded" />
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- Support -->
     <div class="bg-white rounded-lg shadow mb-4">
       <div class="p-4 border-b border-gray-200">
@@ -321,6 +359,20 @@
       </div>
     </div>
 
+    <!-- QR Code Modal -->
+    <div v-if="showQrModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" @click="showQrModal = false">
+      <div class="bg-white rounded-lg p-6 max-w-sm w-full" @click.stop>
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-lg font-semibold">QR-Code</h3>
+          <button @click="showQrModal = false" class="text-gray-500 hover:text-gray-700">✕</button>
+        </div>
+        <div class="flex flex-col items-center">
+          <img :src="qrCodeDataUrl" alt="QR Code" class="w-64 h-64 border border-gray-200 rounded mb-4" />
+          <p class="text-sm text-gray-600 text-center">{{ inviteLink }}</p>
+        </div>
+      </div>
+    </div>
+
   </div>
 </template>
 
@@ -331,6 +383,8 @@ import { useUserStore } from '@/stores/user'
 import { useAuthStore } from '@/stores/auth'
 import apiClient from '@/api/client'
 import Modal from '@/components/common/Modal.vue'
+import { ClipboardDocumentIcon } from '@heroicons/vue/24/outline'
+import QRCode from 'qrcode'
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -345,6 +399,7 @@ const showContactLinkModal = ref(false)
 const showEmailSettingsModal = ref(false)
 const showRegionalPartnerModal = ref(false)
 const showDeleteModal = ref(false)
+const showQrModal = ref(false)
 
 // Email preferences
 const emailPreferences = reactive({
@@ -606,4 +661,36 @@ async function deleteAccount() {
     deleteLoading.value = false
   }
 }
+
+// Invite link and QR code
+const inviteLink = 'https://hands-on.tools/honr'
+const qrCodeDataUrl = ref('')
+const copySuccess = ref(false)
+
+async function generateQrCode() {
+  try {
+    qrCodeDataUrl.value = await QRCode.toDataURL(inviteLink, {
+      width: 200,
+      margin: 2,
+    })
+  } catch (err) {
+    console.error('Error generating QR code:', err)
+  }
+}
+
+async function copyInviteLink() {
+  try {
+    await navigator.clipboard.writeText(inviteLink)
+    copySuccess.value = true
+    setTimeout(() => {
+      copySuccess.value = false
+    }, 2000)
+  } catch (err) {
+    console.error('Failed to copy:', err)
+  }
+}
+
+onMounted(() => {
+  generateQrCode()
+})
 </script>
