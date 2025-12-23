@@ -171,17 +171,31 @@
               v-model="nameForm.nickname"
               type="text"
               required
+              @blur="checkNicknameAvailability"
               class="w-full px-3 py-2 border border-gray-300 rounded-md"
               placeholder="Dein Name"
             />
             <p v-if="nameError" class="mt-1 text-sm text-red-600">{{ nameError }}</p>
-            <p v-else class="mt-1 text-sm text-gray-500">
-              Dein Name muss einzigartig sein.
+            <p v-else-if="nicknameStatusText" :class="[
+              'mt-1 text-sm',
+              !nameForm.nickname.trim()
+                ? 'text-red-600'
+                : nameForm.nickname.trim() === userStore.user?.nickname 
+                  ? 'text-gray-500' 
+                  : nicknameChecking
+                    ? 'text-gray-500'
+                    : nicknameAvailable === false 
+                      ? 'text-red-600' 
+                      : nicknameAvailable === true 
+                        ? 'text-green-600' 
+                        : 'text-gray-500'
+            ]">
+              {{ nicknameStatusText }}
             </p>
           </div>
           <div class="flex gap-2">
             <button type="button" @click="showNameModal = false" class="flex-1 px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50">Abbrechen</button>
-            <button type="submit" :disabled="nameLoading || !nameForm.nickname || !!nameError" class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed">
+            <button type="submit" :disabled="nameLoading || !isNameValid || !!nameError" class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed">
               {{ nameLoading ? 'Speichern...' : 'Speichern' }}
             </button>
           </div>
@@ -395,7 +409,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { useAuthStore } from '@/stores/auth'
@@ -456,6 +470,10 @@ const contactLinkError = ref('')
 const emailSettingsError = ref('')
 const regionalPartnerError = ref('')
 const deleteError = ref('')
+
+// Nickname validation
+const nicknameChecking = ref(false)
+const nicknameAvailable = ref<boolean | null>(null) // null = not checked, true = available, false = taken
 
 // Password validation
 const isPasswordValid = computed(() => {
@@ -558,6 +576,99 @@ async function updatePassword() {
     passwordLoading.value = false
   }
 }
+
+let nicknameValidationTimeout: ReturnType<typeof setTimeout> | null = null
+
+async function checkNicknameAvailability() {
+  const nickname = nameForm.nickname.trim()
+  
+  if (!nickname) {
+    nicknameAvailable.value = null
+    nicknameChecking.value = false
+    return
+  }
+  
+  // If same as current name, it's available
+  if (nickname === userStore.user?.nickname) {
+    nicknameAvailable.value = true
+    nicknameChecking.value = false
+    return
+  }
+  
+  nicknameChecking.value = true
+  nicknameAvailable.value = null
+  
+  try {
+    const response = await apiClient.post('/auth/check-nickname', { nickname })
+    nicknameAvailable.value = response.data.available
+  } catch (err) {
+    nicknameAvailable.value = null
+  } finally {
+    nicknameChecking.value = false
+  }
+}
+
+// Watch nickname input and validate with debounce
+watch(() => nameForm.nickname, (newValue, oldValue) => {
+  // Clear previous timeout
+  if (nicknameValidationTimeout) {
+    clearTimeout(nicknameValidationTimeout)
+  }
+  
+  const nickname = newValue.trim()
+  
+  // Fast local checks (no debounce needed)
+  if (!nickname || nickname === userStore.user?.nickname) {
+    checkNicknameAvailability() // This will handle the fast cases
+    return
+  }
+  
+  // Debounce API calls (wait 500ms after user stops typing)
+  nicknameValidationTimeout = setTimeout(() => {
+    checkNicknameAvailability()
+  }, 500)
+})
+
+// Computed property for nickname status text
+const nicknameStatusText = computed(() => {
+  const nickname = nameForm.nickname.trim()
+  
+  if (!nickname) {
+    return 'Der Name darf nicht leer sein'
+  }
+  
+  if (nickname === userStore.user?.nickname) {
+    return 'Dein aktueller Name'
+  }
+  
+  if (nicknameChecking.value) {
+    return 'Prüfe...'
+  }
+  
+  if (nicknameAvailable.value === false) {
+    return 'Dieser Name ist schon vergeben'
+  }
+  
+  if (nicknameAvailable.value === true) {
+    return 'Dieser Name ist zurzeit noch verfügbar'
+  }
+  
+  return ''
+})
+
+// Computed property to check if name is valid for saving
+const isNameValid = computed(() => {
+  const nickname = nameForm.nickname.trim()
+  const currentNickname = userStore.user?.nickname || ''
+  
+  // Only enable when:
+  // 1. Name is not empty
+  // 2. Name has changed from current
+  // 3. New name is available
+  return nickname.length > 0 && 
+         nickname !== currentNickname && 
+         nicknameAvailable.value === true
+})
 
 async function updateName() {
   nameError.value = ''
