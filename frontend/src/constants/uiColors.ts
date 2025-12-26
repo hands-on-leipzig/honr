@@ -107,6 +107,53 @@ export function getBadgeBorderClass(level: number): string {
 }
 
 /**
+ * Get the background tint color for a badge level (very light, 10-15% opacity)
+ * @param level - Badge level (1-4)
+ * @returns CSS background color with rgba
+ */
+export function getBadgeBackgroundTint(level: number): string {
+  switch (level) {
+    case 1:
+      return 'rgba(255, 255, 255, 1)' // White (no tint)
+    case 2:
+      return 'rgba(205, 127, 50, 0.12)' // Very light bronze tint
+    case 3:
+      return 'rgba(192, 192, 192, 0.15)' // Very light silver tint
+    case 4:
+      return 'rgba(255, 215, 0, 0.12)' // Very light gold tint
+    default:
+      return 'rgba(255, 255, 255, 1)' // White (no tint)
+  }
+}
+
+/**
+ * Get the box-shadow glow for a badge level
+ * @param level - Badge level (1-4)
+ * @param size - Badge size ('md' or 'lg')
+ * @returns CSS box-shadow value
+ */
+export function getBadgeGlow(level: number, size: 'md' | 'lg' = 'md'): string {
+  const baseBlur = size === 'lg' ? 8 : 4
+  const baseSpread = size === 'lg' ? 2 : 1
+  
+  switch (level) {
+    case 1:
+      return 'none' // No glow for level 1
+    case 2:
+      // Subtle bronze glow
+      return `0 0 ${baseBlur}px ${baseSpread}px rgba(205, 127, 50, 0.3)`
+    case 3:
+      // Medium silver glow
+      return `0 0 ${baseBlur * 1.5}px ${baseSpread * 1.5}px rgba(192, 192, 192, 0.4)`
+    case 4:
+      // Strong gold glow
+      return `0 0 ${baseBlur * 2}px ${baseSpread * 2}px rgba(255, 215, 0, 0.5)`
+    default:
+      return 'none'
+  }
+}
+
+/**
  * Get the rank color classes for a given rank
  * @param rank - Rank number (1, 2, 3, or > 3)
  * @returns Tailwind CSS classes for the rank

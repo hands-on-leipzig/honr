@@ -6,7 +6,12 @@
     <!-- Badge container -->
     <div :class="sizeClass" class="relative">
       <!-- Icon with level border -->
-      <div v-if="logoPath" :class="[borderClass, borderWidthClass, borderStyleClass]" class="w-full h-full rounded-full overflow-hidden flex items-center justify-center bg-white">
+      <div 
+        v-if="logoPath" 
+        :class="[borderClass, borderWidthClass, borderStyleClass]" 
+        class="w-full h-full rounded-full overflow-hidden flex items-center justify-center"
+        :style="{ ...badgeBackgroundStyle, ...badgeGlowStyle }"
+      >
         <img
           :src="logoUrl"
           :alt="roleName"
@@ -16,7 +21,12 @@
         />
       </div>
       <!-- Chip fallback with border -->
-      <div v-else :class="[borderClass, borderWidthClass, borderStyleClass]" class="w-full h-full rounded-full flex items-center justify-center bg-white">
+      <div 
+        v-else 
+        :class="[borderClass, borderWidthClass, borderStyleClass]" 
+        class="w-full h-full rounded-full flex items-center justify-center"
+        :style="{ ...badgeBackgroundStyle, ...badgeGlowStyle }"
+      >
         <span :class="textClass" class="px-2 py-1 text-gray-700 font-medium text-center truncate">
           {{ roleName }}
         </span>
@@ -42,7 +52,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import { getBadgeBorderClass } from '@/constants/uiColors'
+import { getBadgeBorderClass, getBadgeBackgroundTint, getBadgeGlow } from '@/constants/uiColors'
 
 interface Props {
   logoPath: string | null
@@ -73,7 +83,17 @@ const sizeClass = computed(() => {
 })
 
 const borderWidthClass = computed(() => {
-  return props.size === 'lg' ? 'border-[4px]' : 'border-[2px]'
+  // Progressive border width: Level 1-2: 2px, Level 3: 3px, Level 4: 4px (md)
+  // Progressive border width: Level 1-2: 4px, Level 3: 5px, Level 4: 6px (lg)
+  if (props.size === 'lg') {
+    if (props.level === 1 || props.level === 2) return 'border-[4px]'
+    if (props.level === 3) return 'border-[5px]'
+    return 'border-[6px]' // Level 4
+  } else {
+    if (props.level === 1 || props.level === 2) return 'border-[2px]'
+    if (props.level === 3) return 'border-[3px]'
+    return 'border-[4px]' // Level 4
+  }
 })
 
 const borderStyleClass = computed(() => {
@@ -96,6 +116,20 @@ const shortNameTextClass = computed(() => {
 const shortNameWidthStyle = computed(() => {
   return {
     width: props.size === 'lg' ? '96px' : '48px' // Match badge width
+  }
+})
+
+// Background tint for badge
+const badgeBackgroundStyle = computed(() => {
+  return {
+    backgroundColor: getBadgeBackgroundTint(props.level)
+  }
+})
+
+// Box-shadow glow for badge
+const badgeGlowStyle = computed(() => {
+  return {
+    boxShadow: getBadgeGlow(props.level, props.size)
   }
 })
 
