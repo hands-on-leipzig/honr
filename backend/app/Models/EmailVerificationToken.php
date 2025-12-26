@@ -9,12 +9,15 @@ use Carbon\Carbon;
 
 class EmailVerificationToken extends Model
 {
+    public $timestamps = false; // Tokens are immutable after creation (no updated_at)
+
     protected $fillable = [
         'user_id',
         'email',
         'token',
         'type',
         'expires_at',
+        'created_at',
     ];
 
     protected $casts = [
@@ -37,12 +40,14 @@ class EmailVerificationToken extends Model
         $hashedToken = Hash::make($token);
 
         // Store hashed token
+        $now = Carbon::now();
         self::create([
             'user_id' => $userId,
             'email' => $email,
             'token' => $hashedToken,
             'type' => $type,
-            'expires_at' => Carbon::now()->addHours($hours),
+            'expires_at' => $now->copy()->addHours($hours),
+            'created_at' => $now,
         ]);
 
         // Return plain token for email
