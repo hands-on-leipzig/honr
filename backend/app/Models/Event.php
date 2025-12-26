@@ -15,6 +15,7 @@ class Event extends Model
         'location_id',
         'date',
         'status',
+        'rejection_reason',
         'proposed_by_user_id',
     ];
 

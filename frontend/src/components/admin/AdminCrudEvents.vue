@@ -111,6 +111,17 @@
           </select>
         </div>
 
+        <div v-if="form.status === 'rejected'">
+          <label class="block text-sm font-medium text-gray-700 mb-1">Grund für Ablehnung *</label>
+          <textarea 
+            v-model="form.rejection_reason" 
+            required
+            rows="3" 
+            placeholder="Bitte gib einen Grund für die Ablehnung an..."
+            class="w-full px-3 py-2 border border-gray-300 rounded-md"
+          ></textarea>
+        </div>
+
         <div v-if="editingItem.proposed_by_user" class="text-sm text-gray-500">
           Vorgeschlagen von: {{ editingItem.proposed_by_user.nickname || editingItem.proposed_by_user.email }}
         </div>
@@ -180,6 +191,7 @@ const form = reactive({
   location_id: '',
   date: '',
   status: 'approved',
+  rejection_reason: '',
 })
 const saving = ref(false)
 const deleting = ref(false)
@@ -283,6 +295,7 @@ function addItem() {
   form.location_id = ''
   form.date = ''
   form.status = 'approved'
+  form.rejection_reason = ''
   selectedLocation.value = null
   locationSearch.value = ''
   error.value = ''
@@ -296,6 +309,7 @@ function editItem(item: any) {
   form.location_id = item.location_id
   form.date = item.date?.split('T')[0] || ''
   form.status = item.status
+  form.rejection_reason = item.rejection_reason || ''
   selectedLocation.value = options.locations.find((loc: any) => loc.id === item.location_id) || null
   locationSearch.value = ''
   error.value = ''
@@ -312,6 +326,7 @@ async function saveItem() {
       location_id: form.location_id,
       date: form.date,
       status: form.status,
+      rejection_reason: form.status === 'rejected' ? form.rejection_reason : null,
     }
     if (editingItem.value.id) {
       await apiClient.put(`${API_PATH}/${editingItem.value.id}`, data)

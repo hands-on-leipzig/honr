@@ -6,7 +6,10 @@ use App\Http\Controllers\Controller;
 use App\Models\Location;
 use App\Models\Country;
 use App\Services\ApprovalValidationService;
+use App\Mail\ProposalApproved;
+use App\Mail\ProposalRejected;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 
 class AdminLocationController extends Controller
 {
@@ -31,8 +34,10 @@ class AdminLocationController extends Controller
             'latitude' => 'nullable|numeric|between:-90,90',
             'longitude' => 'nullable|numeric|between:-180,180',
             'status' => 'required|in:pending,approved,rejected',
+            'rejection_reason' => 'nullable|string|max:1000|required_if:status,rejected',
         ], [
             'name.unique' => 'Dieser Standortname existiert bereits.',
+            'rejection_reason.required_if' => 'Bitte gib einen Grund für die Ablehnung an.',
         ]);
 
         // Validate approval dependencies if trying to approve
@@ -47,10 +52,18 @@ class AdminLocationController extends Controller
 
         $location = Location::create($request->only([
             'name', 'country_id', 'street_address', 'city', 'postal_code',
-            'latitude', 'longitude', 'status'
+            'latitude', 'longitude', 'status', 'rejection_reason'
         ]));
 
-        return response()->json($location->load(['country:id,name,iso_code']), 201);
+        // Reload to get relationships
+        $location->load(['country:id,name,iso_code', 'proposedByUser:id,nickname,email']);
+
+        // Send notification email if created as approved/rejected (not pending)
+        if ($location->status !== 'pending') {
+            $this->sendProposalNotification($location, 'pending', $location->status);
+        }
+
+        return response()->json($location, 201);
     }
 
     public function update(Request $request, Location $location)
@@ -64,8 +77,10 @@ class AdminLocationController extends Controller
             'latitude' => 'nullable|numeric|between:-90,90',
             'longitude' => 'nullable|numeric|between:-180,180',
             'status' => 'required|in:pending,approved,rejected',
+            'rejection_reason' => 'nullable|string|max:1000|required_if:status,rejected',
         ], [
             'name.unique' => 'Dieser Standortname existiert bereits.',
+            'rejection_reason.required_if' => 'Bitte gib einen Grund für die Ablehnung an.',
         ]);
 
         // Validate approval dependencies
@@ -85,14 +100,21 @@ class AdminLocationController extends Controller
 
         $location->update($request->only([
             'name', 'country_id', 'street_address', 'city', 'postal_code',
-            'latitude', 'longitude', 'status'
+            'latitude', 'longitude', 'status', 'rejection_reason'
         ]));
+
+        // Reload to get fresh data including relationships
+        $location->refresh();
+        $location->load(['country:id,name,iso_code', 'proposedByUser:id,nickname,email']);
+
+        // Send notification email if status changed
+        $this->sendProposalNotification($location, $oldStatus, $newStatus);
 
         // If location status changed or country changed, we need to update related events
         // But events don't auto-update, so we just validate on approval
         // The events will be validated when someone tries to approve them
 
-        return response()->json($location->load(['country:id,name,iso_code']));
+        return response()->json($location);
     }
 
     public function destroy(Location $location)
@@ -114,6 +136,44 @@ class AdminLocationController extends Controller
             Country::orderBy('name')
                 ->get(['id', 'name', 'iso_code', 'status'])
         );
+    }
+
+    /**
+     * Send notification email to user who proposed the entry
+     */
+    private function sendProposalNotification(Location $location, string $oldStatus, string $newStatus)
+    {
+        // Only send if there's a user who proposed it and they want notifications
+        if (!$location->proposedByUser || !$location->proposedByUser->email_notify_proposals) {
+            return;
+        }
+
+        // Only send if status changed from pending
+        if ($oldStatus !== 'pending') {
+            return;
+        }
+
+        $user = $location->proposedByUser;
+        $context = $location->country ? ['country' => $location->country->name] : null;
+
+        if ($newStatus === 'approved') {
+            Mail::to($user->email)->send(new ProposalApproved(
+                $user,
+                'location',
+                $location->name,
+                null,
+                $context
+            ));
+        } elseif ($newStatus === 'rejected') {
+            Mail::to($user->email)->send(new ProposalRejected(
+                $user,
+                'location',
+                $location->name,
+                $location->rejection_reason ?? 'Kein Grund angegeben.',
+                null,
+                $context
+            ));
+        }
     }
 }
 

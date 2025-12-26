@@ -82,6 +82,17 @@
           </select>
         </div>
 
+        <div v-if="form.status === 'rejected'">
+          <label class="block text-sm font-medium text-gray-700 mb-1">Grund für Ablehnung *</label>
+          <textarea 
+            v-model="form.rejection_reason" 
+            required
+            rows="3" 
+            placeholder="Bitte gib einen Grund für die Ablehnung an..."
+            class="w-full px-3 py-2 border border-gray-300 rounded-md"
+          ></textarea>
+        </div>
+
         <div v-if="editingItem.proposed_by_user" class="text-sm text-gray-500">
           Vorgeschlagen von: {{ editingItem.proposed_by_user.nickname || editingItem.proposed_by_user.email }}
         </div>
@@ -160,6 +171,7 @@ const form = reactive({
   name: '',
   iso_code: '',
   status: 'approved',
+  rejection_reason: '',
 })
 const saving = ref(false)
 const deleting = ref(false)
@@ -199,6 +211,7 @@ function addItem() {
   form.name = ''
   form.iso_code = ''
   form.status = 'approved'
+  form.rejection_reason = ''
   error.value = ''
 }
 
@@ -207,6 +220,7 @@ function editItem(item: any) {
   form.name = item.name
   form.iso_code = item.iso_code
   form.status = item.status
+  form.rejection_reason = item.rejection_reason || ''
   error.value = ''
 }
 
@@ -218,6 +232,7 @@ async function saveItem() {
       name: form.name,
       iso_code: form.iso_code.toUpperCase(),
       status: form.status,
+      rejection_reason: form.status === 'rejected' ? form.rejection_reason : null,
     }
     if (editingItem.value.id) {
       await apiClient.put(`${API_PATH}/${editingItem.value.id}`, data)

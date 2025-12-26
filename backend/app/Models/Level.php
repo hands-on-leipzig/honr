@@ -13,6 +13,7 @@ class Level extends Model
         'description',
         'sort_order',
         'status',
+        'rejection_reason',
         'proposed_by_user_id',
     ];
 

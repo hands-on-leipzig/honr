@@ -12,6 +12,7 @@ class Country extends Model
         'name',
         'iso_code',
         'status',
+        'rejection_reason',
         'proposed_by_user_id',
     ];
 

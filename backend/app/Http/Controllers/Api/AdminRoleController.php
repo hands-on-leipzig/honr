@@ -6,8 +6,11 @@ use App\Http\Controllers\Controller;
 use App\Models\Role;
 use App\Models\FirstProgram;
 use App\Services\EngagementRecognitionService;
+use App\Mail\ProposalApproved;
+use App\Mail\ProposalRejected;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Mail;
 
 class AdminRoleController extends Controller
 {
@@ -30,6 +33,9 @@ class AdminRoleController extends Controller
             'first_program_id' => 'required|exists:first_programs,id',
             'role_category' => 'nullable|in:volunteer,regional_partner,coach',
             'status' => 'required|in:pending,approved,rejected',
+            'rejection_reason' => 'nullable|string|max:1000|required_if:status,rejected',
+        ], [
+            'rejection_reason.required_if' => 'Bitte gib einen Grund für die Ablehnung an.',
         ]);
 
         $maxSortOrder = Role::max('sort_order') ?? 0;
@@ -42,7 +48,11 @@ class AdminRoleController extends Controller
             'first_program_id' => $request->first_program_id,
             'role_category' => $request->role_category,
             'status' => $request->status,
+            'rejection_reason' => $request->rejection_reason,
         ]);
+
+        // Reload to get relationships
+        $role->load(['firstProgram:id,name', 'proposedByUser:id,nickname,email']);
 
         // If role was created as approved, update all related engagements
         if ($request->status === 'approved') {
@@ -50,7 +60,12 @@ class AdminRoleController extends Controller
             $service->updateEngagementsForRole($role);
         }
 
-        return response()->json($role->load(['firstProgram:id,name']), 201);
+        // Send notification email if created as approved/rejected (not pending)
+        if ($role->status !== 'pending') {
+            $this->sendProposalNotification($role, 'pending', $role->status);
+        }
+
+        return response()->json($role, 201);
     }
 
     public function update(Request $request, Role $role)
@@ -62,6 +77,9 @@ class AdminRoleController extends Controller
             'first_program_id' => 'required|exists:first_programs,id',
             'role_category' => 'nullable|in:volunteer,regional_partner,coach',
             'status' => 'required|in:pending,approved,rejected',
+            'rejection_reason' => 'nullable|string|max:1000|required_if:status,rejected',
+        ], [
+            'rejection_reason.required_if' => 'Bitte gib einen Grund für die Ablehnung an.',
         ]);
 
         $oldStatus = $role->status;
@@ -74,7 +92,12 @@ class AdminRoleController extends Controller
             'first_program_id' => $request->first_program_id,
             'role_category' => $request->role_category,
             'status' => $newStatus,
+            'rejection_reason' => $request->rejection_reason,
         ]);
+
+        // Reload to get fresh data including relationships
+        $role->refresh();
+        $role->load(['firstProgram:id,name', 'proposedByUser:id,nickname,email']);
 
         // If role was just approved, update all related engagements
         if ($oldStatus !== 'approved' && $newStatus === 'approved') {
@@ -82,7 +105,48 @@ class AdminRoleController extends Controller
             $service->updateEngagementsForRole($role);
         }
 
-        return response()->json($role->load(['firstProgram:id,name']));
+        // Send notification email if status changed
+        $this->sendProposalNotification($role, $oldStatus, $newStatus);
+
+        return response()->json($role);
+    }
+
+    /**
+     * Send notification email to user who proposed the entry
+     */
+    private function sendProposalNotification(Role $role, string $oldStatus, string $newStatus)
+    {
+        // Only send if there's a user who proposed it and they want notifications
+        if (!$role->proposedByUser || !$role->proposedByUser->email_notify_proposals) {
+            return;
+        }
+
+        // Only send if status changed from pending
+        if ($oldStatus !== 'pending') {
+            return;
+        }
+
+        $user = $role->proposedByUser;
+        $context = $role->firstProgram ? ['first_program' => $role->firstProgram->name] : null;
+
+        if ($newStatus === 'approved') {
+            Mail::to($user->email)->send(new ProposalApproved(
+                $user,
+                'role',
+                $role->name,
+                $role->description,
+                $context
+            ));
+        } elseif ($newStatus === 'rejected') {
+            Mail::to($user->email)->send(new ProposalRejected(
+                $user,
+                'role',
+                $role->name,
+                $role->rejection_reason ?? 'Kein Grund angegeben.',
+                $role->description,
+                $context
+            ));
+        }
     }
 
     public function reorder(Request $request)

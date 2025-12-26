@@ -17,6 +17,7 @@ class Location extends Model
         'latitude',
         'longitude',
         'status',
+        'rejection_reason',
         'proposed_by_user_id',
     ];
 

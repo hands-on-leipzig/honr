@@ -16,6 +16,7 @@ class Role extends Model
         'first_program_id',
         'role_category',
         'status',
+        'rejection_reason',
         'proposed_by_user_id',
         'logo_path',
     ];
