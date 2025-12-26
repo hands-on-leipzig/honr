@@ -71,8 +71,36 @@
           <div class="px-3 py-2 bg-gray-100 border border-gray-200 rounded-md text-gray-700">{{ editingUser.regional_partner_name || '–' }}</div>
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Volunteer-Newsletter</label>
-          <div class="px-3 py-2 bg-gray-100 border border-gray-200 rounded-md text-gray-700">{{ editingUser.email_volunteer_newsletter ? 'Ja' : 'Nein' }}</div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">E-Mail-Einstellungen</label>
+          <div class="px-3 py-2 bg-gray-100 border border-gray-200 rounded-md space-y-2">
+            <label class="flex items-center text-gray-700">
+              <input
+                type="checkbox"
+                :checked="editingUser.email_notify_proposals"
+                disabled
+                class="rounded border-gray-300 text-blue-600 mr-2"
+              />
+              <span class="text-sm">Benachrichtigung zu angenommenen Vorschlägen</span>
+            </label>
+            <label class="flex items-center text-gray-700">
+              <input
+                type="checkbox"
+                :checked="editingUser.email_tool_info"
+                disabled
+                class="rounded border-gray-300 text-blue-600 mr-2"
+              />
+              <span class="text-sm">Informationen zum Tool, Badges und Leaderboard</span>
+            </label>
+            <label class="flex items-center text-gray-700">
+              <input
+                type="checkbox"
+                :checked="editingUser.email_volunteer_newsletter"
+                disabled
+                class="rounded border-gray-300 text-blue-600 mr-2"
+              />
+              <span class="text-sm">Volunteer-Newsletter von Hands On Technology</span>
+            </label>
+          </div>
         </div>
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
