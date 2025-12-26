@@ -36,6 +36,9 @@ Route::prefix('auth')->group(function () {
     Route::post('/register', [AuthController::class, 'register']);
     Route::post('/check-nickname', [AuthController::class, 'checkNickname']);
     Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
+    Route::get('/verify-email', [AuthController::class, 'verifyEmail']);
+    Route::post('/reset-password', [AuthController::class, 'resetPassword']);
+    Route::get('/verify-email-change', [AuthController::class, 'verifyEmailChange']);
 });
 
 // Authenticated routes

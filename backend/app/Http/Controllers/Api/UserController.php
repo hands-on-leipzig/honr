@@ -5,8 +5,11 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\Engagement;
+use App\Models\EmailVerificationToken;
+use App\Mail\VerifyEmailChange;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\ValidationException;
 
 class UserController extends Controller
@@ -125,17 +128,9 @@ class UserController extends Controller
             ]);
         }
 
-        // TODO: Send confirmation email to new address
-        // $token = Str::random(64);
-        // DB::table('email_verification_tokens')->insert([
-        //     'user_id' => $user->id,
-        //     'email' => $request->new_email,
-        //     'token' => Hash::make($token),
-        //     'type' => 'email_change',
-        //     'expires_at' => now()->addHours(24),
-        //     'created_at' => now(),
-        // ]);
-        // Mail::to($request->new_email)->send(new VerifyEmailChange($user, $token));
+        // Generate verification token and send email to new address
+        $token = EmailVerificationToken::createToken($user->id, $request->new_email, 'email_change');
+        Mail::to($request->new_email)->send(new VerifyEmailChange($user, $request->new_email, $token));
 
         return response()->json([
             'message' => 'Ein Bestätigungslink wurde an die neue E-Mail-Adresse gesendet.',
@@ -286,7 +281,7 @@ class UserController extends Controller
 
         $engagements = Engagement::where('user_id', $user->id)
             ->with([
-                'role:id,name,first_program_id,status,logo_path',
+                'role:id,name,short_name,first_program_id,status,logo_path',
                 'role.firstProgram:id,name,logo_path',
                 'event:id,date,season_id,level_id,location_id,status,first_program_id',
                 'event.firstProgram:id,name,logo_path,sort_order',
