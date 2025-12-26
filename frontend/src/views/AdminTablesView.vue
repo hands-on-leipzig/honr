@@ -65,8 +65,9 @@ const selectedTable = ref<string | null>(null)
 // Tables with implemented CRUD components
 const implementedTables = ['users', 'first_programs', 'seasons', 'levels', 'countries', 'locations', 'roles', 'events', 'engagements']
 
-// Pending counts for crowdsourced tables
+// Pending counts for tables needing admin attention
 const pendingCounts = reactive<Record<string, number>>({
+  users: 0,
   levels: 0,
   roles: 0,
   countries: 0,
@@ -98,6 +99,10 @@ const getTableLabel = (tableName: string) => {
 
 async function loadPendingCounts() {
   try {
+    // Load users with 'requested' status (need admin attention)
+    const usersRes = await apiClient.get('/admin/users')
+    pendingCounts.users = usersRes.data.filter((u: any) => u.status === 'requested').length
+
     // Load levels pending count
     const levelsRes = await apiClient.get('/admin/levels')
     pendingCounts.levels = levelsRes.data.filter((i: any) => i.status === 'pending').length

@@ -1,8 +1,20 @@
 <template>
   <div class="bg-white rounded-lg shadow">
-    <div class="p-4 border-b border-gray-200 flex items-center justify-between">
-      <h2 class="text-xl font-semibold">Benutzer</h2>
-      <button @click="$emit('close')" class="text-gray-500 hover:text-gray-700">✕</button>
+    <div class="p-4 border-b border-gray-200">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+          <h2 class="text-xl font-semibold">Benutzer</h2>
+          <div v-if="hasRequested" class="flex items-center space-x-2">
+            <BellIcon :class="['w-4 h-4', STATUS_WARNING.icon]" />
+            <span :class="['text-sm font-medium', STATUS_WARNING.text]">{{ requestedCount }}</span>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" v-model="filterRequested" class="sr-only peer" />
+              <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
+            </label>
+          </div>
+        </div>
+        <button @click="$emit('close')" class="text-gray-500 hover:text-gray-700">✕</button>
+      </div>
     </div>
 
     <!-- Loading -->
@@ -11,29 +23,32 @@
     <!-- Users List -->
     <div v-else class="divide-y divide-gray-200">
       <div
-        v-for="user in sortedUsers"
+        v-for="user in filteredUsers"
         :key="user.id"
         @click="editUser(user)"
         class="px-4 py-3 hover:bg-gray-50 cursor-pointer"
       >
         <div class="flex items-center justify-between">
-          <div>
-            <div class="font-medium">{{ user.nickname || '(kein Name)' }}</div>
-            <div class="text-sm text-gray-500">{{ user.email }}</div>
-          </div>
-          <div class="flex items-center space-x-2">
-            <span v-if="user.is_admin" class="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800">Admin</span>
-            <span
-              :class="[
-                'px-2 py-1 text-xs rounded-full',
-                user.status === 'active' ? STATUS_SUCCESS.badge :
-                user.status === 'requested' ? STATUS_WARNING.badge :
-                user.status === 'disabled' ? STATUS_ERROR.badge :
-                'bg-gray-100 text-gray-800'
-              ]"
-            >
-              {{ statusLabel(user.status) }}
-            </span>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center space-x-2">
+              <span class="font-medium truncate">{{ user.nickname || '(kein Name)' }}</span>
+              <BellIcon v-if="user.status === 'requested'" :class="['w-4 h-4', STATUS_WARNING.icon]" />
+              <span
+                :class="[
+                  'px-2 py-1 text-xs rounded-full',
+                  user.status === 'active' ? STATUS_SUCCESS.badge :
+                  user.status === 'requested' ? STATUS_WARNING.badge :
+                  user.status === 'disabled' ? STATUS_ERROR.badge :
+                  'bg-gray-100 text-gray-800'
+                ]"
+              >
+                {{ statusLabel(user.status) }}
+              </span>
+            </div>
+            <div class="text-sm text-gray-500 truncate">{{ user.email }}</div>
+            <div v-if="user.is_admin" class="mt-1">
+              <span class="px-2 py-0.5 text-xs rounded-full bg-blue-100 text-blue-800">Admin</span>
+            </div>
           </div>
         </div>
       </div>
@@ -189,6 +204,7 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed, watch, onMounted } from 'vue'
+import { BellIcon } from '@heroicons/vue/24/solid'
 import apiClient from '@/api/client'
 import { useUserStore } from '@/stores/user'
 import { getStatusColorClass, STATUS_SUCCESS, STATUS_WARNING, STATUS_ERROR } from '@/constants/uiColors'
@@ -200,6 +216,7 @@ const userStore = useUserStore()
 // State
 const items = ref<any[]>([])
 const loading = ref(false)
+const filterRequested = ref(false)
 const editingUser = ref<any | null>(null)
 const form = reactive({
   status: 'requested',
@@ -213,8 +230,18 @@ const showDeleteConfirm = ref(false)
 // Computed
 const isCurrentUser = computed(() => editingUser.value?.id === userStore.user?.id)
 
-const sortedUsers = computed(() => {
-  return [...items.value].sort((a, b) => {
+const requestedCount = computed(() => items.value.filter(u => u.status === 'requested').length)
+const hasRequested = computed(() => requestedCount.value > 0)
+
+const filteredUsers = computed(() => {
+  let result = [...items.value]
+  
+  if (filterRequested.value) {
+    result = result.filter(u => u.status === 'requested')
+  }
+  
+  // Sort: requested first, then alphabetically
+  return result.sort((a, b) => {
     if (a.status === 'requested' && b.status !== 'requested') return -1
     if (a.status !== 'requested' && b.status === 'requested') return 1
     const nameA = a.nickname || a.email
@@ -250,6 +277,8 @@ async function load() {
   try {
     const response = await apiClient.get('/admin/users')
     items.value = response.data
+    // Default filter on if there are requested users
+    filterRequested.value = items.value.some(u => u.status === 'requested')
   } catch (err) {
     console.error('Failed to load users', err)
   } finally {
