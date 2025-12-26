@@ -16,7 +16,7 @@ class AdminLocationController extends Controller
     public function index()
     {
         return response()->json(
-            Location::with(['country:id,name,iso_code', 'proposedByUser:id,nickname,email'])
+            Location::with(['country:id,name,iso_code', 'proposedByUser:id,nickname,email,email_notify_proposals'])
                 ->withCount('events')
                 ->orderBy('name')
                 ->get()
@@ -56,7 +56,7 @@ class AdminLocationController extends Controller
         ]));
 
         // Reload to get relationships
-        $location->load(['country:id,name,iso_code', 'proposedByUser:id,nickname,email']);
+        $location->load(['country:id,name,iso_code', 'proposedByUser:id,nickname,email,email_notify_proposals']);
 
         // Send notification email if created as approved/rejected (not pending)
         if ($location->status !== 'pending') {
@@ -105,7 +105,7 @@ class AdminLocationController extends Controller
 
         // Reload to get fresh data including relationships
         $location->refresh();
-        $location->load(['country:id,name,iso_code', 'proposedByUser:id,nickname,email']);
+        $location->load(['country:id,name,iso_code', 'proposedByUser:id,nickname,email,email_notify_proposals']);
 
         // Send notification email if status changed
         $this->sendProposalNotification($location, $oldStatus, $newStatus);

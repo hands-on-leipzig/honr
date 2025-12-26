@@ -17,7 +17,7 @@ class AdminRoleController extends Controller
     public function index()
     {
         return response()->json(
-            Role::with(['firstProgram:id,name', 'proposedByUser:id,nickname,email'])
+            Role::with(['firstProgram:id,name', 'proposedByUser:id,nickname,email,email_notify_proposals'])
                 ->withCount('engagements')
                 ->orderBy('sort_order')
                 ->get()
@@ -52,7 +52,7 @@ class AdminRoleController extends Controller
         ]);
 
         // Reload to get relationships
-        $role->load(['firstProgram:id,name', 'proposedByUser:id,nickname,email']);
+        $role->load(['firstProgram:id,name', 'proposedByUser:id,nickname,email,email_notify_proposals']);
 
         // If role was created as approved, update all related engagements
         if ($request->status === 'approved') {
@@ -97,7 +97,7 @@ class AdminRoleController extends Controller
 
         // Reload to get fresh data including relationships
         $role->refresh();
-        $role->load(['firstProgram:id,name', 'proposedByUser:id,nickname,email']);
+        $role->load(['firstProgram:id,name', 'proposedByUser:id,nickname,email,email_notify_proposals']);
 
         // If role was just approved, update all related engagements
         if ($oldStatus !== 'approved' && $newStatus === 'approved') {

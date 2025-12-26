@@ -25,7 +25,7 @@ class AdminEventController extends Controller
                 'season:id,name,start_year',
                 'level:id,name',
                 'location:id,name,city',
-                'proposedByUser:id,nickname,email'
+                'proposedByUser:id,nickname,email,email_notify_proposals'
             ])
                 ->withCount('engagements')
                 ->orderBy('date', 'desc')

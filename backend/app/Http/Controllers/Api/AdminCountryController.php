@@ -14,7 +14,7 @@ class AdminCountryController extends Controller
     public function index()
     {
         return response()->json(
-            Country::with('proposedByUser:id,nickname,email')
+            Country::with('proposedByUser:id,nickname,email,email_notify_proposals')
                 ->withCount('locations')
                 ->orderBy('name')
                 ->get()
@@ -43,7 +43,7 @@ class AdminCountryController extends Controller
         ]);
 
         // Reload to get relationships
-        $country->load('proposedByUser:id,nickname,email');
+        $country->load('proposedByUser:id,nickname,email,email_notify_proposals');
 
         // Send notification email if created as approved/rejected (not pending)
         if ($country->status !== 'pending') {
@@ -78,7 +78,7 @@ class AdminCountryController extends Controller
 
         // Reload to get fresh data including relationships
         $country->refresh();
-        $country->load('proposedByUser:id,nickname,email');
+        $country->load('proposedByUser:id,nickname,email,email_notify_proposals');
 
         // Send notification email if status changed
         $this->sendProposalNotification($country, $oldStatus, $country->status);

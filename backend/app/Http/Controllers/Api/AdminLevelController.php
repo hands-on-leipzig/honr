@@ -14,7 +14,7 @@ class AdminLevelController extends Controller
     public function index()
     {
         return response()->json(
-            Level::with('proposedByUser:id,nickname,email')
+            Level::with('proposedByUser:id,nickname,email,email_notify_proposals')
                 ->withCount('events')
                 ->orderBy('sort_order')
                 ->get()
@@ -72,7 +72,7 @@ class AdminLevelController extends Controller
         $level = Level::create($request->only(['name', 'description', 'sort_order', 'status', 'rejection_reason']));
 
         // Reload to get relationships
-        $level->load('proposedByUser:id,nickname,email');
+        $level->load('proposedByUser:id,nickname,email,email_notify_proposals');
 
         // Send notification email if created as approved/rejected (not pending)
         if ($level->status !== 'pending') {
@@ -101,7 +101,7 @@ class AdminLevelController extends Controller
 
         // Reload to get fresh data including relationships
         $level->refresh();
-        $level->load('proposedByUser:id,nickname,email');
+        $level->load('proposedByUser:id,nickname,email,email_notify_proposals');
 
         // Send notification email if status changed
         $this->sendProposalNotification($level, $oldStatus, $level->status);
