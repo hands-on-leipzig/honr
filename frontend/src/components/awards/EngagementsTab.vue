@@ -7,21 +7,31 @@
       </button>
     </div>
 
+    <!-- Search Filter -->
+    <div class="mb-4">
+      <input
+        v-model="searchQuery"
+        type="text"
+        placeholder="Suchen..."
+        class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+      />
+    </div>
+
     <!-- Loading -->
     <div v-if="loading" class="bg-white rounded-lg shadow p-6">
       <p class="text-gray-600 text-center py-8">Laden...</p>
     </div>
 
     <!-- Empty State -->
-    <div v-else-if="displayedEngagements.length === 0" class="bg-white rounded-lg shadow p-6">
+    <div v-else-if="filteredEngagements.length === 0" class="bg-white rounded-lg shadow p-6">
       <p class="text-gray-600 text-center py-8">
-        {{ isReadOnly ? 'Noch keine Einsätze vorhanden.' : 'Du hast noch keine Einsätze hinzugefügt.' }}
+        {{ searchQuery ? 'Keine Einsätze gefunden.' : (isReadOnly ? 'Noch keine Einsätze vorhanden.' : 'Du hast noch keine Einsätze hinzugefügt.') }}
       </p>
     </div>
 
     <!-- Read-Only Simple List -->
     <div v-else-if="isReadOnly" class="bg-white rounded-lg shadow divide-y divide-gray-200">
-      <div v-for="item in displayedEngagements" :key="item.id" class="p-4 grid grid-cols-[auto_auto_1fr_1fr] gap-4 items-center">
+      <div v-for="item in filteredEngagements" :key="item.id" class="p-4 grid grid-cols-[auto_auto_1fr_1fr] gap-4 items-center">
         <!-- Season Icon -->
         <div class="flex-shrink-0">
           <img
@@ -66,7 +76,7 @@
 
     <!-- Editable Engagements List -->
     <div v-else class="bg-white rounded-lg shadow divide-y divide-gray-200">
-      <div v-for="item in displayedEngagements" :key="item.id" class="p-4">
+      <div v-for="item in filteredEngagements" :key="item.id" class="p-4">
         <div class="flex items-start justify-between">
           <!-- Status Icon -->
           <div class="mr-3 pt-1">
@@ -465,6 +475,7 @@ const roles = ref<any[]>([])
 const events = ref<any[]>([])
 const roleSearch = ref('')
 const eventSearch = ref('')
+const searchQuery = ref('')
 const selectedRole = ref<any | null>(null)
 const selectedEvent = ref<any | null>(null)
 const saving = ref(false)
@@ -635,6 +646,44 @@ const displayedEngagements = computed(() => {
     return engagements.value.filter((e: any) => e.is_recognized)
   }
   return engagements.value
+})
+
+// Computed: filter engagements based on search query
+const filteredEngagements = computed(() => {
+  if (!searchQuery.value.trim()) {
+    return displayedEngagements.value
+  }
+  
+  const q = searchQuery.value.toLowerCase()
+  
+  return displayedEngagements.value.filter((item: any) => {
+    // Role name and program
+    const roleName = item.role?.name?.toLowerCase() || ''
+    const roleProgram = item.role?.first_program?.name?.toLowerCase() || ''
+    
+    // Event date (formatted)
+    const eventDate = formatDate(item.event?.date).toLowerCase()
+    
+    // Event season, level, location
+    const eventSeason = item.event?.season?.name?.toLowerCase() || ''
+    const eventLevel = item.event?.level?.name?.toLowerCase() || ''
+    const eventLocation = item.event?.location?.name?.toLowerCase() || ''
+    const eventCity = item.event?.location?.city?.toLowerCase() || ''
+    
+    // Status text (for editable view)
+    const statusText = item.is_recognized ? 'erkannt' : 'ausstehend'
+    
+    return (
+      roleName.includes(q) ||
+      roleProgram.includes(q) ||
+      eventDate.includes(q) ||
+      eventSeason.includes(q) ||
+      eventLevel.includes(q) ||
+      eventLocation.includes(q) ||
+      eventCity.includes(q) ||
+      statusText.includes(q)
+    )
+  })
 })
 
 async function loadEngagements() {
