@@ -46,7 +46,7 @@
           </div>
         </div>
         <!-- Role Icon -->
-        <div class="flex-shrink-0">
+        <div class="flex-shrink-0 flex flex-col items-center">
           <img
             v-if="item.role?.logo_path"
             :src="getLogoUrl(item.role.logo_path)"
@@ -57,6 +57,9 @@
           <div v-else class="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
             <span class="text-xs text-gray-500">?</span>
           </div>
+          <span v-if="item.role?.short_name" class="text-[8px] text-gray-500 mt-0.5 text-center truncate max-w-[32px]">
+            {{ item.role.short_name }}
+          </span>
         </div>
         <!-- Date -->
         <div>
@@ -87,13 +90,18 @@
             <!-- Role Column -->
             <div>
               <div class="text-xs text-gray-500 uppercase tracking-wide mb-1 flex items-center gap-2">
-                <img
-                  v-if="item.role?.logo_path"
-                  :src="getLogoUrl(item.role.logo_path)"
-                  :alt="item.role?.name"
-                  class="h-4 w-4 object-contain flex-shrink-0"
-                  @error="handleImageError"
-                />
+                <div class="flex flex-col items-center">
+                  <img
+                    v-if="item.role?.logo_path"
+                    :src="getLogoUrl(item.role.logo_path)"
+                    :alt="item.role?.name"
+                    class="h-4 w-4 object-contain flex-shrink-0"
+                    @error="handleImageError"
+                  />
+                  <span v-if="item.role?.short_name" class="text-[6px] text-gray-500 mt-0.5 leading-none">
+                    {{ item.role.short_name }}
+                  </span>
+                </div>
                 <span>Rolle</span>
               </div>
               <div class="font-medium">{{ item.role?.name }}</div>
