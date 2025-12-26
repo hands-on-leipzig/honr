@@ -45,7 +45,7 @@
         <div class="flex items-center space-x-3">
           <span class="text-gray-400 cursor-grab">⋮⋮</span>
           <!-- Role Icon -->
-          <div class="flex-shrink-0">
+          <div class="flex-shrink-0 flex flex-col items-center">
             <img 
               v-if="item.logo_path" 
               :src="getLogoUrl(item.logo_path)" 
@@ -58,6 +58,9 @@
             >
               <span class="text-gray-400 text-xs">—</span>
             </div>
+            <span v-if="item.short_name" class="text-[8px] text-gray-500 mt-0.5 text-center truncate max-w-[32px]">
+              {{ item.short_name }}
+            </span>
           </div>
           <div class="flex-1 min-w-0">
             <div class="flex items-center space-x-2">
@@ -94,6 +97,11 @@
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">Name *</label>
           <input v-model="form.name" type="text" required class="w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="z.B. Schiedsrichter:in" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Kurzname</label>
+          <input v-model="form.short_name" type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="z.B. Schiri" />
+          <p class="text-xs text-gray-500 mt-1">Wird auf dem Badge angezeigt</p>
         </div>
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">Programm *</label>
@@ -201,6 +209,7 @@ const searchQuery = ref('')
 const editingItem = ref<any | null>(null)
 const form = reactive({
   name: '',
+  short_name: '',
   description: '',
   first_program_id: '',
   role_category: '',
@@ -344,6 +353,7 @@ async function load() {
 function addItem() {
   editingItem.value = {}
   form.name = ''
+  form.short_name = ''
   form.description = ''
   form.first_program_id = ''
   form.role_category = ''
@@ -354,6 +364,7 @@ function addItem() {
 function editItem(item: any) {
   editingItem.value = item
   form.name = item.name
+  form.short_name = item.short_name || ''
   form.description = item.description || ''
   form.first_program_id = item.first_program_id
   form.role_category = item.role_category || ''
@@ -367,6 +378,7 @@ async function saveItem() {
   try {
     const data = {
       name: form.name,
+      short_name: form.short_name || null,
       description: form.description || null,
       first_program_id: form.first_program_id,
       role_category: form.role_category || null,

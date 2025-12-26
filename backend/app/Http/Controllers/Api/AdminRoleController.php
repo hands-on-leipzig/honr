@@ -25,6 +25,7 @@ class AdminRoleController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
+            'short_name' => 'nullable|string|max:255',
             'description' => 'nullable|string',
             'first_program_id' => 'required|exists:first_programs,id',
             'role_category' => 'nullable|in:volunteer,regional_partner,coach',
@@ -35,6 +36,7 @@ class AdminRoleController extends Controller
 
         $role = Role::create([
             'name' => $request->name,
+            'short_name' => $request->short_name,
             'description' => $request->description,
             'sort_order' => $maxSortOrder + 1,
             'first_program_id' => $request->first_program_id,
@@ -55,6 +57,7 @@ class AdminRoleController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
+            'short_name' => 'nullable|string|max:255',
             'description' => 'nullable|string',
             'first_program_id' => 'required|exists:first_programs,id',
             'role_category' => 'nullable|in:volunteer,regional_partner,coach',
@@ -66,6 +69,7 @@ class AdminRoleController extends Controller
 
         $role->update([
             'name' => $request->name,
+            'short_name' => $request->short_name,
             'description' => $request->description,
             'first_program_id' => $request->first_program_id,
             'role_category' => $request->role_category,

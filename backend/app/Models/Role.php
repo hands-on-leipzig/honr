@@ -10,6 +10,7 @@ class Role extends Model
 {
     protected $fillable = [
         'name',
+        'short_name',
         'description',
         'sort_order',
         'first_program_id',

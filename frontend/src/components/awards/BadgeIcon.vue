@@ -1,36 +1,42 @@
 <template>
   <button
     @click="$emit('click')"
-    :class="sizeClass"
-    class="relative flex items-center justify-center cursor-pointer hover:opacity-80 hover:scale-105 transition-all duration-200"
+    class="flex flex-col items-center justify-center cursor-pointer hover:opacity-80 hover:scale-105 transition-all duration-200"
   >
-    <!-- Icon with level border -->
-    <div v-if="logoPath" :class="[borderClass, borderWidthClass, borderStyleClass]" class="w-full h-full rounded-full overflow-hidden flex items-center justify-center bg-white">
-      <img
-        :src="logoUrl"
-        :alt="roleName"
-        :class="paddingClass"
-        class="w-full h-full object-contain"
-        @error="handleImageError"
-      />
+    <!-- Badge container -->
+    <div :class="sizeClass" class="relative">
+      <!-- Icon with level border -->
+      <div v-if="logoPath" :class="[borderClass, borderWidthClass, borderStyleClass]" class="w-full h-full rounded-full overflow-hidden flex items-center justify-center bg-white">
+        <img
+          :src="logoUrl"
+          :alt="roleName"
+          :class="paddingClass"
+          class="w-full h-full object-contain"
+          @error="handleImageError"
+        />
+      </div>
+      <!-- Chip fallback with border -->
+      <div v-else :class="[borderClass, borderWidthClass, borderStyleClass]" class="w-full h-full rounded-full flex items-center justify-center bg-white">
+        <span :class="textClass" class="px-2 py-1 text-gray-700 font-medium text-center truncate">
+          {{ roleName }}
+        </span>
+      </div>
+      <!-- Engagement count badge in bottom right corner - positioned outside to be in front -->
+      <div
+        v-if="engagementCount !== undefined && engagementCount !== null"
+        :class="[smallCircleSize, smallCircleBorderClass, borderWidthClass, smallCircleBorderStyleClass, smallCircleFillClass]"
+        class="absolute rounded-full flex items-center justify-center z-20"
+        :style="smallCirclePosition"
+      >
+        <span :class="[smallCircleTextSize, smallCircleTextColorClass]" class="font-bold leading-none">
+          {{ engagementCount }}
+        </span>
+      </div>
     </div>
-    <!-- Chip fallback with border -->
-    <div v-else :class="[borderClass, borderWidthClass, borderStyleClass]" class="w-full h-full rounded-full flex items-center justify-center bg-white">
-      <span :class="textClass" class="px-2 py-1 text-gray-700 font-medium text-center truncate">
-        {{ roleName }}
-      </span>
-    </div>
-    <!-- Engagement count badge in bottom right corner - positioned outside to be in front -->
-    <div
-      v-if="engagementCount !== undefined && engagementCount !== null"
-      :class="[smallCircleSize, smallCircleBorderClass, borderWidthClass, smallCircleBorderStyleClass, smallCircleFillClass]"
-      class="absolute rounded-full flex items-center justify-center z-20"
-      :style="smallCirclePosition"
-    >
-      <span :class="[smallCircleTextSize, smallCircleTextColorClass]" class="font-bold leading-none">
-        {{ engagementCount }}
-      </span>
-    </div>
+    <!-- Short name in tiny font below badge -->
+    <span v-if="roleShortName" :class="shortNameTextClass" class="mt-1 text-gray-600 text-center truncate" :style="shortNameWidthStyle">
+      {{ roleShortName }}
+    </span>
   </button>
 </template>
 
@@ -42,6 +48,7 @@ interface Props {
   logoPath: string | null
   level: number
   roleName: string
+  roleShortName?: string | null
   size?: 'md' | 'lg'
   engagementCount?: number | null
 }
@@ -80,6 +87,16 @@ const paddingClass = computed(() => {
 
 const textClass = computed(() => {
   return props.size === 'lg' ? 'text-sm' : 'text-xs'
+})
+
+const shortNameTextClass = computed(() => {
+  return props.size === 'lg' ? 'text-[10px]' : 'text-[8px]'
+})
+
+const shortNameWidthStyle = computed(() => {
+  return {
+    width: props.size === 'lg' ? '96px' : '48px' // Match badge width
+  }
 })
 
 // Small circle is 1/2 of badge diameter
