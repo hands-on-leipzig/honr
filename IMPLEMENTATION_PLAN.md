@@ -1,7 +1,7 @@
 # Implementation Plan
 
 ## Overview
-This document outlines the high-level implementation plan for the HOTR (Hands-on Recognition) application, including phases, dependencies, and decisions required before implementation begins.
+This document outlines the high-level implementation plan for the HONR (Hands-on Recognition) application, including phases, dependencies, and decisions required before implementation begins.
 
 ---
 

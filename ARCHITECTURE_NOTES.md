@@ -1,6 +1,6 @@
 # Architecture Discussion Notes
 
-## Project: HOTR (Hands-on Recognition)
+## Project: HONR (Hands-on Recognition)
 
 ### Context
 - **HoT (Hands-on-Technology)**: Non-profit organizing FIRST LEGO League in D-A-CH region (Germany, Austria, Switzerland)

@@ -29,7 +29,7 @@ class VerifyEmailChange extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Neue E-Mail-Adresse bestätigen - HOTR',
+            subject: 'Neue E-Mail-Adresse bestätigen - HONR',
         );
     }
 

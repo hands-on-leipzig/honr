@@ -1,6 +1,6 @@
 # Installation Guide
 
-This guide will help you set up the HOTR project locally for development.
+This guide will help you set up the HONR project locally for development.
 
 ## Prerequisites
 

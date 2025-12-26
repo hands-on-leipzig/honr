@@ -1,6 +1,6 @@
 # Deployment Scripts
 
-This directory contains deployment scripts for HOTR.
+This directory contains deployment scripts for HONR.
 
 ## Scripts
 

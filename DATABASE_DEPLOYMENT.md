@@ -1,10 +1,10 @@
 # Database Deployment Guide
 
-This guide covers database deployment strategies for HOTR across DEV, TST, and PRD environments.
+This guide covers database deployment strategies for HONR across DEV, TST, and PRD environments.
 
 ## Overview
 
-HOTR uses MySQL/MariaDB 9.5+ with Laravel migrations for schema management.
+HONR uses MySQL/MariaDB 9.5+ with Laravel migrations for schema management.
 
 ## Database Strategy
 

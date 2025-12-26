@@ -1,6 +1,6 @@
 # Initial Deployment Guide
 
-This guide covers the **first-time deployment** process for HOTR, which includes copying the entire database from the source environment.
+This guide covers the **first-time deployment** process for HONR, which includes copying the entire database from the source environment.
 
 ## Overview
 

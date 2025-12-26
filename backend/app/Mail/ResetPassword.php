@@ -28,7 +28,7 @@ class ResetPassword extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Passwort zurücksetzen - HOTR',
+            subject: 'Passwort zurücksetzen - HONR',
         );
     }
 

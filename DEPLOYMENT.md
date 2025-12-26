@@ -1,6 +1,6 @@
 # Deployment Guide
 
-This document describes the deployment process for HOTR across three environments: DEV, TST, and PRD.
+This document describes the deployment process for HONR across three environments: DEV, TST, and PRD.
 
 ## Environments
 

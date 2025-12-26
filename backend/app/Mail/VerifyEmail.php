@@ -28,7 +28,7 @@ class VerifyEmail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'E-Mail-Adresse bestätigen - HOTR',
+            subject: 'E-Mail-Adresse bestätigen - HONR',
         );
     }
 

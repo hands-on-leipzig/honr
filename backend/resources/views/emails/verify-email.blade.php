@@ -44,14 +44,14 @@
 </head>
 <body>
     <div class="header">
-        <h1>HOTR - Hands-on Recognition</h1>
+        <h1>HONR - Hands-on Recognition</h1>
     </div>
 
     <h2>E-Mail-Adresse bestätigen</h2>
 
     <p>Hallo {{ $user->nickname }},</p>
 
-    <p>vielen Dank für deine Registrierung bei HOTR! Bitte bestätige deine E-Mail-Adresse, um dein Konto zu aktivieren.</p>
+    <p>vielen Dank für deine Registrierung bei HONR! Bitte bestätige deine E-Mail-Adresse, um dein Konto zu aktivieren.</p>
 
     <p style="text-align: center;">
         <a href="{{ $verificationUrl }}" class="button">E-Mail-Adresse bestätigen</a>
@@ -65,7 +65,7 @@
     <p>Falls du dich nicht registriert hast, kannst du diese E-Mail ignorieren.</p>
 
     <div class="footer">
-        <p>Mit freundlichen Grüßen,<br>Das HOTR-Team</p>
+        <p>Mit freundlichen Grüßen,<br>Das HONR-Team</p>
         <p style="font-size: 12px; color: #9ca3af;">
             Falls du Probleme hast, kontaktiere uns unter: honr@hands-on-technology.org
         </p>

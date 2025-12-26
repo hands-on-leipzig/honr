@@ -1,4 +1,4 @@
-# HOTR - Hands-on Recognition
+# HONR - Hands-on Recognition
 
 A mobile-first web application for FIRST LEGO League (FLL) volunteers in the D-A-CH region to record their engagement, earn badges, and view leaderboards.
 

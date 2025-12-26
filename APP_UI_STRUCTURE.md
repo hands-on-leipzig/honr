@@ -150,7 +150,7 @@ User settings and account management.
 7. **Contact / Support**
    - Link to send email for help, feedback, and ideas
    - Opens default mail client with pre-filled recipient (HoT mail server)
-   - Subject line: "HOTR - [Help/Feedback/Ideas]"
+   - Subject line: "HONR - [Help/Feedback/Ideas]"
    - ✅ Supported: `mailto:` link (no database required)
 
 8. **Delete Account**

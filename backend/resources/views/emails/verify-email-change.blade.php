@@ -50,7 +50,7 @@
 </head>
 <body>
     <div class="header">
-        <h1>HOTR - Hands-on Recognition</h1>
+        <h1>HONR - Hands-on Recognition</h1>
     </div>
 
     <h2>Neue E-Mail-Adresse bestätigen</h2>
@@ -75,7 +75,7 @@
     <p>Falls du diese Änderung nicht angefordert hast, kannst du diese E-Mail ignorieren. Deine E-Mail-Adresse bleibt unverändert.</p>
 
     <div class="footer">
-        <p>Mit freundlichen Grüßen,<br>Das HOTR-Team</p>
+        <p>Mit freundlichen Grüßen,<br>Das HONR-Team</p>
         <p style="font-size: 12px; color: #9ca3af;">
             Falls du Probleme hast, kontaktiere uns unter: honr@hands-on-technology.org
         </p>

@@ -50,14 +50,14 @@
 </head>
 <body>
     <div class="header">
-        <h1>HOTR - Hands-on Recognition</h1>
+        <h1>HONR - Hands-on Recognition</h1>
     </div>
 
     <h2>Passwort zurücksetzen</h2>
 
     <p>Hallo {{ $user->nickname }},</p>
 
-    <p>du hast eine Passwort-Zurücksetzung für dein HOTR-Konto angefordert.</p>
+    <p>du hast eine Passwort-Zurücksetzung für dein HONR-Konto angefordert.</p>
 
     <p style="text-align: center;">
         <a href="{{ $resetUrl }}" class="button">Passwort zurücksetzen</a>
@@ -71,7 +71,7 @@
     </div>
 
     <div class="footer">
-        <p>Mit freundlichen Grüßen,<br>Das HOTR-Team</p>
+        <p>Mit freundlichen Grüßen,<br>Das HONR-Team</p>
         <p style="font-size: 12px; color: #9ca3af;">
             Falls du Probleme hast, kontaktiere uns unter: honr@hands-on-technology.org
         </p>
