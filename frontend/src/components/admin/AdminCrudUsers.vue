@@ -3,7 +3,7 @@
     <div class="p-4 border-b border-gray-200">
       <div class="flex items-center justify-between">
         <div class="flex items-center space-x-3">
-          <h2 class="text-xl font-semibold">Benutzer</h2>
+      <h2 class="text-xl font-semibold">Benutzer</h2>
           <div v-if="hasRequested" class="flex items-center space-x-2">
             <BellIcon :class="['w-4 h-4', STATUS_WARNING.icon]" />
             <span :class="['text-sm font-medium', STATUS_WARNING.text]">{{ requestedCount }}</span>
@@ -13,7 +13,7 @@
             </label>
           </div>
         </div>
-        <button @click="$emit('close')" class="text-gray-500 hover:text-gray-700">✕</button>
+      <button @click="$emit('close')" class="text-gray-500 hover:text-gray-700">✕</button>
       </div>
     </div>
 
@@ -30,20 +30,20 @@
       >
         <div class="flex items-center justify-between">
           <div class="flex-1 min-w-0">
-            <div class="flex items-center space-x-2">
+          <div class="flex items-center space-x-2">
               <span class="font-medium truncate">{{ user.nickname || '(kein Name)' }}</span>
               <BellIcon v-if="user.status === 'requested'" :class="['w-4 h-4', STATUS_WARNING.icon]" />
-              <span
-                :class="[
-                  'px-2 py-1 text-xs rounded-full',
-                  user.status === 'active' ? STATUS_SUCCESS.badge :
-                  user.status === 'requested' ? STATUS_WARNING.badge :
-                  user.status === 'disabled' ? STATUS_ERROR.badge :
-                  'bg-gray-100 text-gray-800'
-                ]"
-              >
-                {{ statusLabel(user.status) }}
-              </span>
+            <span
+              :class="[
+                'px-2 py-1 text-xs rounded-full',
+                user.status === 'active' ? STATUS_SUCCESS.badge :
+                user.status === 'requested' ? STATUS_WARNING.badge :
+                user.status === 'disabled' ? STATUS_ERROR.badge :
+                'bg-gray-100 text-gray-800'
+              ]"
+            >
+              {{ statusLabel(user.status) }}
+            </span>
             </div>
             <div class="text-sm text-gray-500 truncate">{{ user.email }}</div>
             <div v-if="user.is_admin" class="mt-1">

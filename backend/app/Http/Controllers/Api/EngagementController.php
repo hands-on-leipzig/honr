@@ -138,6 +138,13 @@ class EngagementController extends Controller
             'recognized_at' => $isRecognized ? now() : null,
         ]);
 
+        // Check for badge threshold if engagement is recognized
+        // Note: No recognition email sent here - user gets feedback in UI directly
+        if ($isRecognized) {
+            $badgeController = new BadgeController();
+            $badgeController->checkBadgeThresholds($user, $engagement->role_id);
+        }
+
         return response()->json($engagement->load([
             'role:id,name,first_program_id',
             'role.firstProgram:id,name',

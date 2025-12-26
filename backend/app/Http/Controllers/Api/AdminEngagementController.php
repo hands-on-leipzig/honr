@@ -7,7 +7,10 @@ use App\Models\Engagement;
 use App\Models\User;
 use App\Models\Role;
 use App\Models\Event;
+use App\Mail\EngagementRecognized;
+use App\Http\Controllers\Api\BadgeController;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 
 class AdminEngagementController extends Controller
 {
@@ -65,6 +68,17 @@ class AdminEngagementController extends Controller
             'recognized_at' => $isRecognized ? now() : null,
         ]);
 
+        // Send notification if engagement is recognized
+        if ($isRecognized) {
+            $this->sendRecognitionNotification($engagement);
+        }
+
+        // Check for badge threshold
+        if ($isRecognized) {
+            $badgeController = new BadgeController();
+            $badgeController->checkBadgeThresholds($user, $engagement->role_id);
+        }
+
         return response()->json($engagement->load([
             'user:id,nickname,email',
             'role:id,name',
@@ -114,6 +128,17 @@ class AdminEngagementController extends Controller
             'recognized_at' => $isRecognized && !$wasRecognized ? now() : $engagement->recognized_at,
         ]);
 
+        // Send notification if engagement just became recognized
+        if ($isRecognized && !$wasRecognized) {
+            $this->sendRecognitionNotification($engagement);
+        }
+
+        // Check for badge threshold if engagement is recognized
+        if ($isRecognized && !$wasRecognized) {
+            $badgeController = new BadgeController();
+            $badgeController->checkBadgeThresholds($user, $engagement->role_id);
+        }
+
         return response()->json($engagement->load([
             'user:id,nickname,email',
             'role:id,name',
@@ -137,8 +162,24 @@ class AdminEngagementController extends Controller
             'events' => Event::where('status', 'approved')
                 ->with(['level:id,name', 'location:id,name,city', 'season:id,name'])
                 ->orderBy('date', 'desc')
-                ->get(['id', 'date', 'level_id', 'location_id', 'season_id']),
+                ->get(['id', 'date', 'level_id', 'location_id', 'season_id'            ]),
         ]);
+    }
+
+    /**
+     * Send notification email when engagement becomes recognized
+     */
+    private function sendRecognitionNotification(Engagement $engagement)
+    {
+        // Reload engagement with relationships
+        $engagement->load(['user', 'role.firstProgram', 'event.level', 'event.location', 'event.season']);
+
+        // Only send if user wants proposal notifications (reusing this preference for recognition)
+        if (!$engagement->user->email_notify_proposals) {
+            return;
+        }
+
+        Mail::to($engagement->user->email)->send(new EngagementRecognized($engagement->user, $engagement));
     }
 }
 

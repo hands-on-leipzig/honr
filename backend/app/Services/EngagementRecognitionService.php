@@ -6,6 +6,9 @@ use App\Models\Engagement;
 use App\Models\Role;
 use App\Models\Event;
 use App\Models\User;
+use App\Mail\EngagementRecognized;
+use App\Http\Controllers\Api\BadgeController;
+use Illuminate\Support\Facades\Mail;
 
 class EngagementRecognitionService
 {
@@ -23,6 +26,7 @@ class EngagementRecognitionService
 
         foreach ($engagements as $engagement) {
             $shouldBeRecognized = $this->shouldBeRecognized($engagement);
+            $wasRecognized = $engagement->is_recognized;
             
             if ($engagement->is_recognized !== $shouldBeRecognized) {
                 $engagement->update([
@@ -30,6 +34,15 @@ class EngagementRecognitionService
                     'recognized_at' => $shouldBeRecognized && !$engagement->recognized_at ? now() : $engagement->recognized_at,
                 ]);
                 $updated++;
+
+                // Send notification if engagement just became recognized
+                if ($shouldBeRecognized && !$wasRecognized) {
+                    $this->sendRecognitionNotification($engagement);
+                    
+                    // Check for badge threshold
+                    $badgeController = new BadgeController();
+                    $badgeController->checkBadgeThresholds($engagement->user, $engagement->role_id);
+                }
             }
         }
 
@@ -50,6 +63,7 @@ class EngagementRecognitionService
 
         foreach ($engagements as $engagement) {
             $shouldBeRecognized = $this->shouldBeRecognized($engagement);
+            $wasRecognized = $engagement->is_recognized;
             
             if ($engagement->is_recognized !== $shouldBeRecognized) {
                 $engagement->update([
@@ -57,6 +71,15 @@ class EngagementRecognitionService
                     'recognized_at' => $shouldBeRecognized && !$engagement->recognized_at ? now() : $engagement->recognized_at,
                 ]);
                 $updated++;
+
+                // Send notification if engagement just became recognized
+                if ($shouldBeRecognized && !$wasRecognized) {
+                    $this->sendRecognitionNotification($engagement);
+                    
+                    // Check for badge threshold
+                    $badgeController = new BadgeController();
+                    $badgeController->checkBadgeThresholds($engagement->user, $engagement->role_id);
+                }
             }
         }
 
@@ -86,6 +109,22 @@ class EngagementRecognitionService
         return $engagement->user->status === 'active'
             && $engagement->role->status === 'approved'
             && $engagement->event->status === 'approved';
+    }
+
+    /**
+     * Send notification email when engagement becomes recognized
+     */
+    private function sendRecognitionNotification(Engagement $engagement)
+    {
+        // Reload engagement with relationships
+        $engagement->load(['user', 'role.firstProgram', 'event.level', 'event.location', 'event.season']);
+
+        // Only send if user wants proposal notifications (reusing this preference for recognition)
+        if (!$engagement->user->email_notify_proposals) {
+            return;
+        }
+
+        Mail::to($engagement->user->email)->send(new EngagementRecognized($engagement->user, $engagement));
     }
 }
 
