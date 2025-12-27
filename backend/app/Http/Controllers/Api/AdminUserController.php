@@ -5,12 +5,10 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\EmailVerificationToken;
-use App\Mail\VerifyEmail;
-use App\Mail\ResetPassword;
+use App\Mail\InviteUser;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Password;
 
 class AdminUserController extends Controller
 {
@@ -42,13 +40,9 @@ class AdminUserController extends Controller
             'status' => 'invited', // Admin-initiated invitation
         ]);
 
-        // Send verification email (same as registration)
+        // Send invitation email with verification link and password
         $token = EmailVerificationToken::createToken($user->id, $user->email, 'registration');
-        Mail::to($user->email)->send(new VerifyEmail($user, $token));
-
-        // Send password reset email so user can set their own password
-        $resetToken = Password::createToken($user);
-        Mail::to($user->email)->send(new ResetPassword($user, $resetToken));
+        Mail::to($user->email)->send(new InviteUser($user, $token, $randomPassword));
 
         return response()->json($user, 201);
     }
