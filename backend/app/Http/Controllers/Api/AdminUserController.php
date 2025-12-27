@@ -4,7 +4,13 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Models\EmailVerificationToken;
+use App\Mail\VerifyEmail;
+use App\Mail\ResetPassword;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Password;
 
 class AdminUserController extends Controller
 {
@@ -13,6 +19,38 @@ class AdminUserController extends Controller
         return response()->json(
             User::orderByRaw('COALESCE(nickname, email) ASC')->get()
         );
+    }
+
+    public function store(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email|unique:users,email',
+        ], [
+            'email.unique' => 'Diese E-Mail-Adresse ist bereits registriert.',
+        ]);
+
+        // Generate random password (min 8 characters, meets password policy)
+        $randomPassword = $this->generateRandomPassword();
+
+        // Generate temporary unique nickname from email
+        $nickname = $this->generateUniqueNickname($request->email);
+
+        $user = User::create([
+            'email' => $request->email,
+            'nickname' => $nickname,
+            'password' => Hash::make($randomPassword),
+            'status' => 'invited', // Admin-initiated invitation
+        ]);
+
+        // Send verification email (same as registration)
+        $token = EmailVerificationToken::createToken($user->id, $user->email, 'registration');
+        Mail::to($user->email)->send(new VerifyEmail($user, $token));
+
+        // Send password reset email so user can set their own password
+        $resetToken = Password::createToken($user);
+        Mail::to($user->email)->send(new ResetPassword($user, $resetToken));
+
+        return response()->json($user, 201);
     }
 
     public function update(Request $request, User $user)
@@ -25,6 +63,60 @@ class AdminUserController extends Controller
         $user->update($request->only(['status', 'is_admin']));
 
         return response()->json($user);
+    }
+
+    /**
+     * Generate a random password that meets the password policy (min 8 characters)
+     */
+    private function generateRandomPassword(): string
+    {
+        // Generate a secure random password with at least 12 characters
+        // Using a mix of uppercase, lowercase, numbers, and special characters
+        $length = 12;
+        $characters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*';
+        $password = '';
+        
+        for ($i = 0; $i < $length; $i++) {
+            $password .= $characters[random_int(0, strlen($characters) - 1)];
+        }
+        
+        return $password;
+    }
+
+    /**
+     * Generate a unique nickname from email address
+     */
+    private function generateUniqueNickname(string $email): string
+    {
+        // Extract username part from email (before @)
+        $baseNickname = explode('@', $email)[0];
+        
+        // Clean up: remove special characters, keep only alphanumeric
+        $baseNickname = preg_replace('/[^a-zA-Z0-9]/', '', $baseNickname);
+        
+        // Ensure minimum length
+        if (strlen($baseNickname) < 3) {
+            $baseNickname = 'user' . $baseNickname;
+        }
+        
+        // Limit length to 20 characters (nickname field limit)
+        $baseNickname = substr($baseNickname, 0, 20);
+        
+        // Check if nickname exists, if so add random suffix
+        $nickname = $baseNickname;
+        $attempts = 0;
+        while (User::where('nickname', $nickname)->exists() && $attempts < 10) {
+            $suffix = random_int(1000, 9999);
+            $nickname = substr($baseNickname, 0, 16) . $suffix; // Ensure total length <= 20
+            $attempts++;
+        }
+        
+        // If still not unique after 10 attempts, use timestamp
+        if (User::where('nickname', $nickname)->exists()) {
+            $nickname = substr($baseNickname, 0, 12) . time() % 10000;
+        }
+        
+        return $nickname;
     }
 
     public function destroy(User $user)

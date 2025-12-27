@@ -40,6 +40,13 @@ export const STATUS_WARNING = {
   icon: 'text-amber-500',
 } as const
 
+// Status colors - Info/Invited
+export const STATUS_INFO = {
+  badge: 'bg-blue-100 text-blue-800',
+  text: 'text-blue-600',
+  icon: 'text-blue-500',
+} as const
+
 // Rank colors
 export const RANK_COLORS = {
   first: 'bg-yellow-100 text-yellow-700',      // Rank 1
@@ -167,7 +174,7 @@ export function getRankColorClass(rank: number): string {
 
 /**
  * Get status color classes
- * @param status - Status string ('approved', 'pending', 'rejected', 'recognized', 'unrecognized')
+ * @param status - Status string ('approved', 'pending', 'rejected', 'recognized', 'unrecognized', 'invited')
  * @returns Tailwind CSS classes for the status
  */
 export function getStatusColorClass(status: string): string {
@@ -180,6 +187,8 @@ export function getStatusColorClass(status: string): string {
       return STATUS_WARNING.badge
     case 'rejected':
       return STATUS_ERROR.badge
+    case 'invited':
+      return STATUS_INFO.badge
     default:
       return NEUTRAL_COLORS.background.disabled + ' ' + NEUTRAL_COLORS.text.secondary
   }

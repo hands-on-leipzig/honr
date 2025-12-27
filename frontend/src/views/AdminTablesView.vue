@@ -101,7 +101,7 @@ async function loadPendingCounts() {
   try {
     // Load users with 'requested' status (need admin attention)
     const usersRes = await apiClient.get('/admin/users')
-    pendingCounts.users = usersRes.data.filter((u: any) => u.status === 'requested').length
+    pendingCounts.users = usersRes.data.filter((u: any) => u.status === 'requested' || u.status === 'invited').length
 
     // Load levels pending count
     const levelsRes = await apiClient.get('/admin/levels')

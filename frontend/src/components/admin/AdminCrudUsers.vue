@@ -4,6 +4,7 @@
       <div class="flex items-center justify-between">
         <div class="flex items-center space-x-3">
       <h2 class="text-xl font-semibold">Benutzer</h2>
+          <button @click="addUser" class="px-3 py-1 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700">+ Neu</button>
           <div v-if="hasRequested" class="flex items-center space-x-2">
             <BellIcon :class="['w-4 h-4', STATUS_WARNING.icon]" />
             <span :class="['text-sm font-medium', STATUS_WARNING.text]">{{ requestedCount }}</span>
@@ -32,14 +33,11 @@
           <div class="flex-1 min-w-0">
           <div class="flex items-center space-x-2">
               <span class="font-medium truncate">{{ user.nickname || '(kein Name)' }}</span>
-              <BellIcon v-if="user.status === 'requested'" :class="['w-4 h-4', STATUS_WARNING.icon]" />
+              <BellIcon v-if="user.status === 'requested' || user.status === 'invited'" :class="['w-4 h-4', STATUS_WARNING.icon]" />
             <span
               :class="[
                 'px-2 py-1 text-xs rounded-full',
-                user.status === 'active' ? STATUS_SUCCESS.badge :
-                user.status === 'requested' ? STATUS_WARNING.badge :
-                user.status === 'disabled' ? STATUS_ERROR.badge :
-                'bg-gray-100 text-gray-800'
+                getStatusColorClass(user.status)
               ]"
             >
               {{ statusLabel(user.status) }}
@@ -147,6 +145,9 @@
               <div v-if="editingUser.status === 'requested'" class="px-3 py-2 bg-gray-100 border border-gray-200 rounded-md text-gray-500">
                 Unbestätigt (wartet auf E-Mail-Bestätigung)
               </div>
+              <div v-else-if="editingUser.status === 'invited'" class="px-3 py-2 bg-gray-100 border border-gray-200 rounded-md text-gray-500">
+                Eingeladen (wartet auf E-Mail-Bestätigung)
+              </div>
               <select v-else v-model="form.status" class="w-full px-3 py-2 border border-gray-300 rounded-md">
                 <option value="active">Aktiv</option>
                 <option value="disabled">Gesperrt</option>
@@ -183,6 +184,37 @@
     </div>
   </div>
 
+  <!-- Invite User Modal -->
+  <div v-if="showInviteModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-lg w-full max-w-md">
+      <div class="p-4 border-b border-gray-200 flex items-center justify-between">
+        <h3 class="text-lg font-semibold">Benutzer einladen</h3>
+        <button @click="showInviteModal = false" class="text-gray-500 hover:text-gray-700">✕</button>
+      </div>
+      <form @submit.prevent="inviteUser" class="p-4 space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">E-Mail-Adresse *</label>
+          <input 
+            v-model="inviteForm.email" 
+            type="email" 
+            required 
+            class="w-full px-3 py-2 border border-gray-300 rounded-md" 
+            placeholder="benutzer@example.com"
+          />
+        </div>
+        <div v-if="error" class="text-red-600 text-sm">{{ error }}</div>
+        <div class="flex gap-2 pt-2">
+          <button type="button" @click="showInviteModal = false" class="flex-1 px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50">
+            Abbrechen
+          </button>
+          <button type="submit" :disabled="saving" class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50">
+            {{ saving ? 'Einladen...' : 'Einladen' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <!-- Delete Confirmation Modal -->
   <div v-if="showDeleteConfirm" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
     <div class="bg-white rounded-lg w-full max-w-sm p-6">
@@ -207,7 +239,7 @@ import { ref, reactive, computed, watch, onMounted } from 'vue'
 import { BellIcon } from '@heroicons/vue/24/solid'
 import apiClient from '@/api/client'
 import { useUserStore } from '@/stores/user'
-import { getStatusColorClass, STATUS_SUCCESS, STATUS_WARNING, STATUS_ERROR } from '@/constants/uiColors'
+import { getStatusColorClass, STATUS_SUCCESS, STATUS_WARNING, STATUS_ERROR, STATUS_INFO } from '@/constants/uiColors'
 
 const emit = defineEmits(['close'])
 
@@ -226,18 +258,22 @@ const saving = ref(false)
 const deleting = ref(false)
 const error = ref('')
 const showDeleteConfirm = ref(false)
+const showInviteModal = ref(false)
+const inviteForm = reactive({
+  email: '',
+})
 
 // Computed
 const isCurrentUser = computed(() => editingUser.value?.id === userStore.user?.id)
 
-const requestedCount = computed(() => items.value.filter(u => u.status === 'requested').length)
+const requestedCount = computed(() => items.value.filter(u => u.status === 'requested' || u.status === 'invited').length)
 const hasRequested = computed(() => requestedCount.value > 0)
 
 const filteredUsers = computed(() => {
   let result = [...items.value]
   
   if (filterRequested.value) {
-    result = result.filter(u => u.status === 'requested')
+    result = result.filter(u => u.status === 'requested' || u.status === 'invited')
   }
   
   // Sort alphabetically regardless of status
@@ -259,6 +295,7 @@ watch(() => form.status, (newStatus) => {
 const statusLabel = (status: string) => {
   const labels: Record<string, string> = {
     requested: 'Unbestätigt',
+    invited: 'Eingeladen',
     active: 'Aktiv',
     disabled: 'Gesperrt',
   }
@@ -275,12 +312,33 @@ async function load() {
   try {
     const response = await apiClient.get('/admin/users')
     items.value = response.data
-    // Default filter on if there are requested users
-    filterRequested.value = items.value.some(u => u.status === 'requested')
+    // Default filter on if there are requested or invited users
+    filterRequested.value = items.value.some(u => u.status === 'requested' || u.status === 'invited')
   } catch (err) {
     console.error('Failed to load users', err)
   } finally {
     loading.value = false
+  }
+}
+
+function addUser() {
+  showInviteModal.value = true
+  inviteForm.email = ''
+  error.value = ''
+}
+
+async function inviteUser() {
+  error.value = ''
+  saving.value = true
+  try {
+    await apiClient.post('/admin/users', { email: inviteForm.email })
+    await load()
+    showInviteModal.value = false
+    inviteForm.email = ''
+  } catch (err: any) {
+    error.value = err.response?.data?.message || 'Fehler beim Einladen.'
+  } finally {
+    saving.value = false
   }
 }
 
