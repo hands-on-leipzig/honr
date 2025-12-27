@@ -196,9 +196,9 @@ const filteredSeasons = computed(() => {
   return filterOptions.value.seasons.filter((s: any) => s.first_program_id == filters.value.program_id)
 })
 
-// Display only top X entries
+// Display all entries with rank <= topCount (includes all users tied at rank topCount)
 const displayedLeaderboard = computed(() => {
-  return leaderboard.value.slice(0, topCount.value)
+  return leaderboard.value.filter((entry: any) => entry.rank <= topCount.value)
 })
 
 // Find current user's entry in the full leaderboard

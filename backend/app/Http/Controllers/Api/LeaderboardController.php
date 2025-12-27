@@ -47,9 +47,19 @@ class LeaderboardController extends Controller
             ->limit(100)
             ->get();
 
-        // Add rank
-        $ranked = $leaderboard->values()->map(function ($item, $index) {
-            $item->rank = $index + 1;
+        // Add rank with ties (users with same count get same rank)
+        $rank = 1;
+        $previousCount = null;
+        $ranked = $leaderboard->values()->map(function ($item, $index) use (&$rank, &$previousCount) {
+            if ($previousCount !== null && $item->engagement_count == $previousCount) {
+                // Same count as previous, use same rank
+                $item->rank = $rank;
+            } else {
+                // Different count, calculate new rank (index + 1)
+                $rank = $index + 1;
+                $item->rank = $rank;
+            }
+            $previousCount = $item->engagement_count;
             return $item;
         });
 
@@ -91,9 +101,19 @@ class LeaderboardController extends Controller
             ->limit(100)
             ->get();
 
-        // Add rank, use regional_partner_name if set
-        $ranked = $leaderboard->values()->map(function ($item, $index) {
-            $item->rank = $index + 1;
+        // Add rank with ties (users with same count get same rank), use regional_partner_name if set
+        $rank = 1;
+        $previousCount = null;
+        $ranked = $leaderboard->values()->map(function ($item, $index) use (&$rank, &$previousCount) {
+            if ($previousCount !== null && $item->season_count == $previousCount) {
+                // Same count as previous, use same rank
+                $item->rank = $rank;
+            } else {
+                // Different count, calculate new rank (index + 1)
+                $rank = $index + 1;
+                $item->rank = $rank;
+            }
+            $previousCount = $item->season_count;
             $item->display_name = $item->regional_partner_name ?: $item->nickname;
             return $item;
         });
@@ -135,9 +155,19 @@ class LeaderboardController extends Controller
             ->limit(100)
             ->get();
 
-        // Add rank
-        $ranked = $leaderboard->values()->map(function ($item, $index) {
-            $item->rank = $index + 1;
+        // Add rank with ties (users with same count get same rank)
+        $rank = 1;
+        $previousCount = null;
+        $ranked = $leaderboard->values()->map(function ($item, $index) use (&$rank, &$previousCount) {
+            if ($previousCount !== null && $item->season_count == $previousCount) {
+                // Same count as previous, use same rank
+                $item->rank = $rank;
+            } else {
+                // Different count, calculate new rank (index + 1)
+                $rank = $index + 1;
+                $item->rank = $rank;
+            }
+            $previousCount = $item->season_count;
             return $item;
         });
 
