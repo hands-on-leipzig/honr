@@ -64,6 +64,23 @@
       </button>
     </div>
 
+    <!-- Top Count Selection -->
+    <div v-if="!loading && leaderboard.length > 0" class="flex gap-2 mb-4">
+      <button
+        v-for="count in [5, 10, 50, 100]"
+        :key="count"
+        @click="topCount = count"
+        :class="[
+          'px-3 py-1 text-sm font-medium rounded-md transition-colors',
+          topCount === count
+            ? 'bg-blue-600 text-white'
+            : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+        ]"
+      >
+        Top {{ count }}
+      </button>
+    </div>
+
     <!-- Loading -->
     <div v-if="loading" class="bg-white rounded-lg shadow p-6">
       <p class="text-gray-600 text-center py-8">Laden...</p>
@@ -77,7 +94,7 @@
     <!-- Leaderboard List -->
     <div v-else class="bg-white rounded-lg shadow divide-y divide-gray-100">
       <div
-        v-for="entry in leaderboard"
+        v-for="entry in displayedLeaderboard"
         :key="entry.id"
         class="flex items-center p-4"
       >
@@ -111,6 +128,41 @@
           </div>
         </div>
       </div>
+
+      <!-- Current User Below Top X -->
+      <div v-if="showCurrentUserBelow" class="mt-4 pt-4 border-t-2 border-gray-300">
+        <div class="flex items-center p-4">
+          <!-- Rank -->
+          <div class="w-10 text-center">
+            <span
+              :class="[
+                'inline-flex items-center justify-center w-8 h-8 rounded-full text-sm font-bold',
+                getRankColorClass(currentUserEntry.rank)
+              ]"
+            >
+              {{ currentUserEntry.rank }}
+            </span>
+          </div>
+
+          <!-- Name -->
+          <div class="flex-1 ml-3">
+            <button
+              @click="viewUser(currentUserEntry.id)"
+              class="font-medium text-gray-900 hover:text-blue-600 text-left"
+            >
+              {{ currentUserEntry.display_name || currentUserEntry.nickname }}
+            </button>
+          </div>
+
+          <!-- Count -->
+          <div class="text-right">
+            <div :class="['text-lg font-bold', primaryColors.link]">{{ currentUserEntry.engagement_count || currentUserEntry.season_count }}</div>
+            <div class="text-xs text-gray-500">
+              {{ leaderboardCategory === 'volunteers' ? 'Einsätze' : 'Saisons' }}
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -120,6 +172,7 @@ import { ref, watch, onMounted, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import apiClient from '@/api/client'
 import { getRankColorClass, PRIMARY_COLORS, NEUTRAL_COLORS } from '@/constants/uiColors'
+import { useUserStore } from '@/stores/user'
 
 // Make constants available in template
 const primaryColors = PRIMARY_COLORS
@@ -127,18 +180,39 @@ const neutralColors = NEUTRAL_COLORS
 
 const router = useRouter()
 const route = useRoute()
+const userStore = useUserStore()
 
 const leaderboardCategory = ref<'volunteers' | 'regional-partners' | 'coaches'>(
   (route.query.category as 'volunteers' | 'regional-partners' | 'coaches') || 'volunteers'
 )
 const leaderboard = ref<any[]>([])
 const loading = ref(false)
+const topCount = ref(5)
 const filterOptions = ref<{ programs: any[], seasons: any[], levels: any[] }>({ programs: [], seasons: [], levels: [] })
 const filters = ref({ program_id: '', season_id: '', level_id: '' })
 
 const filteredSeasons = computed(() => {
   if (!filters.value.program_id) return filterOptions.value.seasons
   return filterOptions.value.seasons.filter((s: any) => s.first_program_id == filters.value.program_id)
+})
+
+// Display only top X entries
+const displayedLeaderboard = computed(() => {
+  return leaderboard.value.slice(0, topCount.value)
+})
+
+// Find current user's entry in the full leaderboard
+const currentUserEntry = computed(() => {
+  if (!userStore.user?.id) return null
+  return leaderboard.value.find((entry: any) => entry.id === userStore.user?.id) || null
+})
+
+// Check if current user is in the displayed top X
+const showCurrentUserBelow = computed(() => {
+  if (!currentUserEntry.value || !userStore.user?.id) return false
+  // Check if current user is already in the displayed top X
+  const isInTopX = displayedLeaderboard.value.some((entry: any) => entry.id === userStore.user?.id)
+  return !isInTopX
 })
 
 function onProgramChange() {
