@@ -240,10 +240,8 @@ const filteredUsers = computed(() => {
     result = result.filter(u => u.status === 'requested')
   }
   
-  // Sort: requested first, then alphabetically
+  // Sort alphabetically regardless of status
   return result.sort((a, b) => {
-    if (a.status === 'requested' && b.status !== 'requested') return -1
-    if (a.status !== 'requested' && b.status === 'requested') return 1
     const nameA = a.nickname || a.email
     const nameB = b.nickname || b.email
     return nameA.localeCompare(nameB, 'de')

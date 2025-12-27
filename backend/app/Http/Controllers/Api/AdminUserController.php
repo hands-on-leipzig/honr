@@ -10,7 +10,9 @@ class AdminUserController extends Controller
 {
     public function index()
     {
-        return response()->json(User::orderBy('nickname')->get());
+        return response()->json(
+            User::orderByRaw('COALESCE(nickname, email) ASC')->get()
+        );
     }
 
     public function update(Request $request, User $user)
