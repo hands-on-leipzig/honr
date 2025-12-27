@@ -16,7 +16,7 @@
     <ol class="steps">
         <li><strong>E-Mail-Adresse bestätigen:</strong> Klicke auf den Button unten, um deine E-Mail-Adresse zu bestätigen und dein Konto zu aktivieren.</li>
         <li><strong>Erstes Login:</strong> Nach der Bestätigung kannst du dich mit deiner E-Mail-Adresse und dem unten angezeigten Passwort anmelden.</li>
-        <li><strong>Einstellungen anpassen:</strong> Beim ersten Login wirst du aufgefordert, dein Passwort zu ändern und deine Einstellungen anzupassen.</li>
+        <li><strong>Einstellungen anpassen:</strong> Beim ersten Login wirst du aufgefordert, deine Einstellungen anzupassen. Du solltes auch dein Passwort ändern.</li>
     </ol>
 
     <p style="text-align: center;">

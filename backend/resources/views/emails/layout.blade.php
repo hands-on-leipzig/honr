@@ -36,7 +36,7 @@
         
         /* Header */
         .header {
-            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+            background: linear-gradient(135deg, #FF6B35 0%, #F97316 100%);
             color: #ffffff;
             padding: 30px 20px;
             text-align: center;
@@ -66,8 +66,8 @@
         }
         
         .info-box {
-            background-color: #eff6ff;
-            border-left: 4px solid #2563eb;
+            background-color: #fff4e6;
+            border-left: 4px solid #FF6B35;
             padding: 16px;
             margin: 20px 0;
             border-radius: 4px;
@@ -137,23 +137,23 @@
         .button {
             display: inline-block;
             padding: 14px 32px;
-            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+            background: linear-gradient(135deg, #FF6B35 0%, #F97316 100%);
             color: #ffffff;
             text-decoration: none;
             border-radius: 6px;
             margin: 20px 0;
             font-weight: 600;
             font-size: 16px;
-            box-shadow: 0 2px 4px rgba(37, 99, 235, 0.3);
+            box-shadow: 0 2px 4px rgba(255, 107, 53, 0.3);
         }
         .button:hover {
-            background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
-            box-shadow: 0 4px 8px rgba(37, 99, 235, 0.4);
+            background: linear-gradient(135deg, #F97316 0%, #EA580C 100%);
+            box-shadow: 0 4px 8px rgba(255, 107, 53, 0.4);
         }
         
         /* Links */
         .link {
-            color: #2563eb;
+            color: #FF6B35;
             word-break: break-all;
         }
         
@@ -199,7 +199,7 @@
             margin-top: 12px;
         }
         .footer-link {
-            color: #2563eb;
+            color: #FF6B35;
             text-decoration: none;
         }
         .footer-link:hover {
@@ -241,7 +241,7 @@
                     <p class="footer-small" style="margin: 0;">
                         HANDS on TECHNOLOGY e.V.<br>
                         <a href="mailto:honr@hands-on-technology.org" class="footer-link">honr@hands-on-technology.org</a><br>
-                        <a href="https://www.hands-on-technology.org" class="footer-link" style="color: #2563eb;">www.hands-on-technology.org</a>
+                        <a href="https://www.hands-on-technology.org" class="footer-link" style="color: #FF6B35;">www.hands-on-technology.org</a>
                     </p>
                 </div>
             </div>
