@@ -1,50 +1,8 @@
-<!DOCTYPE html>
-<html lang="de">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Einsatz anerkannt</title>
-    <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            line-height: 1.6;
-            color: #333;
-            max-width: 600px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        .header {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-        .success-box {
-            background-color: #d1fae5;
-            border-left: 4px solid #10b981;
-            padding: 16px;
-            margin: 20px 0;
-            border-radius: 4px;
-        }
-        .info-box {
-            background-color: #eff6ff;
-            border-left: 4px solid #2563eb;
-            padding: 16px;
-            margin: 20px 0;
-            border-radius: 4px;
-        }
-        .footer {
-            margin-top: 40px;
-            padding-top: 20px;
-            border-top: 1px solid #e5e7eb;
-            font-size: 14px;
-            color: #6b7280;
-        }
-    </style>
-</head>
-<body>
-    <div class="header">
-        <h1>HONR - Hands-on Recognition</h1>
-    </div>
+@extends('emails.layout')
 
+@section('title', 'Einsatz anerkannt')
+
+@section('content')
     <h2>Einsatz anerkannt</h2>
 
     <p>Hallo {{ $user->nickname }},</p>
@@ -75,13 +33,4 @@
     </div>
 
     <p>Dein Einsatz zählt jetzt zu deinen anerkannten Engagements und wird bei der Berechnung deiner Badges berücksichtigt.</p>
-
-    <div class="footer">
-        <p>Mit freundlichen Grüßen,<br>Das HONR-Team</p>
-        <p style="font-size: 12px; color: #9ca3af;">
-            Falls du Fragen hast, kontaktiere uns unter: honr@hands-on-technology.org
-        </p>
-    </div>
-</body>
-</html>
-
+@endsection

@@ -1,57 +1,8 @@
-<!DOCTYPE html>
-<html lang="de">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vorschlag abgelehnt</title>
-    <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            line-height: 1.6;
-            color: #333;
-            max-width: 600px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        .header {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-        .warning-box {
-            background-color: #fef3c7;
-            border-left: 4px solid #f59e0b;
-            padding: 16px;
-            margin: 20px 0;
-            border-radius: 4px;
-        }
-        .info-box {
-            background-color: #eff6ff;
-            border-left: 4px solid #2563eb;
-            padding: 16px;
-            margin: 20px 0;
-            border-radius: 4px;
-        }
-        .reason-box {
-            background-color: #fee2e2;
-            border-left: 4px solid #ef4444;
-            padding: 16px;
-            margin: 20px 0;
-            border-radius: 4px;
-        }
-        .footer {
-            margin-top: 40px;
-            padding-top: 20px;
-            border-top: 1px solid #e5e7eb;
-            font-size: 14px;
-            color: #6b7280;
-        }
-    </style>
-</head>
-<body>
-    <div class="header">
-        <h1>HONR - Hands-on Recognition</h1>
-    </div>
+@extends('emails.layout')
 
+@section('title', 'Vorschlag abgelehnt')
+
+@section('content')
     <h2>Vorschlag abgelehnt</h2>
 
     <p>Hallo {{ $user->nickname }},</p>
@@ -119,13 +70,4 @@
     </div>
 
     <p>Falls du Fragen zur Ablehnung hast oder einen neuen Vorschlag machen möchtest, kannst du dies jederzeit tun.</p>
-
-    <div class="footer">
-        <p>Mit freundlichen Grüßen,<br>Das HONR-Team</p>
-        <p style="font-size: 12px; color: #9ca3af;">
-            Falls du Fragen hast, kontaktiere uns unter: honr@hands-on-technology.org
-        </p>
-    </div>
-</body>
-</html>
-
+@endsection
