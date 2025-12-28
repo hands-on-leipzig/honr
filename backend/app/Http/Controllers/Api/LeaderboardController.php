@@ -68,16 +68,16 @@ class LeaderboardController extends Controller
 
     /**
      * Regional Partner leaderboard - distinct seasons from events at locations with regional_partner_id
-     * Counts distinct seasons where there's at least one recognized engagement
+     * Regional Partner → Locations → Events → Count distinct seasons
+     * No engagement check - counts all events regardless of engagements
      */
     public function regionalPartners(Request $request)
     {
-        $query = DB::table('engagements')
-            ->join('events', 'engagements.event_id', '=', 'events.id')
-            ->join('locations', 'events.location_id', '=', 'locations.id')
-            ->join('regional_partners', 'locations.regional_partner_id', '=', 'regional_partners.id')
-            ->where('engagements.is_recognized', true)
-            ->whereNotNull('locations.regional_partner_id');
+        $query = DB::table('regional_partners')
+            ->join('locations', 'regional_partners.id', '=', 'locations.regional_partner_id')
+            ->join('events', 'locations.id', '=', 'events.location_id')
+            ->whereNotNull('locations.regional_partner_id')
+            ->whereNotNull('events.season_id');
 
         // Apply filters
         if ($request->filled('program_id')) {

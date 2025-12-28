@@ -33,28 +33,31 @@
         </div>
       </button>
       <button
-        v-if="regionalPartnerEntry && (regionalPartnerEntry.season_count || 0) > 0"
+        v-for="rpEntry in regionalPartnerEntries"
+        :key="rpEntry.regional_partner_id"
         @click="navigateToLeaderboard('regional-partners')"
         class="w-full flex items-center p-4 hover:bg-gray-50 transition-colors text-left"
       >
         <!-- Rank -->
         <div class="w-10 text-center">
           <span
+            v-if="rpEntry.rank"
             :class="[
               'inline-flex items-center justify-center w-8 h-8 rounded-full text-sm font-bold',
-              getRankColorClass(regionalPartnerEntry.rank)
+              getRankColorClass(rpEntry.rank)
             ]"
           >
-            {{ regionalPartnerEntry.rank }}
+            {{ rpEntry.rank }}
           </span>
+          <span v-else class="inline-flex items-center justify-center w-8 h-8 rounded-full text-sm font-bold text-gray-400">–</span>
         </div>
         <!-- Label -->
         <div class="flex-1 ml-3 text-left">
-          <span class="font-medium text-gray-900">Regional-Partner</span>
+          <span class="font-medium text-gray-900">Regionalpartner:in {{ rpEntry.regional_partner_name }}</span>
         </div>
         <!-- Count -->
         <div class="text-right">
-          <div :class="['text-lg font-bold', PRIMARY_COLORS.link]">{{ regionalPartnerEntry.season_count || 0 }}</div>
+          <div :class="['text-lg font-bold', PRIMARY_COLORS.link]">{{ rpEntry.engagement_count || 0 }}</div>
         </div>
       </button>
       <button
@@ -263,23 +266,45 @@ const volunteerEntry = computed(() => {
   return props.leaderboards.volunteers.find((e: any) => e.id === targetUserId) || null
 })
 
-const regionalPartnerEntry = computed(() => {
-  // Find regional partner from user's engagements
-  // Get all regional partner engagements and find the location's regional_partner_id
+const regionalPartnerEntries = computed(() => {
+  // Get all regional partner engagements
   const regionalPartnerEngagements = props.engagements.filter((eng: any) => 
     eng.is_recognized && 
     eng.role?.role_category === 'regional_partner' &&
-    eng.event?.location?.regional_partner_id
+    eng.event?.location?.regional_partner_id &&
+    eng.event?.location?.regional_partner
   )
   
-  if (regionalPartnerEngagements.length === 0) return null
+  if (regionalPartnerEngagements.length === 0) return []
   
-  // Get the regional_partner_id from the first engagement's location
-  // (assuming all regional partner engagements for a user are at locations of the same regional partner)
-  const regionalPartnerId = regionalPartnerEngagements[0].event.location.regional_partner_id
+  // Group by regional_partner_id and count engagements
+  const rpMap = new Map()
+  regionalPartnerEngagements.forEach((eng: any) => {
+    const rpId = eng.event.location.regional_partner_id
+    const rpName = eng.event.location.regional_partner.name
+    
+    if (!rpMap.has(rpId)) {
+      rpMap.set(rpId, {
+        regional_partner_id: rpId,
+        regional_partner_name: rpName,
+        engagement_count: 0,
+        rank: null
+      })
+    }
+    rpMap.get(rpId).engagement_count++
+  })
   
-  // Find this regional partner in the leaderboard
-  return props.leaderboards.regionalPartners.find((e: any) => e.id === regionalPartnerId) || null
+  // Find ranks from leaderboard for each regional partner
+  const entries = Array.from(rpMap.values())
+  entries.forEach((entry: any) => {
+    const leaderboardEntry = props.leaderboards.regionalPartners.find((e: any) => e.id === entry.regional_partner_id)
+    if (leaderboardEntry) {
+      entry.rank = leaderboardEntry.rank
+    }
+  })
+  
+  // Sort by engagement count descending
+  return entries.sort((a: any, b: any) => b.engagement_count - a.engagement_count)
 })
 
 const coachEntry = computed(() => {
@@ -290,7 +315,7 @@ const coachEntry = computed(() => {
 
 const hasAnyRank = computed(() => {
   return (volunteerEntry.value && (volunteerEntry.value.engagement_count || 0) > 0) ||
-         (regionalPartnerEntry.value && (regionalPartnerEntry.value.season_count || 0) > 0) ||
+         (regionalPartnerEntries.value.length > 0) ||
          (coachEntry.value && (coachEntry.value.season_count || 0) > 0)
 })
 
