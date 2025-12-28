@@ -64,7 +64,7 @@
           </div>
           <div class="flex-1 min-w-0">
             <div class="flex items-center space-x-2">
-              <span class="font-medium truncate">{{ item.name }}</span>
+              <span :class="['font-medium truncate', getStatusNameColorClass(item.status)]">{{ item.name }}</span>
               <BellIcon v-if="item.status === 'pending'" :class="['w-4 h-4', STATUS_WARNING.icon]" />
               <span :class="statusBadgeClass(item.status)" class="px-2 py-0.5 text-xs rounded-full">
                 {{ statusLabel(item.status) }}
@@ -96,7 +96,7 @@
       <form @submit.prevent="saveItem" class="p-4 space-y-4">
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">Name *</label>
-          <input v-model="form.name" type="text" required class="w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="z.B. Schiedsrichter:in" />
+          <input v-model="form.name" type="text" required :class="['w-full px-3 py-2 border border-gray-300 rounded-md', getStatusNameColorClass(form.status)]" placeholder="z.B. Schiedsrichter:in" />
         </div>
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">Kurzname</label>
@@ -205,7 +205,7 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { BellIcon } from '@heroicons/vue/24/solid'
 import apiClient from '@/api/client'
-import { getStatusColorClass, STATUS_WARNING } from '@/constants/uiColors'
+import { getStatusColorClass, getStatusNameColorClass, STATUS_WARNING } from '@/constants/uiColors'
 
 const emit = defineEmits(['close'])
 

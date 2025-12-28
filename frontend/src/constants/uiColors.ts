@@ -194,3 +194,21 @@ export function getStatusColorClass(status: string): string {
   }
 }
 
+/**
+ * Get status text color class for name fields
+ * @param status - Status string ('approved', 'pending', 'rejected')
+ * @returns Tailwind CSS text color class
+ */
+export function getStatusNameColorClass(status: string): string {
+  switch (status.toLowerCase()) {
+    case 'approved':
+      return 'text-gray-900' // black
+    case 'pending':
+      return 'text-blue-600' // blue
+    case 'rejected':
+      return 'text-red-600' // red
+    default:
+      return 'text-gray-900' // default to black
+  }
+}
+

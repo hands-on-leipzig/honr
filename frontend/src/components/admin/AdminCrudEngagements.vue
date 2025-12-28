@@ -41,7 +41,7 @@
               {{ item.is_recognized ? 'Anerkannt' : 'Nicht anerkannt' }}
             </span>
           </div>
-          <div class="text-sm text-gray-600 truncate">
+          <div :class="['text-sm truncate', item.role?.status ? getStatusNameColorClass(item.role.status) : 'text-gray-600']">
             {{ item.role?.name }}
           </div>
           <div class="text-sm text-gray-600 truncate">
@@ -75,10 +75,10 @@
           <label class="block text-sm font-medium text-gray-700 mb-1">Rolle *</label>
           <input v-model="roleSearch" type="text" placeholder="Rolle suchen..." class="w-full px-3 py-2 border border-gray-300 rounded-md" />
           <div v-if="filteredRolesSearch.length > 0 && roleSearch && !selectedRole" class="mt-1 max-h-40 overflow-y-auto border border-gray-200 rounded-md">
-            <button v-for="r in filteredRolesSearch" :key="r.id" type="button" @click="selectRole(r)" class="w-full px-3 py-2 text-left hover:bg-gray-50 text-sm border-b border-gray-100 last:border-b-0">{{ r.name }} ({{ r.first_program?.name }})</button>
+            <button v-for="r in filteredRolesSearch" :key="r.id" type="button" @click="selectRole(r)" :class="['w-full px-3 py-2 text-left hover:bg-gray-50 text-sm border-b border-gray-100 last:border-b-0', r.status ? getStatusNameColorClass(r.status) : '']">{{ r.name }} ({{ r.first_program?.name }})</button>
           </div>
           <div v-if="selectedRole" class="mt-2 p-2 bg-blue-50 rounded-md flex items-center justify-between">
-            <span class="text-sm font-medium">{{ selectedRole.name }} ({{ selectedRole.first_program?.name }})</span>
+            <span :class="['text-sm font-medium', selectedRole.status ? getStatusNameColorClass(selectedRole.status) : '']">{{ selectedRole.name }} ({{ selectedRole.first_program?.name }})</span>
             <button type="button" @click="clearRole" class="text-gray-400 hover:text-gray-600">✕</button>
           </div>
         </div>
@@ -86,10 +86,10 @@
           <label class="block text-sm font-medium text-gray-700 mb-1">Veranstaltung *</label>
           <input v-model="eventSearch" type="text" placeholder="Veranstaltung suchen..." class="w-full px-3 py-2 border border-gray-300 rounded-md" />
           <div v-if="filteredEventsSearch.length > 0 && eventSearch && !selectedEvent" class="mt-1 max-h-40 overflow-y-auto border border-gray-200 rounded-md">
-            <button v-for="e in filteredEventsSearch" :key="e.id" type="button" @click="selectEvent(e)" class="w-full px-3 py-2 text-left hover:bg-gray-50 text-sm border-b border-gray-100 last:border-b-0">{{ formatDate(e.date) }} · {{ e.level?.name }} · {{ e.location?.name }}</button>
+            <button v-for="e in filteredEventsSearch" :key="e.id" type="button" @click="selectEvent(e)" :class="['w-full px-3 py-2 text-left hover:bg-gray-50 text-sm border-b border-gray-100 last:border-b-0', e.location?.status ? getStatusNameColorClass(e.location.status) : '']">{{ formatDate(e.date) }} · {{ e.level?.name }} · {{ e.location?.name }}</button>
           </div>
           <div v-if="selectedEvent" class="mt-2 p-2 bg-blue-50 rounded-md flex items-center justify-between">
-            <span class="text-sm font-medium">{{ formatDate(selectedEvent.date) }} · {{ selectedEvent.level?.name }} · {{ selectedEvent.location?.name }}</span>
+            <span :class="['text-sm font-medium', selectedEvent.location?.status ? getStatusNameColorClass(selectedEvent.location.status) : '']">{{ formatDate(selectedEvent.date) }} · {{ selectedEvent.level?.name }} · {{ selectedEvent.location?.name }}</span>
             <button type="button" @click="clearEvent" class="text-gray-400 hover:text-gray-600">✕</button>
           </div>
         </div>
@@ -145,7 +145,7 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { BellIcon } from '@heroicons/vue/24/solid'
 import apiClient from '@/api/client'
-import { getStatusColorClass, STATUS_WARNING, STATUS_SUCCESS } from '@/constants/uiColors'
+import { getStatusColorClass, getStatusNameColorClass, STATUS_WARNING, STATUS_SUCCESS } from '@/constants/uiColors'
 
 const emit = defineEmits(['close'])
 
