@@ -790,10 +790,16 @@ async function proposeRole() {
   proposeError.value = ''
   proposeSaving.value = true
   try {
-    await apiClient.post('/engagements/propose-role', proposeRoleForm.value)
+    const response = await apiClient.post('/engagements/propose-role', proposeRoleForm.value)
+    const newRoleId = response.data.id
     showProposeRoleModal.value = false
     proposeRoleForm.value = { name: '', first_program_id: '' }
     await loadOptions()
+    // Auto-select the newly proposed role
+    const newRole = roles.value.find(r => r.id === newRoleId)
+    if (newRole) {
+      selectRole(newRole)
+    }
   } catch (err: any) {
     proposeError.value = err.response?.data?.message || 'Fehler beim Vorschlagen.'
   } finally {
@@ -809,10 +815,20 @@ async function proposeEvent() {
   proposeError.value = ''
   proposeSaving.value = true
   try {
-    await apiClient.post('/engagements/propose-event', proposeEventForm.value)
+    const response = await apiClient.post('/engagements/propose-event', proposeEventForm.value)
+    const newEventId = response.data.id
     showProposeEventModal.value = false
     proposeEventForm.value = { date: '', season_id: '', level_id: '', location_id: '' }
+    selectedProposeSeason.value = null
+    selectedProposeLocation.value = null
+    proposeSeasonSearch.value = ''
+    proposeLocationSearch.value = ''
     await loadOptions()
+    // Auto-select the newly proposed event
+    const newEvent = events.value.find(e => e.id === newEventId)
+    if (newEvent) {
+      selectEvent(newEvent)
+    }
   } catch (err: any) {
     proposeError.value = err.response?.data?.message || 'Fehler beim Vorschlagen.'
   } finally {
@@ -825,8 +841,13 @@ async function proposeCountry() {
   proposingCountry.value = true
   try {
     const response = await apiClient.post('/engagements/propose-country', { name: newCountryName.value })
+    const newCountryId = response.data.id
     await loadOptions()
-    proposeLocationForm.value.country_id = response.data.id
+    // Auto-select the newly proposed country
+    const newCountry = countries.value.find(c => c.id === newCountryId)
+    if (newCountry) {
+      proposeLocationForm.value.country_id = newCountry.id
+    }
     newCountryName.value = ''
     showNewCountryInput.value = false
   } catch (err: any) {
@@ -845,12 +866,16 @@ async function proposeLocation() {
   proposeSaving.value = true
   try {
     const response = await apiClient.post('/engagements/propose-location', proposeLocationForm.value)
+    const newLocationId = response.data.id
     showProposeLocationModal.value = false
     showProposeEventModal.value = true
     proposeLocationForm.value = { name: '', street_address: '', postal_code: '', city: '', country_id: '' }
     await loadOptions()
     // Auto-select the newly created location
-    proposeEventForm.value.location_id = response.data.id
+    const newLocation = locations.value.find(l => l.id === newLocationId)
+    if (newLocation) {
+      selectProposeLocation(newLocation)
+    }
   } catch (err: any) {
     proposeError.value = err.response?.data?.message || 'Fehler beim Vorschlagen.'
   } finally {
