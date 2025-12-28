@@ -16,7 +16,7 @@ class AdminLocationController extends Controller
     public function index()
     {
         return response()->json(
-            Location::with(['country:id,name,iso_code', 'proposedByUser:id,nickname,email,email_notify_proposals'])
+            Location::with(['country:id,name,iso_code', 'regionalPartner:id,name', 'proposedByUser:id,nickname,email,email_notify_proposals'])
                 ->withCount('events')
                 ->orderBy('name')
                 ->get()
@@ -28,6 +28,7 @@ class AdminLocationController extends Controller
         $request->validate([
             'name' => 'required|string|max:255|unique:locations,name',
             'country_id' => 'required|exists:countries,id',
+            'regional_partner_id' => 'nullable|exists:regional_partners,id',
             'street_address' => 'nullable|string|max:255',
             'city' => 'nullable|string|max:255',
             'postal_code' => 'nullable|string|max:20',
@@ -51,12 +52,12 @@ class AdminLocationController extends Controller
         }
 
         $location = Location::create($request->only([
-            'name', 'country_id', 'street_address', 'city', 'postal_code',
+            'name', 'country_id', 'regional_partner_id', 'street_address', 'city', 'postal_code',
             'latitude', 'longitude', 'status', 'rejection_reason'
         ]));
 
         // Reload to get relationships
-        $location->load(['country:id,name,iso_code', 'proposedByUser:id,nickname,email,email_notify_proposals']);
+        $location->load(['country:id,name,iso_code', 'regionalPartner:id,name', 'proposedByUser:id,nickname,email,email_notify_proposals']);
 
         // Send notification email if created as approved/rejected (not pending)
         if ($location->status !== 'pending') {
@@ -71,6 +72,7 @@ class AdminLocationController extends Controller
         $request->validate([
             'name' => 'required|string|max:255|unique:locations,name,' . $location->id,
             'country_id' => 'required|exists:countries,id',
+            'regional_partner_id' => 'nullable|exists:regional_partners,id',
             'street_address' => 'nullable|string|max:255',
             'city' => 'nullable|string|max:255',
             'postal_code' => 'nullable|string|max:20',
@@ -99,13 +101,13 @@ class AdminLocationController extends Controller
         }
 
         $location->update($request->only([
-            'name', 'country_id', 'street_address', 'city', 'postal_code',
+            'name', 'country_id', 'regional_partner_id', 'street_address', 'city', 'postal_code',
             'latitude', 'longitude', 'status', 'rejection_reason'
         ]));
 
         // Reload to get fresh data including relationships
         $location->refresh();
-        $location->load(['country:id,name,iso_code', 'proposedByUser:id,nickname,email,email_notify_proposals']);
+        $location->load(['country:id,name,iso_code', 'regionalPartner:id,name', 'proposedByUser:id,nickname,email,email_notify_proposals']);
 
         // Send notification email if status changed
         $this->sendProposalNotification($location, $oldStatus, $newStatus);

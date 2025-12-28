@@ -11,6 +11,7 @@ class Location extends Model
     protected $fillable = [
         'name',
         'country_id',
+        'regional_partner_id',
         'street_address',
         'city',
         'postal_code',
@@ -24,6 +25,11 @@ class Location extends Model
     public function country(): BelongsTo
     {
         return $this->belongsTo(Country::class);
+    }
+
+    public function regionalPartner(): BelongsTo
+    {
+        return $this->belongsTo(RegionalPartner::class);
     }
 
     public function proposedByUser(): BelongsTo

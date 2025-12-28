@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\AdminSeasonController;
 use App\Http\Controllers\Api\AdminLevelController;
 use App\Http\Controllers\Api\AdminCountryController;
 use App\Http\Controllers\Api\AdminLocationController;
+use App\Http\Controllers\Api\AdminRegionalPartnerController;
 use App\Http\Controllers\Api\AdminRoleController;
 use App\Http\Controllers\Api\AdminEventController;
 use App\Http\Controllers\Api\AdminEngagementController;
@@ -127,6 +128,12 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/countries', [AdminCountryController::class, 'store']);
         Route::put('/countries/{country}', [AdminCountryController::class, 'update']);
         Route::delete('/countries/{country}', [AdminCountryController::class, 'destroy']);
+
+        // Regional Partners
+        Route::get('/regional-partners', [AdminRegionalPartnerController::class, 'index']);
+        Route::post('/regional-partners', [AdminRegionalPartnerController::class, 'store']);
+        Route::put('/regional-partners/{regionalPartner}', [AdminRegionalPartnerController::class, 'update']);
+        Route::delete('/regional-partners/{regionalPartner}', [AdminRegionalPartnerController::class, 'destroy']);
 
         // Locations (crowdsourced)
         Route::get('/locations', [AdminLocationController::class, 'index']);

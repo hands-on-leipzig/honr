@@ -113,11 +113,18 @@
         <!-- Name -->
         <div class="flex-1 ml-3">
           <button
+            v-if="leaderboardCategory !== 'regional-partners'"
             @click="viewUser(entry.id)"
             class="font-medium text-gray-900 hover:text-blue-600 text-left"
           >
             {{ entry.display_name || entry.nickname }}
           </button>
+          <span
+            v-else
+            class="font-medium text-gray-900"
+          >
+            {{ entry.display_name || entry.name }}
+          </span>
         </div>
 
         <!-- Count -->
@@ -147,11 +154,18 @@
           <!-- Name -->
           <div class="flex-1 ml-3">
             <button
+              v-if="leaderboardCategory !== 'regional-partners'"
               @click="viewUser(currentUserEntry.id)"
               class="font-medium text-gray-900 hover:text-blue-600 text-left"
             >
               {{ currentUserEntry.display_name || currentUserEntry.nickname }}
             </button>
+            <span
+              v-else
+              class="font-medium text-gray-900"
+            >
+              {{ currentUserEntry.display_name || currentUserEntry.name }}
+            </span>
           </div>
 
           <!-- Count -->
@@ -204,6 +218,14 @@ const displayedLeaderboard = computed(() => {
 // Find current user's entry in the full leaderboard
 const currentUserEntry = computed(() => {
   if (!userStore.user?.id) return null
+  
+  // For regional partners, we need to find the regional partner from user's engagements
+  if (leaderboardCategory.value === 'regional-partners') {
+    // This will be handled by AwardsSummaryTab, but for now return null
+    // The leaderboard shows regional partners (entities), not users
+    return null
+  }
+  
   return leaderboard.value.find((entry: any) => entry.id === userStore.user?.id) || null
 })
 

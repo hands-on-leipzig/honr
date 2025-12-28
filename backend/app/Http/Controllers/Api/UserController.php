@@ -57,7 +57,6 @@ class UserController extends Controller
                     $fail('Der Kontakt-Link muss eine gültige URL oder E-Mail-Adresse sein.');
                 },
             ],
-            'regional_partner_name' => 'sometimes|nullable|string|max:255',
             'email_notify_proposals' => 'sometimes|boolean',
             'email_tool_info' => 'sometimes|boolean',
             'email_volunteer_newsletter' => 'sometimes|boolean',
@@ -68,7 +67,6 @@ class UserController extends Controller
             'nickname', 
             'short_bio', 
             'contact_link', 
-            'regional_partner_name', 
             'email_notify_proposals',
             'email_tool_info',
             'email_volunteer_newsletter',
@@ -281,14 +279,15 @@ class UserController extends Controller
 
         $engagements = Engagement::where('user_id', $user->id)
             ->with([
-                'role:id,name,short_name,first_program_id,status,logo_path',
+                'role:id,name,short_name,first_program_id,status,logo_path,role_category',
                 'role.firstProgram:id,name,logo_path',
                 'event:id,date,season_id,level_id,location_id,status,first_program_id',
                 'event.firstProgram:id,name,logo_path,sort_order',
                 'event.season:id,name,logo_path,start_year',
                 'event.level:id,name',
-                'event.location:id,name,city,country_id,latitude,longitude',
+                'event.location:id,name,city,country_id,regional_partner_id,latitude,longitude',
                 'event.location.country:id,name,iso_code',
+                'event.location.regionalPartner:id,name',
             ])
             ->join('events', 'engagements.event_id', '=', 'events.id')
             ->orderBy('events.date', 'desc')

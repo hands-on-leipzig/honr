@@ -78,6 +78,36 @@
           </select>
         </div>
         <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Regionalpartner</label>
+          <div class="relative">
+            <input
+              v-model="regionalPartnerSearch"
+              type="text"
+              @focus="regionalPartnerSearchFocused = true"
+              @blur="setTimeout(() => regionalPartnerSearchFocused = false, 200)"
+              placeholder="Regionalpartner suchen..."
+              class="w-full px-3 py-2 border border-gray-300 rounded-md"
+            />
+            <div v-if="selectedRegionalPartner" class="absolute right-2 top-2">
+              <button type="button" @click="clearRegionalPartner" class="text-gray-400 hover:text-gray-600">✕</button>
+            </div>
+            <div v-if="regionalPartnerSearchFocused && filteredRegionalPartnersSearch.length > 0" class="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
+              <button
+                v-for="rp in filteredRegionalPartnersSearch"
+                :key="rp.id"
+                type="button"
+                @click="selectRegionalPartner(rp)"
+                class="w-full px-3 py-2 text-left hover:bg-gray-50 text-sm border-b border-gray-100 last:border-b-0"
+              >
+                {{ rp.name }}
+              </button>
+            </div>
+          </div>
+          <div v-if="selectedRegionalPartner" class="mt-2 px-3 py-2 bg-gray-50 border border-gray-200 rounded-md">
+            <span class="text-sm font-medium">{{ selectedRegionalPartner.name }}</span>
+          </div>
+        </div>
+        <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">Straße</label>
           <input v-model="form.street_address" type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="z.B. Im Neuenheimer Feld 205" />
         </div>
@@ -192,9 +222,36 @@ const API_PATH = '/admin/locations'
 // State
 const items = ref<any[]>([])
 const countries = ref<any[]>([])
+const regionalPartners = ref<any[]>([])
 const loading = ref(false)
 const filterPending = ref(false)
 const searchQuery = ref('')
+
+// Regional Partner search
+const regionalPartnerSearch = ref('')
+const regionalPartnerSearchFocused = ref(false)
+const selectedRegionalPartner = ref<any>(null)
+
+const filteredRegionalPartnersSearch = computed(() => {
+  if (!regionalPartnerSearch.value.trim()) return regionalPartners.value
+  const q = regionalPartnerSearch.value.toLowerCase()
+  return regionalPartners.value.filter((rp: any) => 
+    rp.name.toLowerCase().includes(q)
+  )
+})
+
+function selectRegionalPartner(rp: any) {
+  selectedRegionalPartner.value = rp
+  form.regional_partner_id = rp.id
+  regionalPartnerSearch.value = ''
+  regionalPartnerSearchFocused.value = false
+}
+
+function clearRegionalPartner() {
+  selectedRegionalPartner.value = null
+  form.regional_partner_id = null
+  regionalPartnerSearch.value = ''
+}
 
 // Computed
 const pendingCount = computed(() => items.value.filter(i => i.status === 'pending').length)
@@ -218,6 +275,7 @@ const editingItem = ref<any | null>(null)
 const form = reactive({
   name: '',
   country_id: '',
+  regional_partner_id: null as number | null,
   street_address: '',
   city: '',
   postal_code: '',
@@ -341,12 +399,14 @@ const statusBadgeClass = (status: string) => {
 async function load() {
   loading.value = true
   try {
-    const [itemsRes, countriesRes] = await Promise.all([
+    const [itemsRes, countriesRes, regionalPartnersRes] = await Promise.all([
       apiClient.get(API_PATH),
-      apiClient.get(`${API_PATH}/countries`)
+      apiClient.get(`${API_PATH}/countries`),
+      apiClient.get('/admin/regional-partners')
     ])
     items.value = itemsRes.data
     countries.value = countriesRes.data
+    regionalPartners.value = regionalPartnersRes.data
     // Default filter on if there are pending items
     filterPending.value = items.value.some(i => i.status === 'pending')
   } catch (err) {
@@ -360,6 +420,7 @@ function addItem() {
   editingItem.value = {}
   form.name = ''
   form.country_id = ''
+  form.regional_partner_id = null
   form.street_address = ''
   form.city = ''
   form.postal_code = ''
@@ -367,6 +428,8 @@ function addItem() {
   form.longitude = null
   form.status = 'approved'
   form.rejection_reason = ''
+  selectedRegionalPartner.value = null
+  regionalPartnerSearch.value = ''
   error.value = ''
 }
 
@@ -374,6 +437,7 @@ async function editItem(item: any) {
   editingItem.value = item
   form.name = item.name
   form.country_id = item.country_id
+  form.regional_partner_id = item.regional_partner_id || null
   form.street_address = item.street_address || ''
   form.city = item.city || ''
   form.postal_code = item.postal_code || ''
@@ -385,6 +449,18 @@ async function editItem(item: any) {
   if (item.country && !countries.value.find((c: any) => c.id === item.country.id)) {
     countries.value.push(item.country)
   }
+  // Set selected regional partner if exists
+  if (item.regional_partner_id) {
+    selectedRegionalPartner.value = regionalPartners.value.find((rp: any) => rp.id === item.regional_partner_id) || item.regional_partner || null
+    if (!selectedRegionalPartner.value && item.regional_partner) {
+      // If regional partner is nested in item and not in list, add it
+      regionalPartners.value.push(item.regional_partner)
+      selectedRegionalPartner.value = item.regional_partner
+    }
+  } else {
+    selectedRegionalPartner.value = null
+  }
+  regionalPartnerSearch.value = ''
   error.value = ''
   await nextTick()
   updateMiniMap()
@@ -397,6 +473,7 @@ async function saveItem() {
     const data = {
       name: form.name,
       country_id: form.country_id,
+      regional_partner_id: form.regional_partner_id || null,
       street_address: form.street_address || null,
       city: form.city || null,
       postal_code: form.postal_code || null,

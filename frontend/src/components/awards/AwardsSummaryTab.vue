@@ -264,9 +264,22 @@ const volunteerEntry = computed(() => {
 })
 
 const regionalPartnerEntry = computed(() => {
-  const targetUserId = props.userId || userStore.user?.id
-  if (!targetUserId) return null
-  return props.leaderboards.regionalPartners.find((e: any) => e.id === targetUserId) || null
+  // Find regional partner from user's engagements
+  // Get all regional partner engagements and find the location's regional_partner_id
+  const regionalPartnerEngagements = props.engagements.filter((eng: any) => 
+    eng.is_recognized && 
+    eng.role?.role_category === 'regional_partner' &&
+    eng.event?.location?.regional_partner_id
+  )
+  
+  if (regionalPartnerEngagements.length === 0) return null
+  
+  // Get the regional_partner_id from the first engagement's location
+  // (assuming all regional partner engagements for a user are at locations of the same regional partner)
+  const regionalPartnerId = regionalPartnerEngagements[0].event.location.regional_partner_id
+  
+  // Find this regional partner in the leaderboard
+  return props.leaderboards.regionalPartners.find((e: any) => e.id === regionalPartnerId) || null
 })
 
 const coachEntry = computed(() => {

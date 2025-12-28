@@ -48,15 +48,6 @@
           E-Mail-Einstellungen
         </button>
         
-        <!-- Regionalpartner Name ändern - only show if user is regional partner -->
-        <button 
-          v-if="userStore.user?.is_admin" 
-          @click="showRegionalPartnerModal = true" 
-          class="w-full px-4 py-3 text-left hover:bg-gray-50"
-        >
-          Regionalpartner Name ändern
-        </button>
-        
         <!-- Abmelden -->
         <button @click="handleLogout" class="w-full px-4 py-3 text-left hover:bg-gray-50">
           Abmelden
@@ -227,25 +218,6 @@
       </form>
     </Modal>
 
-    <!-- Regional Partner Modal -->
-    <div v-if="showRegionalPartnerModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div class="bg-white rounded-lg w-full max-w-sm p-6">
-        <h3 class="text-lg font-semibold mb-4">Regionalpartner Name ändern</h3>
-        <form @submit.prevent="updateRegionalPartner">
-          <div class="mb-4">
-            <label class="block text-sm font-medium text-gray-700 mb-1">Regionalpartner Name</label>
-            <input v-model="regionalPartnerForm.name" type="text" required class="w-full px-3 py-2 border border-gray-300 rounded-md" />
-          </div>
-          <div v-if="regionalPartnerError" class="mb-4 text-red-600 text-sm">{{ regionalPartnerError }}</div>
-          <div class="flex gap-2">
-            <button type="button" @click="showRegionalPartnerModal = false" class="flex-1 px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50">Abbrechen</button>
-            <button type="submit" :disabled="regionalPartnerLoading" class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50">
-              {{ regionalPartnerLoading ? 'Speichern...' : 'Speichern' }}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
 
     <!-- E-Mail Modal -->
     <div v-if="showEmailModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -395,7 +367,6 @@
     <div v-if="showQrModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" @click="showQrModal = false">
       <div class="bg-white rounded-lg p-6 max-w-sm w-full" @click.stop>
         <div class="flex items-center justify-between mb-4">
-          <h3 class="text-lg font-semibold">QR-Code</h3>
           <button @click="showQrModal = false" class="text-gray-500 hover:text-gray-700">✕</button>
         </div>
         <div class="flex flex-col items-center">
@@ -429,7 +400,6 @@ const showNameModal = ref(false)
 const showBioModal = ref(false)
 const showContactLinkModal = ref(false)
 const showEmailSettingsModal = ref(false)
-const showRegionalPartnerModal = ref(false)
 const showDeleteModal = ref(false)
 const showQrModal = ref(false)
 
@@ -447,7 +417,6 @@ const nameForm = reactive({ nickname: '' })
 const bioForm = reactive({ short_bio: '' })
 const contactLinkForm = reactive({ contact_link: '' })
 const contactLinkType = ref<'email' | 'link'>('link')
-const regionalPartnerForm = reactive({ name: '' })
 const deleteForm = reactive({ password: '' })
 
 // Loading states
@@ -457,7 +426,6 @@ const nameLoading = ref(false)
 const bioLoading = ref(false)
 const contactLinkLoading = ref(false)
 const emailSettingsLoading = ref(false)
-const regionalPartnerLoading = ref(false)
 const deleteLoading = ref(false)
 
 // Error states
@@ -468,7 +436,6 @@ const nameError = ref('')
 const bioError = ref('')
 const contactLinkError = ref('')
 const emailSettingsError = ref('')
-const regionalPartnerError = ref('')
 const deleteError = ref('')
 
 // Nickname validation
@@ -528,7 +495,6 @@ onMounted(async () => {
       contactLinkForm.contact_link = contactLink
       contactLinkType.value = 'link'
     }
-    regionalPartnerForm.name = userStore.user.regional_partner_name || ''
     emailPreferences.email_notify_proposals = userStore.user.email_notify_proposals || false
     emailPreferences.email_tool_info = userStore.user.email_tool_info || false
     emailPreferences.email_volunteer_newsletter = userStore.user.email_volunteer_newsletter || false
@@ -755,20 +721,6 @@ async function updateEmailPreferences() {
     emailSettingsError.value = err.response?.data?.message || 'Fehler beim Speichern der E-Mail-Einstellungen.'
   } finally {
     emailSettingsLoading.value = false
-  }
-}
-
-async function updateRegionalPartner() {
-  regionalPartnerError.value = ''
-  regionalPartnerLoading.value = true
-  try {
-    await apiClient.put('/user', { regional_partner_name: regionalPartnerForm.name })
-    await userStore.fetchUser()
-    showRegionalPartnerModal.value = false
-  } catch (err: any) {
-    regionalPartnerError.value = err.response?.data?.message || 'Fehler beim Ändern des Regionalpartner-Namens.'
-  } finally {
-    regionalPartnerLoading.value = false
   }
 }
 

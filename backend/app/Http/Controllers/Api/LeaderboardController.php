@@ -67,17 +67,17 @@ class LeaderboardController extends Controller
     }
 
     /**
-     * Regional Partner leaderboard - distinct seasons where role_category = 'regional_partner'
+     * Regional Partner leaderboard - distinct seasons from events at locations with regional_partner_id
+     * Counts distinct seasons where there's at least one recognized engagement
      */
     public function regionalPartners(Request $request)
     {
         $query = DB::table('engagements')
-            ->join('roles', 'engagements.role_id', '=', 'roles.id')
             ->join('events', 'engagements.event_id', '=', 'events.id')
-            ->join('users', 'engagements.user_id', '=', 'users.id')
+            ->join('locations', 'events.location_id', '=', 'locations.id')
+            ->join('regional_partners', 'locations.regional_partner_id', '=', 'regional_partners.id')
             ->where('engagements.is_recognized', true)
-            ->where('users.status', 'active')
-            ->where('roles.role_category', 'regional_partner');
+            ->whereNotNull('locations.regional_partner_id');
 
         // Apply filters
         if ($request->filled('program_id')) {
@@ -91,17 +91,16 @@ class LeaderboardController extends Controller
         }
 
         $leaderboard = $query->select(
-                'users.id',
-                'users.nickname',
-                'users.regional_partner_name',
+                'regional_partners.id',
+                'regional_partners.name',
                 DB::raw('COUNT(DISTINCT events.season_id) as season_count')
             )
-            ->groupBy('users.id', 'users.nickname', 'users.regional_partner_name')
+            ->groupBy('regional_partners.id', 'regional_partners.name')
             ->orderByDesc('season_count')
             ->limit(100)
             ->get();
 
-        // Add rank with ties (users with same count get same rank), use regional_partner_name if set
+        // Add rank with ties (regional partners with same count get same rank)
         $rank = 1;
         $previousCount = null;
         $ranked = $leaderboard->values()->map(function ($item, $index) use (&$rank, &$previousCount) {
@@ -114,7 +113,7 @@ class LeaderboardController extends Controller
                 $item->rank = $rank;
             }
             $previousCount = $item->season_count;
-            $item->display_name = $item->regional_partner_name ?: $item->nickname;
+            $item->display_name = $item->name;
             return $item;
         });
 

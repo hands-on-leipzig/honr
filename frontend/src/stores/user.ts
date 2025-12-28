@@ -7,10 +7,8 @@ export interface User {
   email: string
   nickname: string | null
   status: string
-  home_location: string | null
   short_bio: string | null
   contact_link: string | null
-  regional_partner_name: string | null
   email_notify_proposals: boolean
   email_tool_info: boolean
   email_volunteer_newsletter: boolean

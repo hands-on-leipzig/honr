@@ -30,6 +30,7 @@
     <AdminCrudLevels v-if="selectedTable === 'levels'" @close="selectedTable = null" />
     <AdminCrudCountries v-if="selectedTable === 'countries'" @close="selectedTable = null" />
     <AdminCrudLocations v-if="selectedTable === 'locations'" @close="selectedTable = null" />
+    <AdminCrudRegionalPartners v-if="selectedTable === 'regional_partners'" @close="selectedTable = null" />
     <AdminCrudRoles v-if="selectedTable === 'roles'" @close="selectedTable = null" />
     <AdminCrudEvents v-if="selectedTable === 'events'" @close="selectedTable = null" />
     <AdminCrudEngagements v-if="selectedTable === 'engagements'" @close="selectedTable = null" />
@@ -56,6 +57,7 @@ import AdminCrudSeasons from '@/components/admin/AdminCrudSeasons.vue'
 import AdminCrudLevels from '@/components/admin/AdminCrudLevels.vue'
 import AdminCrudCountries from '@/components/admin/AdminCrudCountries.vue'
 import AdminCrudLocations from '@/components/admin/AdminCrudLocations.vue'
+import AdminCrudRegionalPartners from '@/components/admin/AdminCrudRegionalPartners.vue'
 import AdminCrudRoles from '@/components/admin/AdminCrudRoles.vue'
 import AdminCrudEvents from '@/components/admin/AdminCrudEvents.vue'
 import AdminCrudEngagements from '@/components/admin/AdminCrudEngagements.vue'
@@ -63,7 +65,7 @@ import AdminCrudEngagements from '@/components/admin/AdminCrudEngagements.vue'
 const selectedTable = ref<string | null>(null)
 
 // Tables with implemented CRUD components
-const implementedTables = ['users', 'first_programs', 'seasons', 'levels', 'countries', 'locations', 'roles', 'events', 'engagements']
+const implementedTables = ['users', 'first_programs', 'seasons', 'levels', 'countries', 'locations', 'regional_partners', 'roles', 'events', 'engagements']
 
 // Pending counts for tables needing admin attention
 const pendingCounts = reactive<Record<string, number>>({
@@ -85,6 +87,7 @@ const tables = [
   { name: 'roles', label: 'Rollen' },
   { name: 'seasons', label: 'Saisons' },
   { name: 'locations', label: 'Standorte' },
+  { name: 'regional_partners', label: 'Regionalpartner' },
   { name: 'events', label: 'Veranstaltungen' },
   { name: 'engagements', label: 'Volunteer-Einsätze' },
 ]

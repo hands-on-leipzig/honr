@@ -20,14 +20,15 @@ class EngagementController extends Controller
         return response()->json(
             Engagement::where('user_id', $request->user()->id)
                 ->with([
-                    'role:id,name,short_name,first_program_id,status,logo_path',
+                    'role:id,name,short_name,first_program_id,status,logo_path,role_category',
                     'role.firstProgram:id,name',
                     'event:id,date,season_id,level_id,location_id,status,first_program_id',
                     'event.firstProgram:id,name,logo_path,sort_order',
                     'event.season:id,name,logo_path,start_year',
                     'event.level:id,name',
-                    'event.location:id,name,city,country_id,latitude,longitude',
+                    'event.location:id,name,city,country_id,regional_partner_id,latitude,longitude',
                     'event.location.country:id,name,iso_code',
+                    'event.location.regionalPartner:id,name',
                 ])
                 ->join('events', 'engagements.event_id', '=', 'events.id')
                 ->orderBy('events.date', 'desc')

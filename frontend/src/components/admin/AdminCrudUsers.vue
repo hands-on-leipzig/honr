@@ -80,8 +80,6 @@
           <div class="px-3 py-2 bg-gray-100 border border-gray-200 rounded-md text-gray-700 min-h-[60px]">{{ editingUser.short_bio || '–' }}</div>
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Regionalpartner Name</label>
-          <div class="px-3 py-2 bg-gray-100 border border-gray-200 rounded-md text-gray-700">{{ editingUser.regional_partner_name || '–' }}</div>
         </div>
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">E-Mail-Einstellungen</label>
