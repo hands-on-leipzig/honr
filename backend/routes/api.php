@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\AdminLocationController;
 use App\Http\Controllers\Api\AdminRoleController;
 use App\Http\Controllers\Api\AdminEventController;
 use App\Http\Controllers\Api\AdminEngagementController;
+use App\Http\Controllers\Api\AdminStatisticsController;
 use App\Http\Controllers\Api\EngagementController;
 use App\Http\Controllers\Api\BadgeController;
 use App\Http\Controllers\Api\LeaderboardController;
@@ -157,6 +158,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/engagements', [AdminEngagementController::class, 'store']);
         Route::put('/engagements/{engagement}', [AdminEngagementController::class, 'update']);
         Route::delete('/engagements/{engagement}', [AdminEngagementController::class, 'destroy']);
+
+        // Statistics
+        Route::get('/statistics', [AdminStatisticsController::class, 'index']);
     });
 });
 
