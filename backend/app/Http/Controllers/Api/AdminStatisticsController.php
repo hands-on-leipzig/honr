@@ -215,25 +215,32 @@ class AdminStatisticsController extends Controller
             $userBadgeCounts[] = $userBadgeCount;
         }
 
-        // Find most awarded badge combination
-        $mostAwarded = null;
-        $mostAwardedCount = 0;
+        // Find top 5 most awarded badge combinations
+        $allBadgeCombinations = [];
         foreach ($badgeCombinations as $roleId => $levels) {
             foreach ($levels as $level => $count) {
-                if ($count > $mostAwardedCount) {
-                    $role = Role::find($roleId);
-                    if ($role) {
-                        $mostAwarded = [
-                            'role_name' => $role->name,
-                            'level' => $level,
-                            'level_name' => $this->getLevelName($level),
-                            'count' => $count,
-                        ];
-                        $mostAwardedCount = $count;
-                    }
+                $role = Role::find($roleId);
+                if ($role) {
+                    $allBadgeCombinations[] = [
+                        'role_id' => $roleId,
+                        'role_name' => $role->name,
+                        'role_short_name' => $role->short_name,
+                        'logo_path' => $role->logo_path,
+                        'level' => $level,
+                        'level_name' => $this->getLevelName($level),
+                        'count' => $count,
+                    ];
                 }
             }
         }
+        
+        // Sort by count descending and take top 5
+        usort($allBadgeCombinations, function ($a, $b) {
+            return $b['count'] - $a['count'];
+        });
+        $topBadges = array_slice($allBadgeCombinations, 0, 5);
+        
+        $mostAwarded = !empty($topBadges) ? $topBadges[0] : null;
 
         $maxBadgesPerUser = !empty($userBadgeCounts) ? max($userBadgeCounts) : 0;
         $avgBadgesPerUser = !empty($userBadgeCounts) ? round(array_sum($userBadgeCounts) / count($userBadgeCounts), 1) : 0;
@@ -241,6 +248,7 @@ class AdminStatisticsController extends Controller
         return [
             'counts' => $badgeCounts,
             'most_awarded' => $mostAwarded,
+            'top_5' => $topBadges,
             'max_per_user' => $maxBadgesPerUser,
             'avg_per_user' => $avgBadgesPerUser,
         ];
