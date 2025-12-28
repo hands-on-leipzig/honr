@@ -30,6 +30,7 @@
         <!-- Count -->
         <div class="text-right">
           <div :class="['text-lg font-bold', PRIMARY_COLORS.link]">{{ volunteerEntry.engagement_count || 0 }}</div>
+          <div class="text-xs text-gray-500">Einsätze</div>
         </div>
       </button>
       <button
@@ -58,6 +59,7 @@
         <!-- Count -->
         <div class="text-right">
           <div :class="['text-lg font-bold', PRIMARY_COLORS.link]">{{ rpEntry.engagement_count || 0 }}</div>
+          <div class="text-xs text-gray-500">Einsätze</div>
         </div>
       </button>
       <button
@@ -83,6 +85,7 @@
         <!-- Count -->
         <div class="text-right">
           <div :class="['text-lg font-bold', PRIMARY_COLORS.link]">{{ coachEntry.season_count || 0 }}</div>
+          <div class="text-xs text-gray-500">Saisons</div>
         </div>
       </button>
     </div>
