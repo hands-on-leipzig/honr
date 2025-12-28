@@ -186,13 +186,20 @@ class AdminStatisticsController extends Controller
         foreach ($users as $user) {
             $engagementsByRole = Engagement::where('user_id', $user->id)
                 ->where('is_recognized', true)
-                ->with('role:id,name')
+                ->with('role:id,name,status')
                 ->get()
                 ->groupBy('role_id');
 
             $userBadgeCount = 0;
 
             foreach ($engagementsByRole as $roleId => $engagements) {
+                $role = $engagements->first()->role;
+                
+                // Only count badges for approved roles
+                if (!$role || $role->status !== 'approved') {
+                    continue;
+                }
+                
                 $count = $engagements->count();
                 $level = BadgeService::calculateLevel($count);
 
@@ -219,7 +226,8 @@ class AdminStatisticsController extends Controller
         foreach ($badgeCombinations as $roleId => $levels) {
             foreach ($levels as $level => $count) {
                 $role = Role::find($roleId);
-                if ($role) {
+                // Only include approved roles
+                if ($role && $role->status === 'approved') {
                     $allBadgeCombinations[] = [
                         'role_id' => $roleId,
                         'role_name' => $role->name,

@@ -24,7 +24,7 @@ class BadgeController extends Controller
         // Get all recognized engagements for this user, grouped by role
         $engagementCounts = Engagement::where('user_id', $user->id)
             ->where('is_recognized', true)
-            ->with('role:id,name,short_name,logo_path')
+            ->with('role:id,name,short_name,logo_path,status')
             ->get()
             ->groupBy('role_id')
             ->map(function ($engagements, $roleId) {
@@ -35,8 +35,10 @@ class BadgeController extends Controller
                 ];
             })
             ->filter(function ($item) {
-                // Only include roles that exist and have engagements
-                return $item['role'] !== null && $item['count'] > 0;
+                // Only include approved roles that exist and have engagements
+                return $item['role'] !== null 
+                    && $item['role']->status === 'approved' 
+                    && $item['count'] > 0;
             });
 
         $badges = [];
