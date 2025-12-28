@@ -381,6 +381,10 @@ async function editItem(item: any) {
   form.longitude = item.longitude
   form.status = item.status
   form.rejection_reason = item.rejection_reason || ''
+  // If country is nested in item and not in countries list, add it (for non-approved countries)
+  if (item.country && !countries.value.find((c: any) => c.id === item.country.id)) {
+    countries.value.push(item.country)
+  }
   error.value = ''
   await nextTick()
   updateMiniMap()

@@ -313,8 +313,20 @@ function editItem(item: any) {
   editingItem.value = item
   form.user_id = item.user_id
   selectedUser.value = options.users.find((u: any) => u.id === item.user_id) || null
-  selectedRole.value = options.roles.find((r: any) => r.id === item.role_id) || null
-  selectedEvent.value = options.events.find((e: any) => e.id === item.event_id) || null
+  // Use nested role data if available (for non-approved roles), otherwise find in options
+  // If role is not in options list, add it so it can be displayed and searched
+  let role = item.role || options.roles.find((r: any) => r.id === item.role_id)
+  if (role && !options.roles.find((r: any) => r.id === role.id)) {
+    options.roles.push(role)
+  }
+  selectedRole.value = role || null
+  // Use nested event data if available (for non-approved events), otherwise find in options
+  // If event is not in options list, add it so it can be displayed and searched
+  let event = item.event || options.events.find((e: any) => e.id === item.event_id)
+  if (event && !options.events.find((e: any) => e.id === event.id)) {
+    options.events.push(event)
+  }
+  selectedEvent.value = event || null
   userSearch.value = ''
   roleSearch.value = ''
   eventSearch.value = ''

@@ -310,7 +310,13 @@ function editItem(item: any) {
   form.date = item.date?.split('T')[0] || ''
   form.status = item.status
   form.rejection_reason = item.rejection_reason || ''
-  selectedLocation.value = options.locations.find((loc: any) => loc.id === item.location_id) || null
+  // Use nested location data if available (for non-approved locations), otherwise find in options
+  // If location is not in options list, add it so it can be displayed and searched
+  let location = item.location || options.locations.find((loc: any) => loc.id === item.location_id)
+  if (location && !options.locations.find((loc: any) => loc.id === location.id)) {
+    options.locations.push(location)
+  }
+  selectedLocation.value = location || null
   locationSearch.value = ''
   error.value = ''
 }

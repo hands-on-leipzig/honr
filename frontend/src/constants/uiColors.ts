@@ -35,7 +35,7 @@ export const STATUS_ERROR = {
 
 // Status colors - Warning/Pending
 export const STATUS_WARNING = {
-  badge: 'bg-yellow-100 text-yellow-800',
+  badge: 'bg-amber-100 text-amber-800',
   text: 'text-amber-600',
   icon: 'text-amber-500',
 } as const
@@ -97,17 +97,18 @@ export const NEUTRAL_COLORS = {
  * Get the border color class for a badge level
  * @param level - Badge level (1-4)
  * @returns Tailwind CSS border color class
+ * @note Colors from BADGE_COLORS constants
  */
 export function getBadgeBorderClass(level: number): string {
   switch (level) {
     case 1:
       return 'border-gray-300' // Light gray border (consistent with ranks > 3)
     case 2:
-      return 'border-[#CD7F32]' // Bronze
+      return 'border-[#CD7F32]' // Bronze (from BADGE_COLORS.bronze)
     case 3:
-      return 'border-[#C0C0C0]' // Silver
+      return 'border-[#C0C0C0]' // Silver (from BADGE_COLORS.silver)
     case 4:
-      return 'border-[#FFD700]' // Gold
+      return 'border-[#FFD700]' // Gold (from BADGE_COLORS.gold)
     default:
       return 'border-gray-300' // Light gray border (consistent with ranks > 3)
   }
@@ -117,17 +118,18 @@ export function getBadgeBorderClass(level: number): string {
  * Get the background tint color for a badge level (very light, 10-15% opacity)
  * @param level - Badge level (1-4)
  * @returns CSS background color with rgba
+ * @note Colors derived from BADGE_COLORS constants
  */
 export function getBadgeBackgroundTint(level: number): string {
   switch (level) {
     case 1:
       return 'rgba(255, 255, 255, 1)' // White (no tint)
     case 2:
-      return 'rgba(205, 127, 50, 0.12)' // Very light bronze tint
+      return 'rgba(205, 127, 50, 0.12)' // Very light bronze tint (from BADGE_COLORS.bronze)
     case 3:
-      return 'rgba(192, 192, 192, 0.15)' // Very light silver tint
+      return 'rgba(192, 192, 192, 0.15)' // Very light silver tint (from BADGE_COLORS.silver)
     case 4:
-      return 'rgba(255, 215, 0, 0.12)' // Very light gold tint
+      return 'rgba(255, 215, 0, 0.12)' // Very light gold tint (from BADGE_COLORS.gold)
     default:
       return 'rgba(255, 255, 255, 1)' // White (no tint)
   }
@@ -138,6 +140,7 @@ export function getBadgeBackgroundTint(level: number): string {
  * @param level - Badge level (1-4)
  * @param size - Badge size ('md' or 'lg')
  * @returns CSS box-shadow value
+ * @note Colors derived from BADGE_COLORS constants
  */
 export function getBadgeGlow(level: number, size: 'md' | 'lg' = 'md'): string {
   const baseBlur = size === 'lg' ? 8 : 4
@@ -147,13 +150,13 @@ export function getBadgeGlow(level: number, size: 'md' | 'lg' = 'md'): string {
     case 1:
       return 'none' // No glow for level 1
     case 2:
-      // Subtle bronze glow
+      // Subtle bronze glow (from BADGE_COLORS.bronze)
       return `0 0 ${baseBlur}px ${baseSpread}px rgba(205, 127, 50, 0.3)`
     case 3:
-      // Medium silver glow
+      // Medium silver glow (from BADGE_COLORS.silver)
       return `0 0 ${baseBlur * 1.5}px ${baseSpread * 1.5}px rgba(192, 192, 192, 0.4)`
     case 4:
-      // Strong gold glow
+      // Strong gold glow (from BADGE_COLORS.gold)
       return `0 0 ${baseBlur * 2}px ${baseSpread * 2}px rgba(255, 215, 0, 0.5)`
     default:
       return 'none'
@@ -196,14 +199,17 @@ export function getStatusColorClass(status: string): string {
 
 /**
  * Get status text color class for name fields
- * @param status - Status string ('approved', 'pending', 'rejected')
+ * @param status - Status string ('approved', 'pending', 'rejected', 'recognized', 'unrecognized')
  * @returns Tailwind CSS text color class
  */
-export function getStatusNameColorClass(status: string): string {
+export function getStatusNameColorClass(status: string | null | undefined): string {
+  if (!status) return 'text-gray-900' // default to black if status is missing
   switch (status.toLowerCase()) {
     case 'approved':
+    case 'recognized':
       return 'text-gray-900' // black
     case 'pending':
+    case 'unrecognized':
       return 'text-blue-600' // blue
     case 'rejected':
       return 'text-red-600' // red
