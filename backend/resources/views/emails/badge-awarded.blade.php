@@ -34,15 +34,9 @@
 
     <div class="info-box">
         <p>Du hast jetzt <strong>{{ $engagementCount }}</strong> anerkannte Einsätze in der Rolle <strong>{{ $roleName }}</strong>.</p>
-        @if($newLevel < 4)
+        @if($newLevel < 4 && $nextThreshold)
         <p style="margin-top: 12px;">
-            @if($newLevel === 1)
-                Nächstes Level: Bronze (5 Einsätze)
-            @elseif($newLevel === 2)
-                Nächstes Level: Silber (20 Einsätze)
-            @elseif($newLevel === 3)
-                Nächstes Level: Gold (50 Einsätze)
-            @endif
+            Nächstes Level: {{ $nextLevelName }} ({{ $nextThreshold }} Einsätze)
         </p>
         @endif
     </div>

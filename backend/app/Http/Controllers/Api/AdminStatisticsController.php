@@ -11,14 +11,13 @@ use App\Models\Location;
 use App\Models\Country;
 use App\Models\FirstProgram;
 use App\Models\Season;
+use App\Services\BadgeService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
 class AdminStatisticsController extends Controller
 {
-    // Badge thresholds (same as BadgeController)
-    private const THRESHOLDS = [0, 1, 5, 20, 50];
 
     public function index(Request $request)
     {
@@ -195,10 +194,10 @@ class AdminStatisticsController extends Controller
 
             foreach ($engagementsByRole as $roleId => $engagements) {
                 $count = $engagements->count();
-                $level = $this->calculateLevel($count);
+                $level = BadgeService::calculateLevel($count);
 
                 if ($level > 0) {
-                    $badgeCounts[$this->getLevelName($level)]++;
+                    $badgeCounts[BadgeService::getLevelName($level)]++;
                     $userBadgeCount++;
 
                     // Track badge combinations (role + level)
@@ -227,7 +226,7 @@ class AdminStatisticsController extends Controller
                         'role_short_name' => $role->short_name,
                         'logo_path' => $role->logo_path,
                         'level' => $level,
-                        'level_name' => $this->getLevelName($level),
+                        'level_name' => BadgeService::getLevelName($level),
                         'count' => $count,
                     ];
                 }
@@ -254,30 +253,5 @@ class AdminStatisticsController extends Controller
         ];
     }
 
-    private function calculateLevel(int $count): int
-    {
-        if ($count >= self::THRESHOLDS[4]) {
-            return 4; // Gold
-        } elseif ($count >= self::THRESHOLDS[3]) {
-            return 3; // Silver
-        } elseif ($count >= self::THRESHOLDS[2]) {
-            return 2; // Bronze
-        } elseif ($count >= self::THRESHOLDS[1]) {
-            return 1; // Basic
-        } else {
-            return 0; // No badge
-        }
-    }
-
-    private function getLevelName(int $level): string
-    {
-        return match($level) {
-            1 => 'basic',
-            2 => 'bronze',
-            3 => 'silver',
-            4 => 'gold',
-            default => 'none',
-        };
-    }
 }
 

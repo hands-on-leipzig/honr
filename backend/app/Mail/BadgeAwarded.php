@@ -3,6 +3,7 @@
 namespace App\Mail;
 
 use App\Models\User;
+use App\Services\BadgeService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
@@ -24,6 +25,35 @@ class BadgeAwarded extends Mailable
         public int $engagementCount,
         public ?string $logoPath = null
     ) {
+    }
+
+    /**
+     * Get the next threshold value for the current level
+     */
+    public function getNextThreshold(): ?int
+    {
+        if ($this->newLevel >= 4) {
+            return null; // Already at max level
+        }
+        return BadgeService::THRESHOLDS[$this->newLevel + 1];
+    }
+
+    /**
+     * Get the next level name in German
+     */
+    public function getNextLevelName(): ?string
+    {
+        if ($this->newLevel >= 4) {
+            return null; // Already at max level
+        }
+        $levelLabels = [
+            1 => 'Basis',
+            2 => 'Bronze',
+            3 => 'Silber',
+            4 => 'Gold',
+        ];
+        $nextLevel = $this->newLevel + 1;
+        return $levelLabels[$nextLevel] ?? null;
     }
 
     /**
@@ -51,6 +81,10 @@ class BadgeAwarded extends Mailable
     {
         return new Content(
             view: 'emails.badge-awarded',
+            with: [
+                'nextThreshold' => $this->getNextThreshold(),
+                'nextLevelName' => $this->getNextLevelName(),
+            ],
         );
     }
 }
