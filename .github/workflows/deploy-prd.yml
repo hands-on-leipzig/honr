@@ -49,7 +49,7 @@ jobs:
           VITE_API_URL: ${{ secrets.PRD_API_URL }}
         run: |
           npm ci
-          npm run build
+          npm run build-only
 
       - name: Create deployment package
         run: |
