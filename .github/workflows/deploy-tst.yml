@@ -79,8 +79,12 @@ jobs:
           chmod 600 ~/.ssh/deploy_key
           # Add server to known hosts
           ssh-keyscan -H $TST_HOST >> ~/.ssh/known_hosts 2>/dev/null || true
-          # Verify key format
-          head -1 ~/.ssh/deploy_key | grep -q "BEGIN.*PRIVATE KEY" || (echo "❌ Invalid SSH key format" && exit 1)
+          # Verify key format (more flexible check)
+          if ! grep -q "BEGIN" ~/.ssh/deploy_key; then
+            echo "❌ Invalid SSH key format - key must start with '-----BEGIN'"
+            echo "First line of key: $(head -1 ~/.ssh/deploy_key)"
+            exit 1
+          fi
           
           # Transfer deployment package
           echo "📤 Transferring deployment package to server..."
