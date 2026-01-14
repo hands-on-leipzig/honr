@@ -79,9 +79,19 @@ jobs:
           # Add server to known hosts
           ssh-keyscan -H $TST_HOST >> ~/.ssh/known_hosts 2>/dev/null || true
           
+          # Debug: Check key format (first and last lines only)
+          echo "🔍 Checking SSH key format..."
+          echo "First line: $(head -1 ~/.ssh/deploy_key | cut -c1-30)..."
+          echo "Last line: $(tail -1 ~/.ssh/deploy_key | cut -c1-30)..."
+          echo "Key file size: $(wc -c < ~/.ssh/deploy_key) bytes"
+          
+          # Test SSH connection with verbose output
+          echo "🔍 Testing SSH connection..."
+          ssh -v -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no -o BatchMode=yes $TST_USER@$TST_HOST echo "SSH test successful" 2>&1 | head -20 || echo "SSH test failed (this is expected if key is not authorized)"
+          
           # Transfer deployment package
           echo "📤 Transferring deployment package to server..."
-          scp -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no deploy-tst.tar.gz $TST_USER@$TST_HOST:/tmp/
+          scp -v -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no -o BatchMode=yes deploy-tst.tar.gz $TST_USER@$TST_HOST:/tmp/ 2>&1 | head -30
           
           # Deploy on server
           echo "🚀 Deploying on server..."
