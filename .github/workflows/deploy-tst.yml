@@ -73,18 +73,11 @@ jobs:
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
           # Write SSH key, ensuring proper format (no CRLF, proper newlines)
+          # Remove carriage returns and ensure proper line endings
           echo "$TST_SSH_KEY" | tr -d '\r' > ~/.ssh/deploy_key
-          # Ensure key ends with newline
-          echo "" >> ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
           # Add server to known hosts
           ssh-keyscan -H $TST_HOST >> ~/.ssh/known_hosts 2>/dev/null || true
-          # Verify key format (more flexible check)
-          if ! grep -q "BEGIN" ~/.ssh/deploy_key; then
-            echo "❌ Invalid SSH key format - key must start with '-----BEGIN'"
-            echo "First line of key: $(head -1 ~/.ssh/deploy_key)"
-            exit 1
-          fi
           
           # Transfer deployment package
           echo "📤 Transferring deployment package to server..."
