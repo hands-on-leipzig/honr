@@ -57,19 +57,8 @@ jobs:
         run: |
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
-          # Write known_hosts - ensure each line has the hostname
-          # If SSH_KNOWN_HOST uses hashed format (|1|...), we need to add the actual hostname
-          if echo "$SSH_KNOWN_HOST" | grep -q "^|1|"; then
-            # Hashed format - add hostname to each line
-            echo "$SSH_KNOWN_HOST" | while IFS= read -r line; do
-              if [ -n "$line" ]; then
-                echo "$SSH_HOST $line" >> ~/.ssh/known_hosts
-              fi
-            done
-          else
-            # Already has hostname, use as-is
-            echo "$SSH_KNOWN_HOST" > ~/.ssh/known_hosts
-          fi
+          # Write known_hosts - should already have hostname (from ssh-keyscan without -H)
+          echo "$SSH_KNOWN_HOST" > ~/.ssh/known_hosts
           chmod 644 ~/.ssh/known_hosts
           # Verify known_hosts was written
           echo "🔍 Known hosts file:"
