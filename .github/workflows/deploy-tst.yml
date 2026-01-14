@@ -1,4 +1,4 @@
-name: Build for TST
+name: Deploy to TST
 
 on:
   push:
@@ -8,8 +8,8 @@ on:
   workflow_dispatch:  # Allow manual trigger
 
 jobs:
-  build:
-    name: Build TST Deployment Package
+  deploy:
+    name: Deploy to Test Environment
     runs-on: ubuntu-latest
     
     steps:
@@ -42,40 +42,90 @@ jobs:
           npm ci
           npm run build-only
 
-      - name: Create deployment package
+      - name: Copy frontend dist to backend public
         run: |
-          mkdir -p deploy-tst
-          cp -r backend deploy-tst/
-          cp -r frontend/dist deploy-tst/frontend-dist
-          cp -r scripts deploy-tst/
-          # Exclude unnecessary files
-          rm -rf deploy-tst/backend/vendor
-          rm -rf deploy-tst/backend/node_modules
-          rm -rf deploy-tst/backend/tests
-          rm -rf deploy-tst/backend/.git
-          tar -czf deploy-tst.tar.gz deploy-tst/
+          rm -rf backend/public/build
+          rm -f backend/public/index.html
+          cp -r frontend/dist/* backend/public/
 
-      - name: Upload deployment artifact
-        uses: actions/upload-artifact@v4
+      - name: Rsync backend to server
+        env:
+          SSH_KNOWN_HOST: ${{ secrets.SSH_KNOWN_HOST }}
+          SSH_KEY: ${{ secrets.TST_SSH_KEY }}
+          SSH_USER: ${{ secrets.TST_USER }}
+          SSH_HOST: ${{ secrets.TST_HOST }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$SSH_KNOWN_HOST" > ~/.ssh/known_hosts
+          echo "$SSH_KEY" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          rsync -avz -e "ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=yes" --delete \
+            --exclude='.env' \
+            --exclude='.git' \
+            --exclude='vendor' \
+            --exclude='node_modules' \
+            --exclude='tests' \
+            ./backend/ $SSH_USER@$SSH_HOST:${{ secrets.TST_DEPLOY_PATH }}/releases/temp/
+
+      - name: Finalize deployment on server
+        uses: appleboy/ssh-action@v1.0.0
         with:
-          name: tst-deployment
-          path: deploy-tst.tar.gz
-          retention-days: 7
+          host: ${{ secrets.TST_HOST }}
+          username: ${{ secrets.TST_USER }}
+          key: ${{ secrets.TST_SSH_KEY }}
+          script: |
+            cd ${{ secrets.TST_DEPLOY_PATH }}/releases/temp
+            chmod +x scripts/deploy-backend.sh || true
+            bash scripts/deploy-backend.sh tst ${{ secrets.TST_DEPLOY_PATH }} || {
+              echo "⚠️  deploy-backend.sh not found or failed, running manual deployment..."
+              # Manual deployment steps
+              RELEASE_DIR="${{ secrets.TST_DEPLOY_PATH }}/releases/$(date +%Y%m%d%H%M%S)"
+              mkdir -p "$RELEASE_DIR"
+              mv * "$RELEASE_DIR/" 2>/dev/null || cp -r . "$RELEASE_DIR/"
+              cd "$RELEASE_DIR"
+              
+              # Install dependencies
+              composer install --no-dev --optimize-autoloader --no-interaction
+              
+              # Link shared storage
+              ln -sf "${{ secrets.TST_DEPLOY_PATH }}/shared/storage" storage
+              ln -sf "${{ secrets.TST_DEPLOY_PATH }}/shared/bootstrap/cache" bootstrap/cache
+              
+              # Copy env file
+              if [ -f "${{ secrets.TST_DEPLOY_PATH }}/shared/.env.tst" ]; then
+                cp "${{ secrets.TST_DEPLOY_PATH }}/shared/.env.tst" .env
+              fi
+              
+              # Laravel setup
+              php artisan config:cache || true
+              php artisan route:cache || true
+              php artisan view:cache || true
+              php artisan storage:link || true
+              
+              # Migrations (skip on initial deployment)
+              MIGRATIONS_EXIST=$(php artisan tinker --execute="try { DB::table('migrations')->count(); echo 'true'; } catch (Exception \$e) { echo 'false'; }" 2>/dev/null | tail -1 || echo "false")
+              if [ "$MIGRATIONS_EXIST" = "true" ]; then
+                php artisan migrate --force
+              else
+                echo "⚠️  Skipping migrations (initial deployment)"
+              fi
+              
+              # Create symlink
+              ln -sfn "$RELEASE_DIR" "${{ secrets.TST_DEPLOY_PATH }}/current"
+              
+              # Cleanup
+              rm -rf "${{ secrets.TST_DEPLOY_PATH }}/releases/temp"
+            }
 
-      - name: Build summary
+      - name: Deployment summary
         run: |
-          echo "## 🚀 TST Build Summary" >> $GITHUB_STEP_SUMMARY
-          echo "- **Status**: ✅ Build package created" >> $GITHUB_STEP_SUMMARY
+          echo "## 🚀 TST Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "- **Status**: ✅ Code deployed to TST server" >> $GITHUB_STEP_SUMMARY
           echo "- **Branch**: ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Commit**: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Time**: $(date)" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### Deployment" >> $GITHUB_STEP_SUMMARY
-          echo "**Server-side deployment:** Run on TST server:" >> $GITHUB_STEP_SUMMARY
-          echo "\`\`\`bash" >> $GITHUB_STEP_SUMMARY
-          echo "cd /var/www/honr" >> $GITHUB_STEP_SUMMARY
-          echo "bash scripts/deploy-from-git.sh tst /var/www/honr main" >> $GITHUB_STEP_SUMMARY
-          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "See \`SERVER_SIDE_DEPLOYMENT.md\` for details." >> $GITHUB_STEP_SUMMARY
+          echo "### Next Steps" >> $GITHUB_STEP_SUMMARY
+          echo "1. Verify application at: ${{ secrets.TST_API_URL }}" >> $GITHUB_STEP_SUMMARY
+          echo "2. Copy database from DEV to TST (if initial deployment)" >> $GITHUB_STEP_SUMMARY
 
