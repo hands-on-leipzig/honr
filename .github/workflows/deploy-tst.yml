@@ -1,4 +1,4 @@
-name: Deploy to TST
+name: Build for TST
 
 on:
   push:
@@ -8,8 +8,8 @@ on:
   workflow_dispatch:  # Allow manual trigger
 
 jobs:
-  deploy:
-    name: Deploy to Test Environment
+  build:
+    name: Build TST Deployment Package
     runs-on: ubuntu-latest
     
     steps:
@@ -62,129 +62,20 @@ jobs:
           path: deploy-tst.tar.gz
           retention-days: 7
 
-      - name: Deploy to TST server
-        env:
-          TST_HOST: ${{ secrets.TST_HOST }}
-          TST_USER: ${{ secrets.TST_USER }}
-          TST_SSH_KEY: ${{ secrets.TST_SSH_KEY }}
-          TST_DEPLOY_PATH: ${{ secrets.TST_DEPLOY_PATH }}
+      - name: Build summary
         run: |
-          # Setup SSH
-          mkdir -p ~/.ssh
-          chmod 700 ~/.ssh
-          # Write SSH key, ensuring proper format (no CRLF, proper newlines)
-          # Remove carriage returns and ensure proper line endings
-          echo "$TST_SSH_KEY" | tr -d '\r' > ~/.ssh/deploy_key
-          chmod 600 ~/.ssh/deploy_key
-          # Add server to known hosts
-          ssh-keyscan -H $TST_HOST >> ~/.ssh/known_hosts 2>/dev/null || true
-          
-          # Debug: Check key format and extract public key
-          echo "🔍 Checking SSH key format..."
-          echo "First line: $(head -1 ~/.ssh/deploy_key | cut -c1-30)..."
-          echo "Last line: $(tail -1 ~/.ssh/deploy_key | cut -c1-30)..."
-          echo "Key file size: $(wc -c < ~/.ssh/deploy_key) bytes"
-          
-          # Extract public key for reference
-          echo "🔑 Extracting public key (for server admin to add to authorized_keys)..."
-          ssh-keygen -y -f ~/.ssh/deploy_key > ~/.ssh/deploy_key.pub 2>/dev/null || echo "Could not extract public key"
-          if [ -f ~/.ssh/deploy_key.pub ]; then
-            echo "Public key to add to server:"
-            cat ~/.ssh/deploy_key.pub
-            echo ""
-          fi
-          
-          # Transfer deployment package
-          echo "📤 Transferring deployment package to server..."
-          scp -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no -o BatchMode=yes deploy-tst.tar.gz $TST_USER@$TST_HOST:/tmp/
-          
-          # Deploy on server
-          echo "🚀 Deploying on server..."
-          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no $TST_USER@$TST_HOST << EOF
-            set -e
-            
-            # Create deployment directory structure if it doesn't exist
-            mkdir -p $TST_DEPLOY_PATH/releases
-            mkdir -p $TST_DEPLOY_PATH/shared/storage/{app/public,framework/{cache,sessions,views},logs}
-            mkdir -p $TST_DEPLOY_PATH/shared/bootstrap/cache
-            
-            # Extract deployment package
-            cd /tmp
-            tar -xzf deploy-tst.tar.gz
-            
-            # Move files to release directory
-            RELEASE_DIR="$TST_DEPLOY_PATH/releases/\$(date +%Y%m%d%H%M%S)"
-            mkdir -p "\$RELEASE_DIR"
-            mv deploy-tst/* "\$RELEASE_DIR/"
-            
-            # Install Composer dependencies
-            echo "📦 Installing Composer dependencies..."
-            cd "\$RELEASE_DIR/backend"
-            composer install --no-dev --optimize-autoloader --no-interaction
-            
-            # Link shared storage
-            ln -sf "$TST_DEPLOY_PATH/shared/storage" "\$RELEASE_DIR/backend/storage"
-            ln -sf "$TST_DEPLOY_PATH/shared/bootstrap/cache" "\$RELEASE_DIR/backend/bootstrap/cache"
-            
-            # Copy environment file if it exists, otherwise create from example
-            if [ -f "$TST_DEPLOY_PATH/shared/.env.tst" ]; then
-              cp "$TST_DEPLOY_PATH/shared/.env.tst" "\$RELEASE_DIR/backend/.env"
-            elif [ -f "\$RELEASE_DIR/backend/env.tst.example" ]; then
-              cp "\$RELEASE_DIR/backend/env.tst.example" "\$RELEASE_DIR/backend/.env"
-              echo "⚠️  Using example .env file. Please configure it properly!"
-            fi
-            
-            # Set permissions
-            chmod -R 775 "$TST_DEPLOY_PATH/shared/storage" || true
-            chmod -R 775 "$TST_DEPLOY_PATH/shared/bootstrap/cache" || true
-            
-            # Run Laravel setup commands
-            echo "⚙️  Running Laravel setup..."
-            cd "\$RELEASE_DIR/backend"
-            php artisan config:cache || true
-            php artisan route:cache || true
-            php artisan view:cache || true
-            php artisan storage:link || true
-            
-            # Check if migrations table exists (skip migrations on initial deployment)
-            echo "📊 Checking database migration status..."
-            MIGRATIONS_EXIST=\$(php artisan tinker --execute="try { DB::table('migrations')->count(); echo 'true'; } catch (Exception \$e) { echo 'false'; }" 2>/dev/null | tail -1 || echo "false")
-            
-            if [ "\$MIGRATIONS_EXIST" = "true" ]; then
-              echo "📊 Running database migrations..."
-              php artisan migrate --force
-            else
-              echo "⚠️  Migrations table not found. Skipping migrations (initial deployment)."
-              echo "⚠️  Database should be copied from DEV separately."
-            fi
-            
-            # Clear and cache config
-            php artisan config:clear || true
-            php artisan cache:clear || true
-            php artisan config:cache || true
-            
-            # Create symlink to current release
-            ln -sfn "\$RELEASE_DIR" "$TST_DEPLOY_PATH/current"
-            
-            # Clean up
-            rm -rf /tmp/deploy-tst /tmp/deploy-tst.tar.gz
-            
-            echo "✅ Deployment completed!"
-            echo "Release directory: \$RELEASE_DIR"
-          EOF
-          
-          # Clean up
-          rm -f ~/.ssh/deploy_key
-
-      - name: Deployment summary
-        run: |
-          echo "## 🚀 TST Deployment Summary" >> $GITHUB_STEP_SUMMARY
-          echo "- **Status**: ✅ Code deployed to TST server" >> $GITHUB_STEP_SUMMARY
+          echo "## 🚀 TST Build Summary" >> $GITHUB_STEP_SUMMARY
+          echo "- **Status**: ✅ Build package created" >> $GITHUB_STEP_SUMMARY
           echo "- **Branch**: ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Commit**: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Time**: $(date)" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### Next Steps" >> $GITHUB_STEP_SUMMARY
-          echo "1. Verify application at: ${{ secrets.TST_API_URL }}" >> $GITHUB_STEP_SUMMARY
-          echo "2. Copy database from DEV to TST (if initial deployment)" >> $GITHUB_STEP_SUMMARY
+          echo "### Deployment" >> $GITHUB_STEP_SUMMARY
+          echo "**Server-side deployment:** Run on TST server:" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`bash" >> $GITHUB_STEP_SUMMARY
+          echo "cd /var/www/honr" >> $GITHUB_STEP_SUMMARY
+          echo "bash scripts/deploy-from-git.sh tst /var/www/honr main" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "See \`SERVER_SIDE_DEPLOYMENT.md\` for details." >> $GITHUB_STEP_SUMMARY
 
