@@ -11,8 +11,9 @@
 
 ### ⚠️ NEW - Required for Current Workflow
 - `SSH_KNOWN_HOST` - SSH known hosts entry (prevents host key verification issues)
-  - **How to get**: `ssh-keyscan -H test.honr.hands-on-technology.org 2>&1 | grep -v "^#"`
-  - **What to use**: Copy ALL key lines (RSA, ED25519, etc.)
+  - **How to get**: `ssh-keyscan test.honr.hands-on-technology.org 2>&1 | grep -v "^#"`
+  - **IMPORTANT**: Do NOT use `-H` flag (that creates hashed hostnames)
+  - **What to use**: Copy ALL key lines (RSA, ED25519, etc.) - should include hostname
   - See `SSH_KNOWN_HOST_SETUP.md` for details
 
 ## Required Secrets for PRD Deployment

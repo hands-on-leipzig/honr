@@ -23,13 +23,19 @@ For example, use these lines:
 
 ## Quick Command
 
-To get just the key lines (without comments):
+**IMPORTANT:** Use `ssh-keyscan` WITHOUT the `-H` flag to get the actual hostname (not hashed):
 
 ```bash
-ssh-keyscan -H test.honr.hands-on-technology.org 2>&1 | grep -v "^#"
+ssh-keyscan test.honr.hands-on-technology.org 2>&1 | grep -v "^#"
 ```
 
-This will output only the key lines, which you can copy directly into the GitHub Secret.
+This will output lines with the actual hostname, which SSH needs:
+```
+test.honr.hands-on-technology.org ssh-rsa AAAAB3NzaC1yc2E...
+test.honr.hands-on-technology.org ssh-ed25519 AAAAC3NzaC1lZDI1NTE5...
+```
+
+**Do NOT use `-H` flag** - that creates hashed hostnames that don't work with StrictHostKeyChecking.
 
 ## Add to GitHub
 
