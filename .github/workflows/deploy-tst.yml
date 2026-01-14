@@ -47,6 +47,7 @@ jobs:
           mkdir -p deploy-tst
           cp -r backend deploy-tst/
           cp -r frontend/dist deploy-tst/frontend-dist
+          cp -r scripts deploy-tst/
           # Exclude unnecessary files
           rm -rf deploy-tst/backend/vendor
           rm -rf deploy-tst/backend/node_modules
@@ -68,30 +69,103 @@ jobs:
           TST_SSH_KEY: ${{ secrets.TST_SSH_KEY }}
           TST_DEPLOY_PATH: ${{ secrets.TST_DEPLOY_PATH }}
         run: |
-          echo "$TST_SSH_KEY" > deploy_key
-          chmod 600 deploy_key
-          ssh -i deploy_key -o StrictHostKeyChecking=no $TST_USER@$TST_HOST << 'EOF'
-            # Create deployment directory
-            mkdir -p $TST_DEPLOY_PATH/releases/$(date +%Y%m%d%H%M%S)
-            RELEASE_DIR="$TST_DEPLOY_PATH/releases/$(date +%Y%m%d%H%M%S)"
+          # Setup SSH
+          mkdir -p ~/.ssh
+          echo "$TST_SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H $TST_HOST >> ~/.ssh/known_hosts 2>/dev/null || true
+          
+          # Transfer deployment package
+          echo "📤 Transferring deployment package to server..."
+          scp -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no deploy-tst.tar.gz $TST_USER@$TST_HOST:/tmp/
+          
+          # Deploy on server
+          echo "🚀 Deploying on server..."
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no $TST_USER@$TST_HOST << EOF
+            set -e
+            
+            # Create deployment directory structure if it doesn't exist
+            mkdir -p $TST_DEPLOY_PATH/releases
+            mkdir -p $TST_DEPLOY_PATH/shared/storage/{app/public,framework/{cache,sessions,views},logs}
+            mkdir -p $TST_DEPLOY_PATH/shared/bootstrap/cache
             
             # Extract deployment package
-            cd $RELEASE_DIR
-            # Note: You'll need to transfer the artifact first or use a different method
-            # This is a template - adjust based on your hosting setup
+            cd /tmp
+            tar -xzf deploy-tst.tar.gz
+            
+            # Move files to release directory
+            RELEASE_DIR="$TST_DEPLOY_PATH/releases/\$(date +%Y%m%d%H%M%S)"
+            mkdir -p "\$RELEASE_DIR"
+            mv deploy-tst/* "\$RELEASE_DIR/"
+            
+            # Install Composer dependencies
+            echo "📦 Installing Composer dependencies..."
+            cd "\$RELEASE_DIR/backend"
+            composer install --no-dev --optimize-autoloader --no-interaction
+            
+            # Link shared storage
+            ln -sf "$TST_DEPLOY_PATH/shared/storage" "\$RELEASE_DIR/backend/storage"
+            ln -sf "$TST_DEPLOY_PATH/shared/bootstrap/cache" "\$RELEASE_DIR/backend/bootstrap/cache"
+            
+            # Copy environment file if it exists, otherwise create from example
+            if [ -f "$TST_DEPLOY_PATH/shared/.env.tst" ]; then
+              cp "$TST_DEPLOY_PATH/shared/.env.tst" "\$RELEASE_DIR/backend/.env"
+            elif [ -f "\$RELEASE_DIR/backend/env.tst.example" ]; then
+              cp "\$RELEASE_DIR/backend/env.tst.example" "\$RELEASE_DIR/backend/.env"
+              echo "⚠️  Using example .env file. Please configure it properly!"
+            fi
+            
+            # Set permissions
+            chmod -R 775 "$TST_DEPLOY_PATH/shared/storage" || true
+            chmod -R 775 "$TST_DEPLOY_PATH/shared/bootstrap/cache" || true
+            
+            # Run Laravel setup commands
+            echo "⚙️  Running Laravel setup..."
+            cd "\$RELEASE_DIR/backend"
+            php artisan config:cache || true
+            php artisan route:cache || true
+            php artisan view:cache || true
+            php artisan storage:link || true
+            
+            # Check if migrations table exists (skip migrations on initial deployment)
+            echo "📊 Checking database migration status..."
+            MIGRATIONS_EXIST=\$(php artisan tinker --execute="try { DB::table('migrations')->count(); echo 'true'; } catch (Exception \$e) { echo 'false'; }" 2>/dev/null | tail -1 || echo "false")
+            
+            if [ "\$MIGRATIONS_EXIST" = "true" ]; then
+              echo "📊 Running database migrations..."
+              php artisan migrate --force
+            else
+              echo "⚠️  Migrations table not found. Skipping migrations (initial deployment)."
+              echo "⚠️  Database should be copied from DEV separately."
+            fi
+            
+            # Clear and cache config
+            php artisan config:clear || true
+            php artisan cache:clear || true
+            php artisan config:cache || true
+            
+            # Create symlink to current release
+            ln -sfn "\$RELEASE_DIR" "$TST_DEPLOY_PATH/current"
+            
+            # Clean up
+            rm -rf /tmp/deploy-tst /tmp/deploy-tst.tar.gz
+            
+            echo "✅ Deployment completed!"
+            echo "Release directory: \$RELEASE_DIR"
           EOF
-          rm -f deploy_key
+          
+          # Clean up
+          rm -f ~/.ssh/deploy_key
 
       - name: Deployment summary
         run: |
           echo "## 🚀 TST Deployment Summary" >> $GITHUB_STEP_SUMMARY
-          echo "- **Status**: ✅ Deployment package created" >> $GITHUB_STEP_SUMMARY
+          echo "- **Status**: ✅ Code deployed to TST server" >> $GITHUB_STEP_SUMMARY
           echo "- **Branch**: ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Commit**: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Time**: $(date)" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Next Steps" >> $GITHUB_STEP_SUMMARY
-          echo "1. Download the deployment artifact" >> $GITHUB_STEP_SUMMARY
-          echo "2. Upload to TST server" >> $GITHUB_STEP_SUMMARY
-          echo "3. Run deployment script on server" >> $GITHUB_STEP_SUMMARY
+          echo "1. Verify application at: ${{ secrets.TST_API_URL }}" >> $GITHUB_STEP_SUMMARY
+          echo "2. Copy database from DEV to TST (if initial deployment)" >> $GITHUB_STEP_SUMMARY
 
