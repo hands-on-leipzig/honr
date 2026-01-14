@@ -73,7 +73,12 @@ jobs:
           mkdir -p ~/.ssh
           echo "$TST_SSH_KEY" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
+          # Remove any Windows line endings and ensure proper format
+          sed -i 's/\r$//' ~/.ssh/deploy_key
+          # Add server to known hosts
           ssh-keyscan -H $TST_HOST >> ~/.ssh/known_hosts 2>/dev/null || true
+          # Test SSH connection
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no -o BatchMode=yes $TST_USER@$TST_HOST echo "SSH connection test successful" || (echo "SSH connection failed" && exit 1)
           
           # Transfer deployment package
           echo "📤 Transferring deployment package to server..."
