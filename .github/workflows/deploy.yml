@@ -1,0 +1,54 @@
+name: Deploy Vue + Laravel App
+
+# Note: Some linters may show false positives for reusable workflows.
+# The syntax below is correct according to GitHub Actions documentation.
+# When using 'uses:' to call a reusable workflow, jobs don't need 'runs-on'.
+
+on:
+  push:
+    branches:
+      - main
+      - test
+  release:
+    types: [created]
+
+jobs:
+  deploy-test:
+    if: github.ref == 'refs/heads/test'
+    uses: ./.github/workflows/deploy-reusable.yml
+    with:
+      checkout_ref: ${{ github.ref }}
+      app_url: https://test.honr.hands-on-technology.org
+      temp_dir: deploy-honr-test-temp
+      public_dir: honr-test
+      refresh_m_tables: true
+      fix_migration_records: false
+      verify_migrations: false
+      seed_main_data: false
+      environment_name: test
+    secrets:
+      SSH_KNOWN_HOST: ${{ secrets.SSH_KNOWN_HOST }}
+      SSH_KEY: ${{ secrets.SSH_KEY }}
+      SSH_USER: ${{ secrets.SSH_USER }}
+      SSH_HOST: ${{ secrets.SSH_HOST }}
+      API_BASE_URL: ${{ secrets.VITE_API_BASE_URL_TEST }}
+
+  deploy-production:
+    if: github.event_name == 'release'
+    uses: ./.github/workflows/deploy-reusable.yml
+    with:
+      checkout_ref: ${{ github.event.release.tag_name }}
+      app_url: https://honr.hands-on-technology.org
+      temp_dir: deploy-honr-prod-temp
+      public_dir: honr-prod
+      refresh_m_tables: true
+      fix_migration_records: true
+      verify_migrations: true
+      seed_main_data: false
+      environment_name: production
+    secrets:
+      SSH_KNOWN_HOST: ${{ secrets.SSH_KNOWN_HOST }}
+      SSH_KEY: ${{ secrets.SSH_KEY }}
+      SSH_USER: ${{ secrets.SSH_USER }}
+      SSH_HOST: ${{ secrets.SSH_HOST }}
+      API_BASE_URL: ${{ secrets.VITE_API_BASE_URL_PROD }}
