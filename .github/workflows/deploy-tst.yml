@@ -49,25 +49,25 @@ jobs:
           rm -f backend/public/index.html
           cp -r frontend/dist/* backend/public/
 
-      - name: Rsync backend to server
+      - name: Setup SSH
         env:
-          SSH_KNOWN_HOST: ${{ secrets.SSH_KNOWN_HOST }}
           SSH_KEY: ${{ secrets.TST_SSH_KEY }}
           SSH_USER: ${{ secrets.TST_USER }}
           SSH_HOST: ${{ secrets.TST_HOST }}
         run: |
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
-          # Write known_hosts - should already have hostname (from ssh-keyscan without -H)
-          echo "$SSH_KNOWN_HOST" > ~/.ssh/known_hosts
+          # Write SSH key
+          echo "$SSH_KEY" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          # Scan for all host keys (RSA, ED25519, ECDSA) and add to known_hosts
+          echo "🔍 Scanning host keys for $SSH_HOST..."
+          ssh-keyscan -H -t rsa,ed25519,ecdsa $SSH_HOST >> ~/.ssh/known_hosts 2>/dev/null || true
           chmod 644 ~/.ssh/known_hosts
           # Verify known_hosts was written
           echo "🔍 Known hosts file:"
           cat ~/.ssh/known_hosts
-          # Write SSH key
-          echo "$SSH_KEY" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          # Test SSH connection first
+          # Test SSH connection
           echo "🔍 Testing SSH connection..."
           ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=yes -o UserKnownHostsFile=~/.ssh/known_hosts $SSH_USER@$SSH_HOST echo "SSH test successful" || {
             echo "❌ SSH test failed"
@@ -75,6 +75,13 @@ jobs:
             cat ~/.ssh/known_hosts
             exit 1
           }
+
+      - name: Rsync backend to server
+        env:
+          SSH_KEY: ${{ secrets.TST_SSH_KEY }}
+          SSH_USER: ${{ secrets.TST_USER }}
+          SSH_HOST: ${{ secrets.TST_HOST }}
+        run: |
           # Create temp directory structure on server
           ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=yes -o UserKnownHostsFile=~/.ssh/known_hosts $SSH_USER@$SSH_HOST "mkdir -p ${{ secrets.TST_DEPLOY_PATH }}/releases/temp/backend"
           # Rsync backend files to temp/backend directory
