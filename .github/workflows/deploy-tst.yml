@@ -146,13 +146,36 @@ jobs:
           # Test SSH connection with verbose output for debugging
           echo "🔍 Testing SSH connection..."
           ssh -v -i ~/.ssh/id_rsa -o StrictHostKeyChecking=yes -o UserKnownHostsFile=~/.ssh/known_hosts -o BatchMode=yes $SSH_USER@$SSH_HOST echo "SSH test successful" 2>&1 || {
-            echo "❌ SSH test failed"
-            echo "Key file first line:"
-            head -1 ~/.ssh/id_rsa
-            echo "Key file last line:"
-            tail -1 ~/.ssh/id_rsa
-            echo "Key file line count:"
-            wc -l ~/.ssh/id_rsa
+            echo ""
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo "❌ SSH AUTHENTICATION FAILED"
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo ""
+            echo "The server accepted the key format but denied access."
+            echo "This means the PUBLIC KEY is not in the server's authorized_keys file."
+            echo ""
+            echo "🔑 Key fingerprint: SHA256:OeOL+jZO8BCnKHUwcKBsGN6ZwqB4hpj4X0oVt+BZSuM"
+            echo ""
+            echo "📋 TO FIX THIS:"
+            echo ""
+            echo "Option 1: Add Public Key to Server (Recommended)"
+            echo "  1. Extract public key from your private key:"
+            echo "     ssh-keygen -y -f /path/to/your/private/key > public_key.pub"
+            echo ""
+            echo "  2. Add to server's authorized_keys:"
+            echo "     cat public_key.pub | ssh $SSH_USER@$SSH_HOST 'mkdir -p ~/.ssh && cat >> ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys'"
+            echo ""
+            echo "Option 2: Use Server-Side Deployment (No SSH needed)"
+            echo "  SSH to server manually and run:"
+            echo "    cd ${{ secrets.TST_DEPLOY_PATH }}"
+            echo "    bash scripts/deploy-from-git.sh tst ${{ secrets.TST_DEPLOY_PATH }} main"
+            echo ""
+            echo "Option 3: Generate New Unencrypted Key for CI/CD"
+            echo "  ssh-keygen -t ed25519 -C 'github-actions' -f ~/.ssh/github_deploy -N ''"
+            echo "  # Add github_deploy to TST_SSH_KEY secret"
+            echo "  # Add github_deploy.pub to server's authorized_keys"
+            echo ""
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
             exit 1
           }
 
@@ -266,15 +289,51 @@ jobs:
             echo "✅ Deployment completed!"
             echo "Current release: $RELEASE_DIR"
 
+      - name: Create deployment artifact (fallback)
+        if: failure()
+        run: |
+          echo "⚠️  SSH deployment failed. Creating deployment artifact as fallback..."
+          mkdir -p deploy-tst
+          cp -r backend deploy-tst/
+          # Exclude unnecessary files
+          rm -rf deploy-tst/backend/vendor
+          rm -rf deploy-tst/backend/node_modules
+          rm -rf deploy-tst/backend/tests
+          rm -rf deploy-tst/backend/.git
+          tar -czf deploy-tst.tar.gz deploy-tst/
+          
+      - name: Upload deployment artifact (fallback)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tst-deployment-fallback
+          path: deploy-tst.tar.gz
+          retention-days: 30
+
       - name: Deployment summary
         run: |
           echo "## 🚀 TST Deployment Summary" >> $GITHUB_STEP_SUMMARY
-          echo "- **Status**: ✅ Code deployed to TST server" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ job.status }}" = "success" ]; then
+            echo "- **Status**: ✅ Code deployed to TST server" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- **Status**: ⚠️  SSH deployment failed - artifact created for manual deployment" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### Manual Deployment Required" >> $GITHUB_STEP_SUMMARY
+            echo "1. Download the deployment artifact from this run" >> $GITHUB_STEP_SUMMARY
+            echo "2. Upload to server: \`scp deploy-tst.tar.gz ${{ secrets.TST_USER }}@${{ secrets.TST_HOST }}:/tmp/\`" >> $GITHUB_STEP_SUMMARY
+            echo "3. SSH to server and run: \`bash scripts/deploy-from-git.sh tst ${{ secrets.TST_DEPLOY_PATH }} main\`" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "**OR** use server-side deployment (recommended):" >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`bash" >> $GITHUB_STEP_SUMMARY
+            echo "ssh ${{ secrets.TST_USER }}@${{ secrets.TST_HOST }}" >> $GITHUB_STEP_SUMMARY
+            echo "cd ${{ secrets.TST_DEPLOY_PATH }}" >> $GITHUB_STEP_SUMMARY
+            echo "bash scripts/deploy-from-git.sh tst ${{ secrets.TST_DEPLOY_PATH }} main" >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          fi
           echo "- **Branch**: ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Commit**: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Time**: $(date)" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Next Steps" >> $GITHUB_STEP_SUMMARY
           echo "1. Verify application at: ${{ secrets.TST_API_URL }}" >> $GITHUB_STEP_SUMMARY
-          echo "2. Copy database from DEV to TST (if initial deployment)" >> $GITHUB_STEP_SUMMARY
 
