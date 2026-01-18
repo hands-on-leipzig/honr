@@ -8,13 +8,12 @@ on:
   push:
     branches:
       - main
-      - test
   release:
     types: [created]
 
 jobs:
   deploy-test:
-    if: github.ref == 'refs/heads/test'
+    if: github.ref == 'refs/heads/main'
     uses: ./.github/workflows/deploy-reusable.yml
     with:
       checkout_ref: ${{ github.ref }}
