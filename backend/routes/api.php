@@ -32,6 +32,8 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
+Route::get('/ping', fn() => ['pong' => true]);
+
 // Auth - Public
 Route::prefix('auth')->group(function () {
     Route::post('/login', [AuthController::class, 'login']);
@@ -45,7 +47,7 @@ Route::prefix('auth')->group(function () {
 
 // Authenticated routes
 Route::middleware('auth:sanctum')->group(function () {
-    
+
     // Auth - Authenticated
     Route::post('/auth/logout', [AuthController::class, 'logout']);
 
@@ -92,7 +94,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Admin routes
     Route::middleware('admin')->prefix('admin')->group(function () {
-        
+
         // Users
         Route::get('/users', [AdminUserController::class, 'index']);
         Route::post('/users', [AdminUserController::class, 'store']);
