@@ -66,9 +66,35 @@ jobs:
         run: |
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
-          # Write SSH key
-          echo "$SSH_KEY" > ~/.ssh/id_rsa
+          # Write SSH key - use printf to preserve newlines properly
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
+          # Verify key format
+          echo "🔍 Verifying SSH key format..."
+          if head -1 ~/.ssh/id_rsa | grep -q "BEGIN"; then
+            echo "✅ Key starts with BEGIN"
+          else
+            echo "❌ Key is missing BEGIN line - check GitHub secret format"
+            head -1 ~/.ssh/id_rsa
+            exit 1
+          fi
+          if tail -1 ~/.ssh/id_rsa | grep -q "END"; then
+            echo "✅ Key ends with END"
+          else
+            echo "❌ Key is missing END line - check GitHub secret format"
+            tail -1 ~/.ssh/id_rsa
+            exit 1
+          fi
+          # Extract and show public key fingerprint for verification
+          echo "🔍 Extracting public key fingerprint..."
+          ssh-keygen -y -f ~/.ssh/id_rsa > ~/.ssh/id_rsa.pub 2>&1 || {
+            echo "❌ Failed to extract public key - key format is invalid"
+            echo "First 3 lines of key:"
+            head -3 ~/.ssh/id_rsa
+            exit 1
+          }
+          echo "Public key fingerprint:"
+          ssh-keygen -lf ~/.ssh/id_rsa.pub || true
           # Scan for all host keys (RSA, ED25519, ECDSA) and add to known_hosts
           echo "🔍 Scanning host keys for $SSH_HOST..."
           ssh-keyscan -H -t rsa,ed25519,ecdsa $SSH_HOST >> ~/.ssh/known_hosts 2>/dev/null || true
@@ -76,12 +102,16 @@ jobs:
           # Verify known_hosts was written
           echo "🔍 Known hosts file:"
           cat ~/.ssh/known_hosts
-          # Test SSH connection
+          # Test SSH connection with verbose output for debugging
           echo "🔍 Testing SSH connection..."
-          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=yes -o UserKnownHostsFile=~/.ssh/known_hosts $SSH_USER@$SSH_HOST echo "SSH test successful" || {
+          ssh -v -i ~/.ssh/id_rsa -o StrictHostKeyChecking=yes -o UserKnownHostsFile=~/.ssh/known_hosts -o BatchMode=yes $SSH_USER@$SSH_HOST echo "SSH test successful" 2>&1 || {
             echo "❌ SSH test failed"
-            echo "Known hosts content:"
-            cat ~/.ssh/known_hosts
+            echo "Key file first line:"
+            head -1 ~/.ssh/id_rsa
+            echo "Key file last line:"
+            tail -1 ~/.ssh/id_rsa
+            echo "Key file line count:"
+            wc -l ~/.ssh/id_rsa
             exit 1
           }
 
