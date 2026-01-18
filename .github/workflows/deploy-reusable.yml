@@ -80,7 +80,9 @@ jobs:
       - name: Set up PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.2'
+          php-version: '8.4'
+          extensions: pdo, pdo_mysql, mbstring, xml, curl, zip, gd
+          coverage: none
 
       - name: Install Laravel dependencies
         working-directory: ./backend
