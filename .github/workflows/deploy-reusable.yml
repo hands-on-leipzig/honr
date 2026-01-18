@@ -191,22 +191,28 @@ jobs:
           RETRY_DELAY=10
           RETRY_COUNT=0
           
-          while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
-            if curl -f -s --max-time 10 "${{ inputs.app_url }}/ping" > /dev/null; then
-              echo "✅ Health check passed! Application is responding."
-              exit 0
-            else
-              RETRY_COUNT=$((RETRY_COUNT + 1))
-              if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
-                echo "⏳ Health check failed (attempt $RETRY_COUNT/$MAX_RETRIES). Retrying in ${RETRY_DELAY}s..."
-                sleep $RETRY_DELAY
-              fi
-            fi
-          done
-          
-          echo "❌ Health check failed after $MAX_RETRIES attempts"
-          echo "Application may not be responding at ${{ inputs.app_url }}/ping"
-          exit 1
+            while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+             # Try /api/ping endpoint (the actual route)
+             if curl -f -s --max-time 10 "${{ inputs.app_url }}/api/ping" > /dev/null; then
+               echo "✅ Health check passed! Application is responding."
+               exit 0
+             else
+               RETRY_COUNT=$((RETRY_COUNT + 1))
+               if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
+                 echo "⏳ Health check failed (attempt $RETRY_COUNT/$MAX_RETRIES). Retrying in ${RETRY_DELAY}s..."
+                 sleep $RETRY_DELAY
+               fi
+             fi
+           done
+           
+           echo "❌ Health check failed after $MAX_RETRIES attempts"
+           echo "Application may not be responding at ${{ inputs.app_url }}/api/ping"
+           echo ""
+           echo "Debugging info:"
+           echo "  - Tried URL: ${{ inputs.app_url }}/api/ping"
+           echo "  - Check if application is deployed and web server is running"
+           echo "  - Verify the app_url is correct: ${{ inputs.app_url }}"
+           exit 1
 
       - name: Notify deployment success
         if: success()
