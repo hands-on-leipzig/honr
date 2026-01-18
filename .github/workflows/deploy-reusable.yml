@@ -84,7 +84,7 @@ jobs:
 
       - name: Install Laravel dependencies
         working-directory: ./backend
-        run: composer install --no-dev --optimize-autoloader
+        run: composer install --optimize-autoloader
 
       - name: Run backend tests
         working-directory: ./backend
