@@ -122,13 +122,67 @@ jobs:
           rm -f backend/public/index.html
           cp -r frontend/dist/* backend/public/
 
-      - name: Rsync backend to server
+      - name: Setup SSH
         run: |
           mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
           echo "${{ secrets.SSH_KNOWN_HOST }}" > ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
           echo "${{ secrets.SSH_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-          rsync -avz -e "ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=yes -p 222" --delete ./backend/ ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:~/${{ inputs.temp_dir }}/
+          
+          # Verify key format
+          echo "🔍 Verifying SSH key..."
+          if head -1 ~/.ssh/id_rsa | grep -qE "(BEGIN|OPENSSH)"; then
+            echo "✅ Key format looks correct"
+          else
+            echo "❌ Key format issue - first line: $(head -1 ~/.ssh/id_rsa)"
+            exit 1
+          fi
+          
+          # Try to extract public key for verification
+          if ssh-keygen -y -f ~/.ssh/id_rsa > ~/.ssh/id_rsa.pub 2>/dev/null; then
+            echo "✅ Public key extracted successfully"
+            echo ""
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo "📋 PUBLIC KEY (add this to server's ~/.ssh/authorized_keys on port 222):"
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            cat ~/.ssh/id_rsa.pub
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo ""
+            echo "🔑 Public key fingerprint:"
+            ssh-keygen -lf ~/.ssh/id_rsa.pub
+            echo ""
+          else
+            echo "⚠️  Could not extract public key (key might be encrypted)"
+            echo "You'll need to extract it manually: ssh-keygen -y -f /path/to/private/key"
+          fi
+          
+          # Test SSH connection
+          echo "🔍 Testing SSH connection to port 222..."
+          ssh -v -i ~/.ssh/id_rsa -o StrictHostKeyChecking=yes -o UserKnownHostsFile=~/.ssh/known_hosts -p 222 ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} echo "SSH test successful" 2>&1 || {
+            echo ""
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo "❌ SSH AUTHENTICATION FAILED"
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo ""
+            echo "The public key above needs to be added to the server's authorized_keys file."
+            echo ""
+            echo "To fix this, SSH to the server (using a working key) and run:"
+            echo "  mkdir -p ~/.ssh"
+            echo "  chmod 700 ~/.ssh"
+            echo "  echo 'PASTE_PUBLIC_KEY_HERE' >> ~/.ssh/authorized_keys"
+            echo "  chmod 600 ~/.ssh/authorized_keys"
+            echo ""
+            echo "Or use ssh-copy-id (if you have password access):"
+            echo "  ssh-copy-id -p 222 -i ~/.ssh/id_rsa.pub ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}"
+            echo ""
+            exit 1
+          }
+
+      - name: Rsync backend to server
+        run: |
+          rsync -avz -e "ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=yes -o UserKnownHostsFile=~/.ssh/known_hosts -p 222" --delete ./backend/ ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:~/${{ inputs.temp_dir }}/
 
       - name: Finalize on server
         uses: appleboy/ssh-action@v1.0.0
