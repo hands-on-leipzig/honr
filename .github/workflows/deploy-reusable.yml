@@ -192,7 +192,7 @@ jobs:
           RETRY_COUNT=0
           
           while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
-            if curl -f -s --max-time 10 "${{ inputs.app_url }}/api/ping" > /dev/null; then
+            if curl -f -s --max-time 10 "${{ inputs.app_url }}/ping" > /dev/null; then
               echo "✅ Health check passed! Application is responding."
               exit 0
             else
@@ -205,7 +205,7 @@ jobs:
           done
           
           echo "❌ Health check failed after $MAX_RETRIES attempts"
-          echo "Application may not be responding at ${{ inputs.app_url }}/api/ping"
+          echo "Application may not be responding at ${{ inputs.app_url }}/ping"
           exit 1
 
       - name: Notify deployment success
