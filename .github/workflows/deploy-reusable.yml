@@ -184,24 +184,6 @@ jobs:
         run: |
           rsync -avz -e "ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=yes -o UserKnownHostsFile=~/.ssh/known_hosts -p 222" --delete ./backend/ ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:~/${{ inputs.temp_dir }}/
 
-      - name: Finalize on server
-        uses: appleboy/ssh-action@v1.0.0
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_KEY }}
-          port: 222
-          script: |
-            cd ~/${{ inputs.temp_dir }}
-            chmod +x scripts/deploy-finalize.sh
-            ./scripts/deploy-finalize.sh \
-              "${{ inputs.temp_dir }}" \
-              "${{ inputs.public_dir }}" \
-              "${{ inputs.refresh_m_tables }}" \
-              "${{ inputs.fix_migration_records }}" \
-              "${{ inputs.verify_migrations }}" \
-              "${{ inputs.seed_main_data }}"
-
       - name: Verify deployment health
         run: |
           echo "🏥 Checking application health..."
