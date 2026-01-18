@@ -44,6 +44,7 @@ jobs:
 
       - name: Copy frontend dist to backend public
         run: |
+          mkdir -p backend/public
           rm -rf backend/public/build
           rm -f backend/public/index.html
           cp -r frontend/dist/* backend/public/
@@ -74,64 +75,109 @@ jobs:
             cat ~/.ssh/known_hosts
             exit 1
           }
-          # Rsync with explicit known_hosts file
+          # Create temp directory structure on server
+          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=yes -o UserKnownHostsFile=~/.ssh/known_hosts $SSH_USER@$SSH_HOST "mkdir -p ${{ secrets.TST_DEPLOY_PATH }}/releases/temp/backend"
+          # Rsync backend files to temp/backend directory
           rsync -avz -e "ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=yes -o UserKnownHostsFile=~/.ssh/known_hosts" --delete \
             --exclude='.env' \
             --exclude='.git' \
             --exclude='vendor' \
             --exclude='node_modules' \
             --exclude='tests' \
-            ./backend/ $SSH_USER@$SSH_HOST:${{ secrets.TST_DEPLOY_PATH }}/releases/temp/
+            ./backend/ $SSH_USER@$SSH_HOST:${{ secrets.TST_DEPLOY_PATH }}/releases/temp/backend/
 
       - name: Finalize deployment on server
-        uses: appleboy/ssh-action@v1.0.0
+        uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.TST_HOST }}
           username: ${{ secrets.TST_USER }}
           key: ${{ secrets.TST_SSH_KEY }}
           script: |
-            cd ${{ secrets.TST_DEPLOY_PATH }}/releases/temp
-            chmod +x scripts/deploy-backend.sh || true
-            bash scripts/deploy-backend.sh tst ${{ secrets.TST_DEPLOY_PATH }} || {
-              echo "⚠️  deploy-backend.sh not found or failed, running manual deployment..."
-              # Manual deployment steps
-              RELEASE_DIR="${{ secrets.TST_DEPLOY_PATH }}/releases/$(date +%Y%m%d%H%M%S)"
-              mkdir -p "$RELEASE_DIR"
-              mv * "$RELEASE_DIR/" 2>/dev/null || cp -r . "$RELEASE_DIR/"
-              cd "$RELEASE_DIR"
-              
-              # Install dependencies
-              composer install --no-dev --optimize-autoloader --no-interaction
-              
-              # Link shared storage
-              ln -sf "${{ secrets.TST_DEPLOY_PATH }}/shared/storage" storage
-              ln -sf "${{ secrets.TST_DEPLOY_PATH }}/shared/bootstrap/cache" bootstrap/cache
-              
-              # Copy env file
-              if [ -f "${{ secrets.TST_DEPLOY_PATH }}/shared/.env.tst" ]; then
-                cp "${{ secrets.TST_DEPLOY_PATH }}/shared/.env.tst" .env
-              fi
-              
-              # Laravel setup
-              php artisan config:cache || true
-              php artisan route:cache || true
-              php artisan view:cache || true
-              php artisan storage:link || true
-              
-              # Migrations (skip on initial deployment)
-              MIGRATIONS_EXIST=$(php artisan tinker --execute="try { DB::table('migrations')->count(); echo 'true'; } catch (Exception \$e) { echo 'false'; }" 2>/dev/null | tail -1 || echo "false")
-              if [ "$MIGRATIONS_EXIST" = "true" ]; then
-                php artisan migrate --force
-              else
-                echo "⚠️  Skipping migrations (initial deployment)"
-              fi
-              
-              # Create symlink
-              ln -sfn "$RELEASE_DIR" "${{ secrets.TST_DEPLOY_PATH }}/current"
-              
-              # Cleanup
-              rm -rf "${{ secrets.TST_DEPLOY_PATH }}/releases/temp"
-            }
+            set -e
+            DEPLOY_PATH="${{ secrets.TST_DEPLOY_PATH }}"
+            RELEASE_DIR="$DEPLOY_PATH/releases/$(date +%Y%m%d%H%M%S)"
+            SHARED_DIR="$DEPLOY_PATH/shared"
+            CURRENT_LINK="$DEPLOY_PATH/current"
+            TEMP_DIR="$DEPLOY_PATH/releases/temp"
+            
+            echo "🚀 Starting deployment..."
+            echo "Release directory: $RELEASE_DIR"
+            
+            # Create release directory
+            mkdir -p "$RELEASE_DIR"
+            
+            # Move backend from temp to release directory
+            if [ -d "$TEMP_DIR/backend" ]; then
+              mv "$TEMP_DIR/backend" "$RELEASE_DIR/"
+            else
+              echo "❌ Error: Backend files not found in $TEMP_DIR/backend"
+              exit 1
+            fi
+            
+            # Ensure shared directories exist
+            mkdir -p "$SHARED_DIR/storage/app/public"
+            mkdir -p "$SHARED_DIR/storage/framework/cache"
+            mkdir -p "$SHARED_DIR/storage/framework/sessions"
+            mkdir -p "$SHARED_DIR/storage/framework/views"
+            mkdir -p "$SHARED_DIR/storage/logs"
+            mkdir -p "$SHARED_DIR/bootstrap/cache"
+            
+            # Install Composer dependencies
+            cd "$RELEASE_DIR/backend"
+            composer install --no-dev --optimize-autoloader --no-interaction
+            
+            # Link shared storage
+            rm -rf storage bootstrap/cache
+            ln -sf "$SHARED_DIR/storage" storage
+            ln -sf "$SHARED_DIR/bootstrap/cache" bootstrap/cache
+            
+            # Copy env file
+            if [ -f "$SHARED_DIR/.env.tst" ]; then
+              cp "$SHARED_DIR/.env.tst" .env
+            else
+              echo "⚠️  Warning: .env.tst not found in $SHARED_DIR"
+            fi
+            
+            # Set permissions
+            chmod -R 775 "$SHARED_DIR/storage" || true
+            chmod -R 775 "$SHARED_DIR/bootstrap/cache" || true
+            chown -R www-data:www-data "$SHARED_DIR/storage" || true
+            chown -R www-data:www-data "$SHARED_DIR/bootstrap/cache" || true
+            
+            # Laravel setup
+            php artisan config:cache || true
+            php artisan route:cache || true
+            php artisan view:cache || true
+            php artisan storage:link || true
+            
+            # Migrations (skip on initial deployment)
+            echo "📊 Checking database migration status..."
+            MIGRATIONS_EXIST=$(php artisan tinker --execute="try { DB::table('migrations')->count(); echo 'true'; } catch (Exception \$e) { echo 'false'; }" 2>/dev/null | tail -1 || echo "false")
+            
+            if [ "$MIGRATIONS_EXIST" = "true" ]; then
+              echo "📊 Running database migrations..."
+              php artisan migrate --force
+            else
+              echo "⚠️  Skipping migrations (initial deployment or migrations table not found)"
+            fi
+            
+            # Clear and cache config
+            php artisan config:clear || true
+            php artisan cache:clear || true
+            php artisan config:cache || true
+            
+            # Create symlink to current release
+            ln -sfn "$RELEASE_DIR" "$CURRENT_LINK"
+            
+            # Cleanup temp directory
+            rm -rf "$TEMP_DIR"
+            
+            # Clean up old releases (keep last 5)
+            cd "$DEPLOY_PATH/releases"
+            ls -t | tail -n +6 | xargs rm -rf 2>/dev/null || true
+            
+            echo "✅ Deployment completed!"
+            echo "Current release: $RELEASE_DIR"
 
       - name: Deployment summary
         run: |

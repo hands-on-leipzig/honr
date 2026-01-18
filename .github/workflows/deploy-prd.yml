@@ -51,56 +51,151 @@ jobs:
           npm ci
           npm run build-only
 
-      - name: Create deployment package
+      - name: Copy frontend dist to backend public
         run: |
-          mkdir -p deploy-prd
-          cp -r backend deploy-prd/
-          cp -r frontend/dist deploy-prd/frontend-dist
-          # Exclude unnecessary files
-          rm -rf deploy-prd/backend/vendor
-          rm -rf deploy-prd/backend/node_modules
-          rm -rf deploy-prd/backend/tests
-          rm -rf deploy-prd/backend/.git
-          tar -czf deploy-prd.tar.gz deploy-prd/
+          mkdir -p backend/public
+          rm -rf backend/public/build
+          rm -f backend/public/index.html
+          cp -r frontend/dist/* backend/public/
 
-      - name: Upload deployment artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: prd-deployment
-          path: deploy-prd.tar.gz
-          retention-days: 30
-
-      - name: Deploy to PRD server
+      - name: Setup SSH
         env:
-          PRD_HOST: ${{ secrets.PRD_HOST }}
-          PRD_USER: ${{ secrets.PRD_USER }}
-          PRD_SSH_KEY: ${{ secrets.PRD_SSH_KEY }}
-          PRD_DEPLOY_PATH: ${{ secrets.PRD_DEPLOY_PATH }}
+          SSH_KNOWN_HOST: ${{ secrets.SSH_KNOWN_HOST }}
+          SSH_KEY: ${{ secrets.PRD_SSH_KEY }}
+          SSH_USER: ${{ secrets.PRD_USER }}
+          SSH_HOST: ${{ secrets.PRD_HOST }}
         run: |
-          echo "$PRD_SSH_KEY" > deploy_key
-          chmod 600 deploy_key
-          ssh -i deploy_key -o StrictHostKeyChecking=no $PRD_USER@$PRD_HOST << 'EOF'
-            # Create deployment directory
-            mkdir -p $PRD_DEPLOY_PATH/releases/$(date +%Y%m%d%H%M%S)
-            RELEASE_DIR="$PRD_DEPLOY_PATH/releases/$(date +%Y%m%d%H%M%S)"
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          echo "$SSH_KNOWN_HOST" > ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
+          echo "$SSH_KEY" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          # Test SSH connection
+          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=yes -o UserKnownHostsFile=~/.ssh/known_hosts $SSH_USER@$SSH_HOST echo "SSH test successful" || {
+            echo "❌ SSH test failed"
+            exit 1
+          }
+
+      - name: Rsync backend to server
+        env:
+          SSH_KEY: ${{ secrets.PRD_SSH_KEY }}
+          SSH_USER: ${{ secrets.PRD_USER }}
+          SSH_HOST: ${{ secrets.PRD_HOST }}
+        run: |
+          # Create temp directory structure on server
+          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=yes -o UserKnownHostsFile=~/.ssh/known_hosts $SSH_USER@$SSH_HOST "mkdir -p ${{ secrets.PRD_DEPLOY_PATH }}/releases/temp/backend"
+          # Rsync backend files to temp/backend directory
+          rsync -avz -e "ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=yes -o UserKnownHostsFile=~/.ssh/known_hosts" --delete \
+            --exclude='.env' \
+            --exclude='.git' \
+            --exclude='vendor' \
+            --exclude='node_modules' \
+            --exclude='tests' \
+            ./backend/ $SSH_USER@$SSH_HOST:${{ secrets.PRD_DEPLOY_PATH }}/releases/temp/backend/
+
+      - name: Finalize deployment on server
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.PRD_HOST }}
+          username: ${{ secrets.PRD_USER }}
+          key: ${{ secrets.PRD_SSH_KEY }}
+          script: |
+            set -e
+            DEPLOY_PATH="${{ secrets.PRD_DEPLOY_PATH }}"
+            RELEASE_DIR="$DEPLOY_PATH/releases/$(date +%Y%m%d%H%M%S)"
+            SHARED_DIR="$DEPLOY_PATH/shared"
+            CURRENT_LINK="$DEPLOY_PATH/current"
+            TEMP_DIR="$DEPLOY_PATH/releases/temp"
             
-            # Extract deployment package
-            cd $RELEASE_DIR
-            # Note: You'll need to transfer the artifact first or use a different method
-            # This is a template - adjust based on your hosting setup
-          EOF
-          rm -f deploy_key
+            echo "🚀 Starting PRD deployment..."
+            echo "Release directory: $RELEASE_DIR"
+            
+            # Create release directory
+            mkdir -p "$RELEASE_DIR"
+            
+            # Move backend from temp to release directory
+            if [ -d "$TEMP_DIR/backend" ]; then
+              mv "$TEMP_DIR/backend" "$RELEASE_DIR/"
+            else
+              echo "❌ Error: Backend files not found in $TEMP_DIR/backend"
+              exit 1
+            fi
+            
+            # Ensure shared directories exist
+            mkdir -p "$SHARED_DIR/storage/app/public"
+            mkdir -p "$SHARED_DIR/storage/framework/cache"
+            mkdir -p "$SHARED_DIR/storage/framework/sessions"
+            mkdir -p "$SHARED_DIR/storage/framework/views"
+            mkdir -p "$SHARED_DIR/storage/logs"
+            mkdir -p "$SHARED_DIR/bootstrap/cache"
+            
+            # Install Composer dependencies
+            cd "$RELEASE_DIR/backend"
+            composer install --no-dev --optimize-autoloader --no-interaction
+            
+            # Link shared storage
+            rm -rf storage bootstrap/cache
+            ln -sf "$SHARED_DIR/storage" storage
+            ln -sf "$SHARED_DIR/bootstrap/cache" bootstrap/cache
+            
+            # Copy env file
+            if [ -f "$SHARED_DIR/.env.prd" ]; then
+              cp "$SHARED_DIR/.env.prd" .env
+            else
+              echo "⚠️  Warning: .env.prd not found in $SHARED_DIR"
+            fi
+            
+            # Set permissions
+            chmod -R 775 "$SHARED_DIR/storage" || true
+            chmod -R 775 "$SHARED_DIR/bootstrap/cache" || true
+            chown -R www-data:www-data "$SHARED_DIR/storage" || true
+            chown -R www-data:www-data "$SHARED_DIR/bootstrap/cache" || true
+            
+            # Laravel setup
+            php artisan config:cache || true
+            php artisan route:cache || true
+            php artisan view:cache || true
+            php artisan storage:link || true
+            
+            # Migrations (skip on initial deployment)
+            echo "📊 Checking database migration status..."
+            MIGRATIONS_EXIST=$(php artisan tinker --execute="try { DB::table('migrations')->count(); echo 'true'; } catch (Exception \$e) { echo 'false'; }" 2>/dev/null | tail -1 || echo "false")
+            
+            if [ "$MIGRATIONS_EXIST" = "true" ]; then
+              echo "📊 Running database migrations..."
+              php artisan migrate --force
+            else
+              echo "⚠️  Skipping migrations (initial deployment or migrations table not found)"
+            fi
+            
+            # Clear and cache config
+            php artisan config:clear || true
+            php artisan cache:clear || true
+            php artisan config:cache || true
+            
+            # Create symlink to current release
+            ln -sfn "$RELEASE_DIR" "$CURRENT_LINK"
+            
+            # Cleanup temp directory
+            rm -rf "$TEMP_DIR"
+            
+            # Clean up old releases (keep last 5)
+            cd "$DEPLOY_PATH/releases"
+            ls -t | tail -n +6 | xargs rm -rf 2>/dev/null || true
+            
+            echo "✅ PRD deployment completed!"
+            echo "Current release: $RELEASE_DIR"
 
       - name: Deployment summary
         run: |
           echo "## 🚀 PRD Deployment Summary" >> $GITHUB_STEP_SUMMARY
-          echo "- **Status**: ✅ Deployment package created" >> $GITHUB_STEP_SUMMARY
+          echo "- **Status**: ✅ Code deployed to PRD server" >> $GITHUB_STEP_SUMMARY
           echo "- **Branch**: ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Commit**: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Time**: $(date)" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Next Steps" >> $GITHUB_STEP_SUMMARY
-          echo "1. Download the deployment artifact" >> $GITHUB_STEP_SUMMARY
-          echo "2. Upload to PRD server" >> $GITHUB_STEP_SUMMARY
-          echo "3. Run deployment script on server" >> $GITHUB_STEP_SUMMARY
+          echo "1. Verify application at: ${{ secrets.PRD_API_URL }}" >> $GITHUB_STEP_SUMMARY
+          echo "2. Monitor logs for any issues" >> $GITHUB_STEP_SUMMARY
 
