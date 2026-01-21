@@ -221,8 +221,9 @@ jobs:
           echo "  - Check if application is deployed and web server is running"
           echo "  - Verify the app_url is correct: ${{ inputs.app_url }}"
           echo "  - Check server logs for errors"
-          # Don't fail the workflow - deployment might still be successful
-          echo "⚠️  Continuing despite health check failure..."
+          echo ""
+          echo "⚠️  Health check is MANDATORY - deployment failed!"
+          exit 1
 
       - name: Notify deployment success
         if: success()
