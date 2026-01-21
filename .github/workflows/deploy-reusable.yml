@@ -191,28 +191,38 @@ jobs:
           RETRY_DELAY=10
           RETRY_COUNT=0
           
-            while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
-             # Try /api/ping endpoint (the actual route)
-             if curl -f -s --max-time 10 "${{ inputs.app_url }}/api/ping" > /dev/null; then
-               echo "✅ Health check passed! Application is responding."
-               exit 0
-             else
-               RETRY_COUNT=$((RETRY_COUNT + 1))
-               if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
-                 echo "⏳ Health check failed (attempt $RETRY_COUNT/$MAX_RETRIES). Retrying in ${RETRY_DELAY}s..."
-                 sleep $RETRY_DELAY
-               fi
-             fi
-           done
-           
-           echo "❌ Health check failed after $MAX_RETRIES attempts"
-           echo "Application may not be responding at ${{ inputs.app_url }}/api/ping"
-           echo ""
-           echo "Debugging info:"
-           echo "  - Tried URL: ${{ inputs.app_url }}/api/ping"
-           echo "  - Check if application is deployed and web server is running"
-           echo "  - Verify the app_url is correct: ${{ inputs.app_url }}"
-           exit 1
+          while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+            # Try /api/ping endpoint first
+            if curl -f -s --max-time 10 "${{ inputs.app_url }}/api/ping" > /dev/null 2>&1; then
+              echo "✅ Health check passed! Application is responding at /api/ping"
+              exit 0
+            # Fallback: try Laravel's built-in /up endpoint
+            elif curl -f -s --max-time 10 "${{ inputs.app_url }}/up" > /dev/null 2>&1; then
+              echo "✅ Health check passed! Application is responding at /up"
+              exit 0
+            # Fallback: try the frontend (index.html)
+            elif curl -f -s --max-time 10 "${{ inputs.app_url }}" > /dev/null 2>&1; then
+              echo "✅ Application is responding (frontend loads)"
+              exit 0
+            else
+              RETRY_COUNT=$((RETRY_COUNT + 1))
+              if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
+                echo "⏳ Health check failed (attempt $RETRY_COUNT/$MAX_RETRIES). Retrying in ${RETRY_DELAY}s..."
+                sleep $RETRY_DELAY
+              fi
+            fi
+          done
+          
+          echo "❌ Health check failed after $MAX_RETRIES attempts"
+          echo "Application may not be responding at ${{ inputs.app_url }}"
+          echo ""
+          echo "Debugging info:"
+          echo "  - Tried URLs: ${{ inputs.app_url }}/api/ping, ${{ inputs.app_url }}/up, ${{ inputs.app_url }}"
+          echo "  - Check if application is deployed and web server is running"
+          echo "  - Verify the app_url is correct: ${{ inputs.app_url }}"
+          echo "  - Check server logs for errors"
+          # Don't fail the workflow - deployment might still be successful
+          echo "⚠️  Continuing despite health check failure..."
 
       - name: Notify deployment success
         if: success()

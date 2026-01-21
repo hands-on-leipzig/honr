@@ -34,6 +34,11 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/ping', fn() => ['pong' => true]);
 
+// Health check - Public
+Route::get('/ping', function () {
+    return response()->json(['status' => 'ok', 'timestamp' => now()]);
+});
+
 // Auth - Public
 Route::prefix('auth')->group(function () {
     Route::post('/login', [AuthController::class, 'login']);
