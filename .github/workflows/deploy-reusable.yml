@@ -184,6 +184,33 @@ jobs:
         run: |
           rsync -avz -e "ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=yes -o UserKnownHostsFile=~/.ssh/known_hosts -p 222" --delete ./backend/ ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:~/${{ inputs.temp_dir }}/
 
+      - name: Finalize on server
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          port: 222
+          script: |
+            set -e
+            TEMP_DIR=~/${{ inputs.temp_dir }}
+            PUBLIC_BASE=~/public_html
+            PUBLIC_DIR=$PUBLIC_BASE/${{ inputs.public_dir }}
+            
+            echo "📦 Finalizing deployment: moving $TEMP_DIR → $PUBLIC_DIR"
+            
+            if [ ! -d "$TEMP_DIR" ]; then
+              echo "❌ Temp directory not found: $TEMP_DIR"
+              exit 1
+            fi
+            
+            mkdir -p "$PUBLIC_BASE"
+            rm -rf "$PUBLIC_DIR"
+            mv "$TEMP_DIR" "$PUBLIC_DIR"
+            
+            echo "✅ Deployment finalized. Application is now at $PUBLIC_DIR"
+            echo "   Document root for web server should be: $PUBLIC_DIR/public"
+
       - name: Verify deployment health
         run: |
           echo "🏥 Checking application health..."
