@@ -65,6 +65,7 @@
 import { ref, watch, onMounted, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import apiClient from '@/api/client'
+import { getStorageUrl } from '@/api/storageUrl'
 import { isJsonArray } from '@/api/responseGuard'
 import { LOAD_ERROR_MESSAGE } from '@/api/responseGuard'
 
@@ -86,10 +87,7 @@ const filterIconCode = computed(() => route.query.filter_icon_code as string | u
 const hasFilter = computed(() => !!filterType.value && !!filterId.value)
 
 function getLogoUrl(logoPath: string | null) {
-  if (!logoPath) return ''
-  const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8001/api'
-  const backendUrl = apiUrl.replace('/api', '')
-  return `${backendUrl}/storage/${logoPath}`
+  return getStorageUrl(logoPath)
 }
 
 function getFilterIconUrl(): string | undefined {

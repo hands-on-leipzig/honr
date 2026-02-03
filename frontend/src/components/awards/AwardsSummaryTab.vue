@@ -118,6 +118,7 @@
           <img
             :src="getLogoUrl(program.logo_path)"
             :alt="program.name"
+            @error="handleImageError"
             class="w-full h-full object-contain"
             @error="handleImageError"
           />
@@ -137,6 +138,7 @@
           <img
             :src="getLogoUrl(season.logo_path)"
             :alt="season.name"
+            @error="handleImageError"
             class="w-full h-full object-contain"
             @error="handleImageError"
           />
@@ -174,6 +176,7 @@ import { ref, computed, onMounted, nextTick, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import apiClient from '@/api/client'
+import { getStorageUrl } from '@/api/storageUrl'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import BadgeIcon from './BadgeIcon.vue'
@@ -345,10 +348,7 @@ const engagementLocations = computed(() => {
 })
 
 function getLogoUrl(logoPath: string | null) {
-  if (!logoPath) return ''
-  const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8001/api'
-  const backendUrl = apiUrl.replace('/api', '')
-  return `${backendUrl}/storage/${logoPath}`
+  return getStorageUrl(logoPath)
 }
 
 function handleImageError(event: Event) {

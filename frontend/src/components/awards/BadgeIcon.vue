@@ -52,6 +52,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import { getStorageUrl } from '@/api/storageUrl'
 import { getBadgeBorderClass, getBadgeBackgroundTint, getBadgeGlow } from '@/constants/uiColors'
 
 interface Props {
@@ -67,12 +68,7 @@ const props = withDefaults(defineProps<Props>(), {
   size: 'md'
 })
 
-const logoUrl = computed(() => {
-  if (!props.logoPath) return ''
-  const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8001/api'
-  const backendUrl = apiUrl.replace('/api', '')
-  return `${backendUrl}/storage/${props.logoPath}`
-})
+const logoUrl = computed(() => getStorageUrl(props.logoPath))
 
 const borderClass = computed(() => {
   return getBadgeBorderClass(props.level)

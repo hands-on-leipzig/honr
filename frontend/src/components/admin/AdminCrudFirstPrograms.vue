@@ -131,6 +131,7 @@
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted } from 'vue'
 import apiClient from '@/api/client'
+import { getStorageUrl } from '@/api/storageUrl'
 
 const emit = defineEmits(['close'])
 
@@ -168,11 +169,7 @@ const deletingLogo = ref(false)
 const logoError = ref('')
 
 function getLogoUrl(logoPath: string | null) {
-  if (!logoPath) return ''
-  // Get backend URL (remove /api from baseURL)
-  const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8001/api'
-  const backendUrl = apiUrl.replace('/api', '')
-  return `${backendUrl}/storage/${logoPath}`
+  return getStorageUrl(logoPath)
 }
 
 async function handleLogoSelect(event: Event) {

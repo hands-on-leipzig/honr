@@ -205,6 +205,7 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { BellIcon } from '@heroicons/vue/24/solid'
 import apiClient from '@/api/client'
+import { getStorageUrl } from '@/api/storageUrl'
 import { getStatusColorClass, getStatusNameColorClass, STATUS_WARNING } from '@/constants/uiColors'
 
 const emit = defineEmits(['close'])
@@ -241,10 +242,7 @@ const deletingLogo = ref(false)
 const logoError = ref('')
 
 function getLogoUrl(logoPath: string | null) {
-  if (!logoPath) return ''
-  const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8001/api'
-  const backendUrl = apiUrl.replace('/api', '')
-  return `${backendUrl}/storage/${logoPath}`
+  return getStorageUrl(logoPath)
 }
 
 async function handleLogoSelect(event: Event) {

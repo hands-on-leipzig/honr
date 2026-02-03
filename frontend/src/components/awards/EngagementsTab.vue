@@ -436,6 +436,7 @@ import { useRouter } from 'vue-router'
 import { CheckCircleIcon, ClockIcon } from '@heroicons/vue/24/solid'
 import { useUserStore } from '@/stores/user'
 import apiClient from '@/api/client'
+import { getStorageUrl } from '@/api/storageUrl'
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -563,10 +564,7 @@ const formatDate = (dateStr: string) => {
 }
 
 function getLogoUrl(logoPath: string | null) {
-  if (!logoPath) return ''
-  const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8001/api'
-  const backendUrl = apiUrl.replace('/api', '')
-  return `${backendUrl}/storage/${logoPath}`
+  return getStorageUrl(logoPath)
 }
 
 function handleImageError(event: Event) {
