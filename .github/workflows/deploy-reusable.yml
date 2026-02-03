@@ -229,6 +229,13 @@ jobs:
               echo "⚠️  No .env found - admin must create it (see SERVER_ENV_MYSQL_FIX.md)"
             fi
             
+            # Ensure storage link exists (public/storage -> storage/app/public)
+            cd "$PUBLIC_DIR" && php artisan storage:link 2>/dev/null || true
+            echo "✅ Storage link ensured"
+            
+            # Generate role badge icons (not in repo; generated from code so /awards badges show)
+            cd "$PUBLIC_DIR" && php artisan roles:generate-icons --generate-svgs 2>/dev/null && echo "✅ Role icons generated" || echo "⚠️  Role icons not generated (run manually: php artisan roles:generate-icons --generate-svgs)"
+            
             echo "✅ Deployment finalized. Application is now at $PUBLIC_DIR"
             echo "   Document root for web server should be: $PUBLIC_DIR/public"
 
