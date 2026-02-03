@@ -22,5 +22,9 @@ vendor/
 .env.local
 .env.*.local
 
+# Database exports (never commit)
+honr-database-for-tst-*.sql
+honr-database-for-tst-*.sql.gz
+
 
 
