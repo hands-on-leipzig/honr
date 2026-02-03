@@ -1,7 +1,0 @@
-# Ensure correct Content-Type for logo images (some hosts omit or wrong-type .png/.jpg)
-<IfModule mod_mime.c>
-  AddType image/png .png
-  AddType image/jpeg .jpg .jpeg
-  AddType image/svg+xml .svg
-  AddType image/webp .webp
-</IfModule>

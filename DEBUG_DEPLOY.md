@@ -25,7 +25,7 @@ For **one** such request note:
 - **Request URL** (full URL).
 - **Status** (200, 404, etc.).
 
-If you don’t see any request to `/images/logos/...`, the app may be using a different URL (e.g. `/storage/...`); note one example URL for a logo.
+If you don't see any request to `/images/logos/...`, the app may be using a different URL (e.g. `/storage/...`); note one example URL for a logo.
 
 ## 3. What the API returns (`logo_path`)
 
@@ -35,8 +35,8 @@ If you don’t see any request to `/images/logos/...`, the app may be using a di
 
 Note one example, e.g.:
 
-- `"logo_path": "images/logos/programs/1.jpg"`  
-- or `"logo_path": "images/logos/programs/default.svg"`  
+- `"logo_path": "images/logos/programs/1.jpg"`
+- or `"logo_path": "images/logos/programs/default.svg"`
 - or `"logo_path": "logos/roles/1.svg"` (old path).
 
 ---
@@ -49,17 +49,4 @@ Note one example, e.g.:
 
 With that we can tell whether the problem is: files not deployed, wrong web server path, wrong URL in frontend, or DB/API still returning old paths.
 
----
-
-## When one logo works (e.g. 1.jpg) and another fails (e.g. 3.png)
-
-1. **Test the failing file directly**  
-   Open in a new tab:  
-   `https://test.honr.hands-on-technology.org/images/logos/programs/3.png`  
-   - Loads → file is there; the “error loading resource” may be MIME type or caching; we added `public/images/.htaccess` so `.png` is served as `image/png`.  
-   - 404 / 403 / other → file missing or not readable on server; check deploy included `backend/public/images/logos/programs/3.png` and server docroot is `…/public`.
-
-2. **Check what the API returns for that program**  
-   In Network tab, open the API response that contains programs (e.g. engagements or programs list). Find the program whose logo fails (e.g. id 3) and note its `logo_path`.  
-   - Should be like `images/logos/programs/3.png`.  
-   - If it’s something else (e.g. `default.svg` or an old path), the repair migration may not have run after deploy, or the file wasn’t present when it ran; re-run migrations on the server or fix the path in DB/Admin.
+If one logo works and another doesn't, test the failing file's URL directly and check the API `logo_path` for that program/season/role.
