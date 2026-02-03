@@ -21,8 +21,15 @@ FcgidWrapper "/home/httpd/cgi-bin/php84-fcgi-starter.fcgi" .php
     RewriteCond %{REQUEST_URI} (.+)/$
     RewriteRule ^ %1 [L,R=301]
 
-    # Send Requests To Front Controller...
-    RewriteCond %{REQUEST_FILENAME} !-d
-    RewriteCond %{REQUEST_FILENAME} !-f
+    # API requests go to Laravel
+    RewriteCond %{REQUEST_URI} ^/api
     RewriteRule ^ index.php [L]
+
+    # Existing files and directories: serve them
+    RewriteCond %{REQUEST_FILENAME} -f [OR]
+    RewriteCond %{REQUEST_FILENAME} -d
+    RewriteRule ^ - [L]
+
+    # All other requests: SPA fallback (Vue Router handles /admin/tables, /login, etc.)
+    RewriteRule ^ index.html [L]
 </IfModule>
