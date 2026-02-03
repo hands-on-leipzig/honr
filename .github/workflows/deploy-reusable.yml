@@ -225,6 +225,7 @@ jobs:
               fi
               echo "✅ Ensured DB_CONNECTION=mysql in .env"
               cd "$PUBLIC_DIR" && php artisan config:clear && php artisan config:cache
+              cd "$PUBLIC_DIR" && php artisan migrate --force && echo "✅ Migrations run"
             else
               echo "⚠️  No .env found - admin must create it (see SERVER_ENV_MYSQL_FIX.md)"
             fi
