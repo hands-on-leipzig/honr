@@ -24,7 +24,13 @@ export const useUserStore = defineStore('user', () => {
     loading.value = true
     try {
       const response = await apiClient.get('/user')
-      user.value = response.data
+      const data = response.data
+      // Only accept a valid user object (avoid treating HTML/error payload as user)
+      if (data && typeof data === 'object' && typeof (data as User).wizard_completed === 'boolean') {
+        user.value = data as User
+      } else {
+        user.value = null
+      }
     } catch (error) {
       user.value = null
     } finally {

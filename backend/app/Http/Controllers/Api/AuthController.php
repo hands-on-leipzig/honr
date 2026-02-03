@@ -60,7 +60,18 @@ class AuthController extends Controller
             'nickname' => 'required|string',
         ]);
 
-        $exists = User::where('nickname', $request->nickname)->exists();
+        $query = User::where('nickname', $request->nickname);
+
+        // When called from wizard/settings, exclude the current user so their own nickname is "available"
+        $token = $request->bearerToken();
+        if ($token) {
+            $accessToken = \Laravel\Sanctum\PersonalAccessToken::findToken($token);
+            if ($accessToken && $accessToken->tokenable instanceof User) {
+                $query->where('id', '!=', $accessToken->tokenable->id);
+            }
+        }
+
+        $exists = $query->exists();
 
         return response()->json([
             'available' => !$exists,

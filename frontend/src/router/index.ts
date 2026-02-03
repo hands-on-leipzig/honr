@@ -84,7 +84,7 @@ router.beforeEach(async (to, _from, next) => {
       if (!userStore.user) {
         await userStore.fetchUser()
       }
-      if (userStore.user && !userStore.user.wizard_completed) {
+      if (userStore.user && typeof userStore.user.wizard_completed === 'boolean' && !userStore.user.wizard_completed) {
         next('/wizard')
       } else {
         next('/awards')
@@ -103,7 +103,7 @@ router.beforeEach(async (to, _from, next) => {
       if (!userStore.user) {
         await userStore.fetchUser()
       }
-      if (userStore.user && userStore.user.wizard_completed) {
+      if (userStore.user && typeof userStore.user.wizard_completed === 'boolean' && userStore.user.wizard_completed) {
         next('/awards')
       } else {
         next()
@@ -123,8 +123,8 @@ router.beforeEach(async (to, _from, next) => {
         await userStore.fetchUser()
       }
       
-      // Redirect to wizard if not completed
-      if (userStore.user && !userStore.user.wizard_completed) {
+      // Redirect to wizard only if we have a valid user with wizard not completed
+      if (userStore.user && typeof userStore.user.wizard_completed === 'boolean' && !userStore.user.wizard_completed) {
         next('/wizard')
       } else {
         next()
