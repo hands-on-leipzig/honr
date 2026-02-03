@@ -1,3 +1,5 @@
+FcgidWrapper "/home/httpd/cgi-bin/php84-fcgi-starter.fcgi" .php
+
 <IfModule mod_rewrite.c>
     <IfModule mod_negotiation.c>
         Options -MultiViews -Indexes +FollowSymLinks
