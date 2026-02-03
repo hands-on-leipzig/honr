@@ -9,11 +9,13 @@ use App\Services\EngagementRecognitionService;
 use App\Mail\ProposalApproved;
 use App\Mail\ProposalRejected;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Mail;
 
 class AdminRoleController extends Controller
 {
+    private const LOGO_DIR = 'images/logos/roles';
     public function index()
     {
         return response()->json(
@@ -189,39 +191,44 @@ class AdminRoleController extends Controller
             'logo' => 'required|image|mimes:png,jpg,jpeg,svg,webp|max:2048',
         ]);
 
-        // Delete old logo if exists
-        if ($role->logo_path && Storage::disk('public')->exists($role->logo_path)) {
-            Storage::disk('public')->delete($role->logo_path);
+        if ($role->logo_path) {
+            $this->deleteRoleLogoFile($role->logo_path);
         }
 
-        // Get file extension
         $extension = $request->file('logo')->getClientOriginalExtension();
-        
-        // Rename to {id}.{ext}
         $filename = $role->id . '.' . $extension;
-        $path = 'logos/roles/' . $filename;
+        $path = self::LOGO_DIR . '/' . $filename;
+        $dir = public_path(self::LOGO_DIR);
 
-        // Store file
-        $request->file('logo')->storeAs('logos/roles', $filename, 'public');
-
-        // Update database
+        if (!File::isDirectory($dir)) {
+            File::makeDirectory($dir, 0755, true);
+        }
+        $request->file('logo')->move($dir, $filename);
         $role->update(['logo_path' => $path]);
 
         return response()->json([
             'logo_path' => $path,
-            'logo_url' => Storage::url($path),
+            'logo_url' => asset($path),
         ]);
     }
 
     public function deleteLogo(Role $role)
     {
-        if ($role->logo_path && Storage::disk('public')->exists($role->logo_path)) {
-            Storage::disk('public')->delete($role->logo_path);
+        if ($role->logo_path) {
+            $this->deleteRoleLogoFile($role->logo_path);
         }
 
         $role->update(['logo_path' => null]);
 
         return response()->json(['message' => 'Logo gelöscht.']);
+    }
+
+    private function deleteRoleLogoFile(string $path): void
+    {
+        $fullPath = public_path($path);
+        if (File::exists($fullPath)) {
+            File::delete($fullPath);
+        }
     }
 }
 

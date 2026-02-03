@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <defs>
+    <style>
+      .icon-stroke { fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+      .icon-fill { stroke: none; }
+      .icon-light { opacity: 0.3; }
+    </style>
+  </defs>
+  <defs><linearGradient id="gutGrad" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" style="stop-color:#00A651;stop-opacity:1" /><stop offset="100%" style="stop-color:#00843D;stop-opacity:1" /></linearGradient></defs><g class="icon-fill" fill="url(#gutGrad)"><path d="M 18 14 L 46 14 L 46 50 L 18 50 Z" rx="2"/></g><g class="icon-stroke" stroke="#ffffff" stroke-width="2"><path d="M 22 18 L 22 46 M 42 18 L 42 46"/></g><g class="icon-stroke" stroke="#4F46E5" stroke-width="3"><circle cx="28" cy="28" r="5"/><path d="M 32 32 L 36 36"/></g>
+</svg>

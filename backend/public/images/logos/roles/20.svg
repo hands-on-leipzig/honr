@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <defs>
+    <style>
+      .icon-stroke { fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+      .icon-fill { stroke: none; }
+      .icon-light { opacity: 0.3; }
+    </style>
+  </defs>
+  <defs><linearGradient id="coachGrad" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" style="stop-color:#8B5CF6;stop-opacity:1" /><stop offset="100%" style="stop-color:#6D28D9;stop-opacity:1" /></linearGradient></defs><g class="icon-fill" fill="url(#coachGrad)"><circle cx="32" cy="18" r="7"/><path d="M 18 36 Q 18 30 32 30 Q 46 30 46 36 L 46 50 L 18 50 Z"/></g><g class="icon-fill" fill="#ffffff" opacity="0.2"><circle cx="32" cy="18" r="4"/></g><g class="icon-fill" fill="#4C1D95"><rect x="48" y="22" width="10" height="12" rx="1.5"/></g><g class="icon-stroke" stroke="#ffffff" stroke-width="1.5"><path d="M 50 25 L 56 25"/></g>
+</svg>

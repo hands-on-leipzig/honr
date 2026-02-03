@@ -4,7 +4,7 @@ namespace App\Console\Commands;
 
 use App\Models\Role;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\File;
 
 class GenerateRoleIcons extends Command
 {
@@ -68,21 +68,25 @@ class GenerateRoleIcons extends Command
         }
     }
 
+    private const LOGO_DIR = 'images/logos/roles';
+
     private function generateSvgs($roles)
     {
-        // Ensure directory exists
-        Storage::disk('public')->makeDirectory('logos/roles');
+        $dir = public_path(self::LOGO_DIR);
+        if (!File::isDirectory($dir)) {
+            File::makeDirectory($dir, 0755, true);
+        }
 
         foreach ($roles as $role) {
             $svg = $this->generateSvgForRole($role);
-            
+
             if ($svg) {
                 $filename = $role->id . '.svg';
-                $path = 'logos/roles/' . $filename;
-                
-                Storage::disk('public')->put($path, $svg);
+                $path = self::LOGO_DIR . '/' . $filename;
+
+                File::put($dir . '/' . $filename, $svg);
                 $role->update(['logo_path' => $path]);
-                
+
                 $this->info("Generated SVG for: {$role->name} (ID: {$role->id})");
             } else {
                 $this->warn("Failed to generate SVG for: {$role->name}");

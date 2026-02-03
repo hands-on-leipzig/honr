@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <defs>
+    <style>
+      .icon-stroke { fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+      .icon-fill { stroke: none; }
+      .icon-light { opacity: 0.3; }
+    </style>
+  </defs>
+  <g class="icon-fill" fill="#FBBF24"><circle cx="32" cy="18" r="7"/></g><g class="icon-fill" fill="#ffffff"><path d="M 18 36 Q 18 30 32 30 Q 46 30 46 36 L 46 50 L 18 50 Z"/></g><g class="icon-fill" fill="#000000"><rect x="18" y="30" width="3" height="20"/><rect x="24" y="30" width="3" height="20"/><rect x="30" y="30" width="3" height="20"/><rect x="36" y="30" width="3" height="20"/><rect x="42" y="30" width="3" height="20"/></g>
+</svg>

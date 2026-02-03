@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <defs>
+    <style>
+      .icon-stroke { fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+      .icon-fill { stroke: none; }
+      .icon-light { opacity: 0.3; }
+    </style>
+  </defs>
+  <g class="icon-fill" fill="#F97316"><path d="M 14 30 Q 14 26 18 26 L 22 26 Q 26 26 26 30 L 26 38 Q 26 42 22 42 L 18 42 Q 14 42 14 38 Z"/></g><g class="icon-fill" fill="#EA580C"><path d="M 16 32 Q 16 28 18 28 L 20 28 Q 22 28 22 32 L 22 36 Q 22 40 20 40 L 18 40 Q 16 40 16 36 Z"/></g><g class="icon-fill" fill="#F97316"><path d="M 50 30 Q 50 26 46 26 L 42 26 Q 38 26 38 30 L 38 38 Q 38 42 42 42 L 46 42 Q 50 42 50 38 Z"/></g><g class="icon-fill" fill="#EA580C"><path d="M 48 32 Q 48 28 46 28 L 44 28 Q 42 28 42 32 L 42 36 Q 42 40 44 40 L 46 40 Q 48 40 48 36 Z"/></g><g class="icon-fill" fill="#F97316"><path d="M 26 34 L 38 34 Q 36 38 32 38 Q 28 38 26 34"/></g><g class="icon-fill" fill="#EA580C"><path d="M 28 34 L 36 34 Q 34 36 32 36 Q 30 36 28 34"/></g>
+</svg>

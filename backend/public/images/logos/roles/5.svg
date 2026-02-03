@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <defs>
+    <style>
+      .icon-stroke { fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+      .icon-fill { stroke: none; }
+      .icon-light { opacity: 0.3; }
+    </style>
+  </defs>
+  <defs><linearGradient id="jurorGradGrad" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" style="stop-color:#ED1C24;stop-opacity:1" /><stop offset="100%" style="stop-color:#C8102E;stop-opacity:1" /></linearGradient></defs><g class="icon-fill" fill="url(#jurorGradGrad)"><path d="M 18 14 L 46 14 L 46 50 L 18 50 Z" rx="2"/></g><g class="icon-stroke" stroke="#ffffff" stroke-width="2"><path d="M 22 18 L 22 46 M 42 18 L 42 46"/></g><g class="icon-fill" fill="#EC4899"><path d="M 32 26 C 30 24 28 26 28 28 C 28 30 32 34 32 34 C 32 34 36 30 36 28 C 36 26 34 24 32 26 Z"/></g>
+</svg>
