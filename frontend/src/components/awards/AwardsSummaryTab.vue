@@ -118,7 +118,6 @@
           <img
             :src="getLogoUrl(program.logo_path)"
             :alt="program.name"
-            @error="handleImageError"
             class="w-full h-full object-contain"
             @error="handleImageError"
           />
@@ -138,7 +137,6 @@
           <img
             :src="getLogoUrl(season.logo_path)"
             :alt="season.name"
-            @error="handleImageError"
             class="w-full h-full object-contain"
             @error="handleImageError"
           />
