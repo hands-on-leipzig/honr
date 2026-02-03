@@ -140,13 +140,9 @@
           <div class="space-y-4">
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">Status ändern</label>
-              <div v-if="editingUser.status === 'requested'" class="px-3 py-2 bg-gray-100 border border-gray-200 rounded-md text-gray-500">
-                Unbestätigt (wartet auf E-Mail-Bestätigung)
-              </div>
-              <div v-else-if="editingUser.status === 'invited'" class="px-3 py-2 bg-gray-100 border border-gray-200 rounded-md text-gray-500">
-                Eingeladen (wartet auf E-Mail-Bestätigung)
-              </div>
-              <select v-else v-model="form.status" class="w-full px-3 py-2 border border-gray-300 rounded-md">
+              <p v-if="editingUser.status === 'requested'" class="text-sm text-gray-500 mb-2">Aktuell: Unbestätigt (wartet auf E-Mail-Bestätigung)</p>
+              <p v-else-if="editingUser.status === 'invited'" class="text-sm text-gray-500 mb-2">Aktuell: Eingeladen (wartet auf E-Mail-Bestätigung)</p>
+              <select v-model="form.status" class="w-full px-3 py-2 border border-gray-300 rounded-md">
                 <option value="active">Aktiv</option>
                 <option value="disabled">Gesperrt</option>
               </select>
@@ -342,7 +338,11 @@ async function inviteUser() {
 
 function editUser(user: any) {
   editingUser.value = user
-  form.status = user.status
+  if (user.status === 'requested' || user.status === 'invited') {
+    form.status = 'active'
+  } else {
+    form.status = user.status
+  }
   form.is_admin = user.is_admin
   error.value = ''
 }
