@@ -5,10 +5,27 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Season;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\File;
 
 class AdminSeasonController extends Controller
 {
+    private const LOGO_DIR = 'images/logos/seasons';
+    private const DEFAULT_LOGO = 'images/logos/seasons/default.svg';
+
+    private function logoPathToAbsolute(string $path): string
+    {
+        return str_starts_with($path, 'images/')
+            ? public_path($path)
+            : storage_path('app/public/' . $path);
+    }
+
+    private function deleteLogoFile(string $path): void
+    {
+        $abs = $this->logoPathToAbsolute($path);
+        if (File::exists($abs) && !str_ends_with($path, 'default.svg')) {
+            File::delete($abs);
+        }
+    }
     public function index()
     {
         return response()->json(
@@ -93,37 +110,34 @@ class AdminSeasonController extends Controller
             'logo' => 'required|image|mimes:png,jpg,jpeg,svg,webp|max:2048',
         ]);
 
-        // Delete old logo if exists
-        if ($season->logo_path && Storage::disk('public')->exists($season->logo_path)) {
-            Storage::disk('public')->delete($season->logo_path);
+        if ($season->logo_path) {
+            $this->deleteLogoFile($season->logo_path);
         }
 
-        // Get file extension
         $extension = $request->file('logo')->getClientOriginalExtension();
-        
-        // Rename to {id}.{ext}
         $filename = $season->id . '.' . $extension;
-        $path = 'logos/seasons/' . $filename;
+        $path = self::LOGO_DIR . '/' . $filename;
+        $dir = public_path(self::LOGO_DIR);
 
-        // Store file
-        $request->file('logo')->storeAs('logos/seasons', $filename, 'public');
-
-        // Update database
+        if (!File::isDirectory($dir)) {
+            File::makeDirectory($dir, 0755, true);
+        }
+        $request->file('logo')->move($dir, $filename);
         $season->update(['logo_path' => $path]);
 
         return response()->json([
             'logo_path' => $path,
-            'logo_url' => Storage::url($path),
+            'logo_url' => asset($path),
         ]);
     }
 
     public function deleteLogo(Season $season)
     {
-        if ($season->logo_path && Storage::disk('public')->exists($season->logo_path)) {
-            Storage::disk('public')->delete($season->logo_path);
+        if ($season->logo_path) {
+            $this->deleteLogoFile($season->logo_path);
         }
 
-        $season->update(['logo_path' => null]);
+        $season->update(['logo_path' => self::DEFAULT_LOGO]);
 
         return response()->json(['message' => 'Logo gelöscht.']);
     }

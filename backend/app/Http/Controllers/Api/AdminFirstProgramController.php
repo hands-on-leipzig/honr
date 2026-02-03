@@ -5,10 +5,27 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\FirstProgram;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\File;
 
 class AdminFirstProgramController extends Controller
 {
+    private const LOGO_DIR = 'images/logos/programs';
+    private const DEFAULT_LOGO = 'images/logos/programs/default.svg';
+
+    private function logoPathToAbsolute(string $path): string
+    {
+        return str_starts_with($path, 'images/')
+            ? public_path($path)
+            : storage_path('app/public/' . $path);
+    }
+
+    private function deleteLogoFile(string $path): void
+    {
+        $abs = $this->logoPathToAbsolute($path);
+        if (File::exists($abs) && !str_ends_with($path, 'default.svg')) {
+            File::delete($abs);
+        }
+    }
     public function index()
     {
         return response()->json(
@@ -97,37 +114,34 @@ class AdminFirstProgramController extends Controller
             'logo' => 'required|image|mimes:png,jpg,jpeg,svg,webp|max:2048',
         ]);
 
-        // Delete old logo if exists
-        if ($firstProgram->logo_path && Storage::disk('public')->exists($firstProgram->logo_path)) {
-            Storage::disk('public')->delete($firstProgram->logo_path);
+        if ($firstProgram->logo_path) {
+            $this->deleteLogoFile($firstProgram->logo_path);
         }
 
-        // Get file extension
         $extension = $request->file('logo')->getClientOriginalExtension();
-        
-        // Rename to {id}.{ext}
         $filename = $firstProgram->id . '.' . $extension;
-        $path = 'logos/first_programs/' . $filename;
+        $path = self::LOGO_DIR . '/' . $filename;
+        $dir = public_path(self::LOGO_DIR);
 
-        // Store file
-        $request->file('logo')->storeAs('logos/first_programs', $filename, 'public');
-
-        // Update database
+        if (!File::isDirectory($dir)) {
+            File::makeDirectory($dir, 0755, true);
+        }
+        $request->file('logo')->move($dir, $filename);
         $firstProgram->update(['logo_path' => $path]);
 
         return response()->json([
             'logo_path' => $path,
-            'logo_url' => Storage::url($path),
+            'logo_url' => asset($path),
         ]);
     }
 
     public function deleteLogo(FirstProgram $firstProgram)
     {
-        if ($firstProgram->logo_path && Storage::disk('public')->exists($firstProgram->logo_path)) {
-            Storage::disk('public')->delete($firstProgram->logo_path);
+        if ($firstProgram->logo_path) {
+            $this->deleteLogoFile($firstProgram->logo_path);
         }
 
-        $firstProgram->update(['logo_path' => null]);
+        $firstProgram->update(['logo_path' => self::DEFAULT_LOGO]);
 
         return response()->json(['message' => 'Logo gelöscht.']);
     }

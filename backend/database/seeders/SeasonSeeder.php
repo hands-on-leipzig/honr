@@ -64,5 +64,8 @@ class SeasonSeeder extends Seeder
                 ]
             );
         }
+
+        // Default logo (in repo: public/images/logos/seasons/default.svg) so app is ready after deploy
+        Season::whereNull('logo_path')->update(['logo_path' => 'images/logos/seasons/default.svg']);
     }
 }

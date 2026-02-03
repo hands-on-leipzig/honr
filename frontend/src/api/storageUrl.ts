@@ -11,10 +11,14 @@ export function getStorageBaseUrl(): string {
   return apiUrl.replace(/\/api\/?$/, '')
 }
 
-/** Full URL for a storage path (e.g. logo_path from API). Returns '' if path is empty. */
+/** Full URL for a logo/storage path (e.g. logo_path from API). Returns '' if path is empty. */
 export function getStorageUrl(path: string | null | undefined): string {
   if (!path || typeof path !== 'string' || !path.trim()) return ''
   const base = getStorageBaseUrl()
   const normalized = path.startsWith('/') ? path.slice(1) : path
+  // Program/season logos live in public/images/logos/ (in repo); role logos in storage/
+  if (normalized.startsWith('images/')) {
+    return `${base}/${normalized}`
+  }
   return `${base}/storage/${normalized}`
 }

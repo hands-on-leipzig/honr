@@ -432,10 +432,9 @@ After deployment, verify:
 
 ## Icons and storage (badges, program/season logos)
 
-- **Icons are not in the repo.** They live in `storage/app/public/logos/` (gitignored).
-- **Role badges** (badges per role on /awards): Generated from code. Deployment runs `php artisan roles:generate-icons --generate-svgs` so role icons exist on the server. To regenerate manually: `php artisan roles:generate-icons --generate-svgs`.
-- **Program and season icons**: No generator; they are uploaded via Admin (First Programs, Seasons). In TST/PRD, upload logos in Admin so program and season icons show on /awards.
-- **Storage link**: Deployment runs `php artisan storage:link` so `public/storage` points to `storage/app/public`. The web server must serve `/storage` from that path (see WEB_SERVER_CONFIGURATION.md).
+- **Role badges** (badges per role on /awards): Generated from code; not in repo. Deployment runs `php artisan roles:generate-icons --generate-svgs` so role icons exist on the server. To regenerate manually: `php artisan roles:generate-icons --generate-svgs`.
+- **Program and season icons**: In repo at `backend/public/images/logos/programs/` and `backend/public/images/logos/seasons/`. Default SVGs are committed; after deploy + migrate (or seed), programs and seasons use these defaults so the app is ready to use. Admin can still upload/replace logos via Admin UI (uploaded files go to the same public dir).
+- **Storage link**: Deployment runs `php artisan storage:link` so `public/storage` points to `storage/app/public` (for role badges). The web server must serve `/storage` from that path (see WEB_SERVER_CONFIGURATION.md).
 
 ## Troubleshooting
 

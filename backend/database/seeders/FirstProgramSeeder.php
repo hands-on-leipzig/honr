@@ -61,5 +61,8 @@ class FirstProgramSeeder extends Seeder
                 'valid_to' => null,
             ]
         );
+
+        // Default logo (in repo: public/images/logos/programs/default.svg) so app is ready after deploy
+        FirstProgram::whereNull('logo_path')->update(['logo_path' => 'images/logos/programs/default.svg']);
     }
 }
