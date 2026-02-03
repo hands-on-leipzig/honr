@@ -27,6 +27,11 @@
       </div>
     </div>
 
+    <!-- Load error -->
+    <div v-if="loadError" class="mb-4 p-4 bg-amber-50 border border-amber-200 rounded-lg text-amber-800 text-sm">
+      {{ LOAD_ERROR_MESSAGE }}
+    </div>
+
     <!-- Stats -->
     <div class="bg-white rounded-lg shadow p-3 mb-4 flex justify-between text-sm">
       <span class="text-gray-700"><strong>{{ heatmapData.length }}</strong> Standorte</span>
@@ -43,6 +48,7 @@
 <script setup lang="ts">
 import { ref, watch, onMounted, computed, nextTick } from 'vue'
 import apiClient from '@/api/client'
+import { isJsonArray, isFilterOptionsShape, LOAD_ERROR_MESSAGE } from '@/api/responseGuard'
 import L from 'leaflet'
 import { MAP_COLORS } from '@/constants/uiColors'
 import 'leaflet/dist/leaflet.css'
@@ -56,6 +62,7 @@ const markersLayer = ref<L.LayerGroup | null>(null)
 const heatmapData = ref<any[]>([])
 const mapOptions = ref<{ programs: any[], seasons: any[], levels: any[] }>({ programs: [], seasons: [], levels: [] })
 const mapFilters = ref({ program_id: '', season_id: '', level_id: '' })
+const loadError = ref(false)
 
 const filteredSeasons = computed(() => {
   if (!mapFilters.value.program_id) return mapOptions.value.seasons
@@ -73,7 +80,10 @@ function onProgramChange() {
 async function loadMapOptions() {
   try {
     const response = await apiClient.get('/heatmap/options')
-    mapOptions.value = response.data
+    const data = response.data
+    if (isFilterOptionsShape(data)) {
+      mapOptions.value = data
+    }
   } catch (err) {
     console.error('Failed to load map options', err)
   }
@@ -81,17 +91,25 @@ async function loadMapOptions() {
 
 async function loadHeatmapData() {
   try {
+    loadError.value = false
     const params = new URLSearchParams()
     if (mapFilters.value.program_id) params.append('program_id', mapFilters.value.program_id)
     if (mapFilters.value.season_id) params.append('season_id', mapFilters.value.season_id)
     if (mapFilters.value.level_id) params.append('level_id', mapFilters.value.level_id)
     
     const response = await apiClient.get(`/heatmap?${params.toString()}`)
-    heatmapData.value = response.data
+    const data = response.data
+    if (isJsonArray(data)) {
+      heatmapData.value = data
+    } else {
+      heatmapData.value = []
+      loadError.value = true
+    }
     updateHeatmap()
   } catch (err) {
     console.error('Failed to load heatmap data', err)
     heatmapData.value = []
+    loadError.value = true
   }
 }
 

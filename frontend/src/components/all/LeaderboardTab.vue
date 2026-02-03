@@ -86,6 +86,11 @@
       <p class="text-gray-600 text-center py-8">Laden...</p>
     </div>
 
+    <!-- Load error -->
+    <div v-else-if="loadError" class="bg-white rounded-lg shadow p-6">
+      <p class="text-amber-800 text-center py-8">{{ LOAD_ERROR_MESSAGE }}</p>
+    </div>
+
     <!-- Empty State -->
     <div v-else-if="leaderboard.length === 0" class="bg-white rounded-lg shadow p-6">
       <p class="text-gray-600 text-center py-8">Noch keine Einträge vorhanden.</p>
@@ -185,6 +190,7 @@
 import { ref, watch, onMounted, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import apiClient from '@/api/client'
+import { isJsonArray, isFilterOptionsShape, LOAD_ERROR_MESSAGE } from '@/api/responseGuard'
 import { getRankColorClass, PRIMARY_COLORS, NEUTRAL_COLORS } from '@/constants/uiColors'
 import { useUserStore } from '@/stores/user'
 
@@ -201,6 +207,7 @@ const leaderboardCategory = ref<'volunteers' | 'regional-partners' | 'coaches'>(
 )
 const leaderboard = ref<any[]>([])
 const loading = ref(false)
+const loadError = ref(false)
 const topCount = ref(5)
 const filterOptions = ref<{ programs: any[], seasons: any[], levels: any[] }>({ programs: [], seasons: [], levels: [] })
 const filters = ref({ program_id: '', season_id: '', level_id: '' })
@@ -244,7 +251,10 @@ function onProgramChange() {
 async function loadFilterOptions() {
   try {
     const response = await apiClient.get('/leaderboard/options')
-    filterOptions.value = response.data
+    const data = response.data
+    if (isFilterOptionsShape(data)) {
+      filterOptions.value = data
+    }
   } catch (err) {
     console.error('Failed to load filter options', err)
   }
@@ -252,6 +262,7 @@ async function loadFilterOptions() {
 
 async function loadLeaderboard() {
   loading.value = true
+  loadError.value = false
   try {
     const params = new URLSearchParams()
     if (filters.value.program_id) params.append('program_id', filters.value.program_id)
@@ -259,10 +270,17 @@ async function loadLeaderboard() {
     if (filters.value.level_id) params.append('level_id', filters.value.level_id)
     
     const response = await apiClient.get(`/leaderboard/${leaderboardCategory.value}?${params.toString()}`)
-    leaderboard.value = response.data
+    const data = response.data
+    if (isJsonArray(data)) {
+      leaderboard.value = data
+    } else {
+      leaderboard.value = []
+      loadError.value = true
+    }
   } catch (err) {
     console.error('Failed to load leaderboard', err)
     leaderboard.value = []
+    loadError.value = true
   } finally {
     loading.value = false
   }

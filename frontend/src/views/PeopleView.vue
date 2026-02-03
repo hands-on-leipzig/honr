@@ -5,6 +5,10 @@
       <p class="text-gray-600 text-center py-8">Laden...</p>
     </div>
 
+    <div v-else-if="loadError" class="bg-white rounded-lg shadow p-6">
+      <p class="text-amber-800 text-center py-8">{{ LOAD_ERROR_MESSAGE }}</p>
+    </div>
+
     <div v-else-if="users.length === 0" class="bg-white rounded-lg shadow p-6">
       <p class="text-gray-600 text-center py-8">
         {{ searchQuery ? 'Keine Benutzer gefunden.' : 'Noch keine Benutzer vorhanden.' }}
@@ -61,11 +65,14 @@
 import { ref, watch, onMounted, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import apiClient from '@/api/client'
+import { isJsonArray } from '@/api/responseGuard'
+import { LOAD_ERROR_MESSAGE } from '@/api/responseGuard'
 
 const router = useRouter()
 const route = useRoute()
 const users = ref<any[]>([])
 const loading = ref(true)
+const loadError = ref(false)
 const searchQuery = ref('')
 
 // Get filter from query params
@@ -97,6 +104,7 @@ function getFilterIconUrl(): string | undefined {
 
 async function loadUsers() {
   loading.value = true
+  loadError.value = false
   try {
     const params = new URLSearchParams()
     params.append('status', 'active')
@@ -122,10 +130,17 @@ async function loadUsers() {
     }
     
     const response = await apiClient.get(`/users?${params.toString()}`)
-    users.value = response.data
+    const data = response.data
+    if (isJsonArray(data)) {
+      users.value = data
+    } else {
+      users.value = []
+      loadError.value = true
+    }
   } catch (err) {
     console.error('Failed to load users', err)
     users.value = []
+    loadError.value = true
   } finally {
     loading.value = false
   }

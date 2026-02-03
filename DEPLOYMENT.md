@@ -439,6 +439,7 @@ After deployment, verify:
 3. **Cache issues**: Run `php artisan config:clear && php artisan cache:clear`
 4. **Storage link**: Ensure `php artisan storage:link` has been run
 5. **Frontend API URL**: Verify `VITE_API_URL` matches backend URL
+6. **Empty screens after login**: If you can log in but all screens show no data (or "Daten konnten nicht geladen werden"), the API may be returning HTML instead of JSON (e.g. wrong rewrite). Ensure all `/api` (and, if app is in a subpath, `/subpath/api`) requests go to Laravel, not to the SPA. In the browser DevTools → Network tab, check that requests to `/api/engagements`, `/api/users`, etc. return JSON (Content-Type: application/json), not HTML.
 
 ### Logs
 

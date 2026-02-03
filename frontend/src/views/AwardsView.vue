@@ -32,6 +32,11 @@
       </div>
     </div>
 
+    <!-- Load error (e.g. API returned HTML or failed) -->
+    <div v-if="loadError" class="mb-4 p-4 bg-amber-50 border border-amber-200 rounded-lg text-amber-800 text-sm">
+      {{ LOAD_ERROR_MESSAGE }}
+    </div>
+
     <!-- Navigation Tabs -->
     <TabNavigation
       :tabs="tabs"
@@ -58,6 +63,8 @@ import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import apiClient from '@/api/client'
+import { isJsonArray } from '@/api/responseGuard'
+import { LOAD_ERROR_MESSAGE } from '@/api/responseGuard'
 import TabNavigation from '@/components/common/TabNavigation.vue'
 import AwardsSummaryTab from '@/components/awards/AwardsSummaryTab.vue'
 import EngagementsTab from '@/components/awards/EngagementsTab.vue'
@@ -78,30 +85,47 @@ const leaderboards = ref({
   regionalPartners: [] as any[],
   coaches: [] as any[]
 })
+const loadError = ref(false)
 
 async function loadEngagements() {
   try {
+    loadError.value = false
     const response = await apiClient.get('/engagements')
-    engagements.value = response.data
+    const data = response.data
+    if (isJsonArray(data)) {
+      engagements.value = data
+    } else {
+      engagements.value = []
+      loadError.value = true
+    }
   } catch (err) {
     console.error('Failed to load engagements', err)
+    engagements.value = []
+    loadError.value = true
   }
 }
 
 async function loadLeaderboards() {
   try {
+    loadError.value = false
     const [volunteersRes, regionalPartnersRes, coachesRes] = await Promise.all([
       apiClient.get('/leaderboard/volunteers'),
       apiClient.get('/leaderboard/regional-partners'),
       apiClient.get('/leaderboard/coaches')
     ])
-    leaderboards.value = {
-      volunteers: volunteersRes.data,
-      regionalPartners: regionalPartnersRes.data,
-      coaches: coachesRes.data
+    const v = volunteersRes.data
+    const r = regionalPartnersRes.data
+    const c = coachesRes.data
+    if (isJsonArray(v) && isJsonArray(r) && isJsonArray(c)) {
+      leaderboards.value = { volunteers: v, regionalPartners: r, coaches: c }
+    } else {
+      leaderboards.value = { volunteers: [], regionalPartners: [], coaches: [] }
+      loadError.value = true
     }
   } catch (err) {
     console.error('Failed to load leaderboards', err)
+    leaderboards.value = { volunteers: [], regionalPartners: [], coaches: [] }
+    loadError.value = true
   }
 }
 
