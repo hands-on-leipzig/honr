@@ -29,25 +29,27 @@
         @click="editUser(user)"
         class="px-4 py-3 hover:bg-gray-50 cursor-pointer"
       >
-        <div class="flex items-center justify-between">
+        <div class="flex items-center justify-between gap-2">
           <div class="flex-1 min-w-0">
-          <div class="flex items-center space-x-2">
+            <div class="flex items-center space-x-2">
               <span class="font-medium truncate">{{ user.nickname || '(kein Name)' }}</span>
               <BellIcon v-if="user.status === 'requested' || user.status === 'invited'" :class="['w-4 h-4', STATUS_WARNING.icon]" />
-            <span
-              :class="[
-                'px-2 py-1 text-xs rounded-full',
-                getStatusColorClass(user.status)
-              ]"
-            >
-              {{ statusLabel(user.status) }}
-            </span>
+              <span
+                :class="[
+                  'px-2 py-0.5 text-xs rounded-full',
+                  getStatusColorClass(user.status)
+                ]"
+              >
+                {{ statusLabel(user.status) }}
+              </span>
             </div>
             <div class="text-sm text-gray-500 truncate">{{ user.email }}</div>
-            <div v-if="user.is_admin" class="mt-1">
-              <span class="px-2 py-0.5 text-xs rounded-full bg-blue-100 text-blue-800">Admin</span>
+            <div class="flex flex-wrap gap-1 mt-1 text-xs">
+              <span class="px-2 py-0.5 bg-gray-100 rounded-full">{{ user.engagements_count ?? 0 }} Einsätze</span>
+              <span class="px-2 py-0.5 bg-gray-100 rounded-full">Letzter Login: {{ formatDate(user.last_login_at) }}</span>
             </div>
           </div>
+          <span v-if="user.is_admin" class="px-2 py-0.5 text-xs rounded-full bg-blue-100 text-blue-800 shrink-0">Admin</span>
         </div>
       </div>
     </div>

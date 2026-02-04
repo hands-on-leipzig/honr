@@ -37,15 +37,20 @@
           <div class="flex items-center space-x-2">
             <span class="font-medium">{{ item.user?.nickname || item.user?.email }}</span>
             <BellIcon v-if="!item.is_recognized" :class="['w-4 h-4', STATUS_WARNING.icon]" />
-            <span :class="getStatusColorClass(item.is_recognized ? 'recognized' : 'unrecognized')" class="px-2 py-0.5 text-xs rounded-full">
+            <span :class="['px-2 py-0.5 text-xs rounded-full', getStatusColorClass(item.is_recognized ? 'recognized' : 'unrecognized')]">
               {{ item.is_recognized ? 'Anerkannt' : 'Nicht anerkannt' }}
             </span>
           </div>
-          <div :class="['text-sm truncate', item.role?.status ? getStatusNameColorClass(item.role.status) : 'text-gray-600']">
-            {{ item.role?.name }}
+          <div class="flex flex-wrap gap-1 mt-1 text-xs">
+            <span :class="['px-2 py-0.5 rounded-full bg-gray-100', item.role?.status ? getStatusNameColorClass(item.role.status) : '']">
+              {{ item.role?.name }}
+            </span>
           </div>
-          <div class="text-sm text-gray-600 truncate">
-            {{ item.event?.season?.name }} · {{ item.event?.level?.name }} · {{ item.event?.location?.name }}<span v-if="item.event?.location?.city">, {{ item.event.location.city }}</span>
+          <div class="flex flex-wrap gap-1 mt-1 text-xs">
+            <span class="px-2 py-0.5 bg-gray-100 rounded-full">{{ formatDate(item.event?.date) }}</span>
+            <span class="px-2 py-0.5 bg-gray-100 rounded-full">{{ item.event?.season?.name }}</span>
+            <span class="px-2 py-0.5 bg-gray-100 rounded-full">{{ item.event?.level?.name }}</span>
+            <span class="px-2 py-0.5 bg-gray-100 rounded-full">{{ item.event?.location?.name }}{{ item.event?.location?.city ? `, ${item.event.location.city}` : '' }}</span>
           </div>
         </div>
       </div>

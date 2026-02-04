@@ -15,7 +15,9 @@ class AdminUserController extends Controller
     public function index()
     {
         return response()->json(
-            User::orderByRaw('COALESCE(nickname, email) ASC')->get()
+            User::withCount('engagements')
+                ->orderByRaw('COALESCE(nickname, email) ASC')
+                ->get()
         );
     }
 
