@@ -162,7 +162,10 @@
               v-model="eventSearch"
               type="text"
               placeholder="Veranstaltung suchen (Saison, Level, Ort)..."
-              class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+              :class="[
+                'w-full px-3 py-2 border rounded-md text-sm',
+                eventSearch.trim() && filteredEvents.length === 0 ? 'border-red-500 text-red-600' : 'border-gray-300'
+              ]"
             />
             <div v-if="filteredEvents.length > 0 && eventSearch" class="mt-1 max-h-48 overflow-y-auto border border-gray-200 rounded-md">
               <button
@@ -210,8 +213,9 @@
               placeholder="Rolle suchen..."
               :disabled="!selectedEvent"
               :class="[
-                'w-full px-3 py-2 border border-gray-300 rounded-md text-sm',
-                !selectedEvent ? 'bg-gray-100 cursor-not-allowed' : ''
+                'w-full px-3 py-2 border rounded-md text-sm',
+                !selectedEvent ? 'bg-gray-100 cursor-not-allowed' : '',
+                selectedEvent && roleSearch.trim() && filteredRoles.length === 0 ? 'border-red-500 text-red-600' : 'border-gray-300'
               ]"
             />
             <div v-if="!selectedEvent" class="mt-1 text-xs text-gray-500">
@@ -307,7 +311,10 @@
               v-model="proposeSeasonSearch"
               type="text"
               placeholder="Saison suchen..."
-              class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+              :class="[
+                'w-full px-3 py-2 border rounded-md text-sm',
+                proposeSeasonSearch.trim() && filteredProposeSeasons.length === 0 ? 'border-red-500 text-red-600' : 'border-gray-300'
+              ]"
             />
             <div v-if="filteredProposeSeasons.length > 0 && proposeSeasonSearch && !proposeEventForm.season_id" class="mt-1 max-h-40 overflow-y-auto border border-gray-200 rounded-md">
               <button
@@ -344,7 +351,10 @@
               v-model="proposeLocationSearch"
               type="text"
               placeholder="Standort suchen..."
-              class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+              :class="[
+                'w-full px-3 py-2 border rounded-md text-sm',
+                proposeLocationSearch.trim() && filteredProposeLocations.length === 0 ? 'border-red-500 text-red-600' : 'border-gray-300'
+              ]"
             />
             <div v-if="filteredProposeLocations.length > 0 && proposeLocationSearch && !selectedProposeLocation" class="mt-1 max-h-40 overflow-y-auto border border-gray-200 rounded-md">
               <button
@@ -520,11 +530,11 @@ const proposingCountry = ref(false)
 // Computed
 const filteredRoles = computed(() => {
   if (!roleSearch.value.trim() || !selectedEvent.value) return []
-  const q = roleSearch.value.toLowerCase()
+  const terms = roleSearch.value.toLowerCase().split(/\s+/).filter(Boolean)
   const eventProgramId = selectedEvent.value.first_program_id || selectedEvent.value.season?.first_program_id
   return roles.value.filter(r => {
-    const matchesSearch = r.name.toLowerCase().includes(q) ||
-      r.first_program?.name?.toLowerCase().includes(q)
+    const searchable = `${r.name} ${r.first_program?.name ?? ''}`.toLowerCase()
+    const matchesSearch = terms.every(term => searchable.includes(term))
     const matchesProgram = !eventProgramId || r.first_program_id === eventProgramId
     return matchesSearch && matchesProgram
   }).slice(0, 10)
@@ -532,28 +542,34 @@ const filteredRoles = computed(() => {
 
 const filteredEvents = computed(() => {
   if (!eventSearch.value.trim()) return []
-  const q = eventSearch.value.toLowerCase()
-  return events.value.filter(e =>
-    e.season?.name?.toLowerCase().includes(q) ||
-    e.level?.name?.toLowerCase().includes(q) ||
-    e.location?.name?.toLowerCase().includes(q) ||
-    e.location?.city?.toLowerCase().includes(q)
-  ).slice(0, 10)
+  const terms = eventSearch.value.toLowerCase().split(/\s+/).filter(Boolean)
+  return events.value.filter(e => {
+    const searchable = [
+      e.season?.name,
+      e.level?.name,
+      e.location?.name,
+      e.location?.city,
+      formatDate(e.date),
+    ].filter(Boolean).join(' ')
+    return terms.every(term => searchable.toLowerCase().includes(term))
+  }).slice(0, 10)
 })
 
 const filteredProposeSeasons = computed(() => {
   if (!proposeSeasonSearch.value.trim()) return []
-  const q = proposeSeasonSearch.value.toLowerCase()
-  return seasons.value.filter(s => s.name?.toLowerCase().includes(q)).slice(0, 10)
+  const terms = proposeSeasonSearch.value.toLowerCase().split(/\s+/).filter(Boolean)
+  return seasons.value.filter(s =>
+    terms.every(term => (s.name ?? '').toLowerCase().includes(term))
+  ).slice(0, 10)
 })
 
 const filteredProposeLocations = computed(() => {
   if (!proposeLocationSearch.value.trim()) return []
-  const q = proposeLocationSearch.value.toLowerCase()
-  return locations.value.filter(loc =>
-    loc.name?.toLowerCase().includes(q) ||
-    loc.city?.toLowerCase().includes(q)
-  ).slice(0, 10)
+  const terms = proposeLocationSearch.value.toLowerCase().split(/\s+/).filter(Boolean)
+  return locations.value.filter(loc => {
+    const searchable = `${loc.name ?? ''} ${loc.city ?? ''}`.toLowerCase()
+    return terms.every(term => searchable.includes(term))
+  }).slice(0, 10)
 })
 
 // Methods
