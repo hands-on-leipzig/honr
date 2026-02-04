@@ -323,11 +323,11 @@
                 @click="selectProposeSeason(s)"
                 class="w-full px-3 py-2 text-left hover:bg-gray-50 text-sm border-b border-gray-100 last:border-b-0"
               >
-                {{ s.name }}
+                {{ s.name }}{{ s.start_year != null ? ` (${s.start_year})` : '' }}
               </button>
             </div>
             <div v-if="selectedProposeSeason" class="mt-2 p-2 bg-blue-50 rounded-md flex items-center justify-between">
-              <span class="text-sm font-medium">{{ selectedProposeSeason.name }}</span>
+              <span class="text-sm font-medium">{{ selectedProposeSeason.name }}{{ selectedProposeSeason.start_year != null ? ` (${selectedProposeSeason.start_year})` : '' }}</span>
               <button @click="clearProposeSeason" class="text-gray-400 hover:text-gray-600">✕</button>
             </div>
           </div>
@@ -558,9 +558,10 @@ const filteredEvents = computed(() => {
 const filteredProposeSeasons = computed(() => {
   if (!proposeSeasonSearch.value.trim()) return []
   const terms = proposeSeasonSearch.value.toLowerCase().split(/\s+/).filter(Boolean)
-  return seasons.value.filter(s =>
-    terms.every(term => (s.name ?? '').toLowerCase().includes(term))
-  ).slice(0, 10)
+  return seasons.value.filter(s => {
+    const searchable = `${s.name ?? ''} ${String(s.start_year ?? '')}`.toLowerCase()
+    return terms.every(term => searchable.includes(term))
+  }).slice(0, 10)
 })
 
 const filteredProposeLocations = computed(() => {

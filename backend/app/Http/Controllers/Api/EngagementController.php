@@ -73,7 +73,7 @@ class EngagementController extends Controller
             'roles' => $roles,
             'events' => $events,
             'programs' => FirstProgram::orderBy('sort_order')->get(['id', 'name']),
-            'seasons' => Season::orderBy('start_year', 'desc')->get(['id', 'name', 'first_program_id']),
+            'seasons' => Season::orderBy('start_year', 'desc')->get(['id', 'name', 'start_year', 'first_program_id']),
             'levels' => Level::where('status', 'approved')->orderBy('sort_order')->get(['id', 'name']),
             'locations' => Location::where(function ($q) use ($userId) {
                     $q->where('status', 'approved')
