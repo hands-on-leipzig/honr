@@ -9,6 +9,7 @@ use App\Mail\VerifyEmail;
 use App\Mail\ResetPassword;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
@@ -266,20 +267,34 @@ class AuthController extends Controller
         $frontendUrl = rtrim(config('app.frontend_url'), '/');
         $loginPath = '/login';
 
+        Log::info('SSO callback hit', [
+            'query_keys' => array_keys($request->query()),
+            'has_code' => $request->has('code'),
+            'error' => $request->query('error'),
+            'error_description' => $request->query('error_description'),
+        ]);
+
         try {
             $oauthUser = Socialite::driver('keycloak')->user();
         } catch (\Throwable $e) {
+            Log::error('SSO callback: Socialite user() failed', [
+                'message' => $e->getMessage(),
+                'exception' => get_class($e),
+                'trace' => $e->getTraceAsString(),
+            ]);
             return redirect($frontendUrl . $loginPath . '?sso_error=' . urlencode('SSO-Anmeldung fehlgeschlagen.'));
         }
 
         // Require Keycloak realm role "volunteer"
         $accessToken = $oauthUser->token ?? null;
-        if (! $accessToken || ! $this->keycloakUserHasVolunteerRole($accessToken)) {
+        $volunteerOk = $accessToken && $this->keycloakUserHasVolunteerRole($accessToken, $oauthUser->getNickname());
+        if (! $volunteerOk) {
             return redirect($frontendUrl . $loginPath . '?sso_error=' . urlencode('Rolle "volunteer" in Keycloak fehlt.'));
         }
 
         $email = $oauthUser->getNickname(); // preferred_username – required to be email in Keycloak
         if (empty($email) || ! is_string($email)) {
+            Log::warning('SSO callback: preferred_username missing', ['oauth_user_nickname' => $oauthUser->getNickname()]);
             return redirect($frontendUrl . $loginPath . '?sso_error=' . urlencode('Keycloak preferred_username fehlt.'));
         }
 
@@ -316,19 +331,32 @@ class AuthController extends Controller
     /**
      * Decode Keycloak access token (JWT) and check for realm role "volunteer".
      */
-    private function keycloakUserHasVolunteerRole(string $accessToken): bool
+    private function keycloakUserHasVolunteerRole(string $accessToken, ?string $nickname = null): bool
     {
         $parts = explode('.', $accessToken);
         if (count($parts) !== 3) {
+            Log::warning('SSO volunteer check: invalid JWT segment count', ['count' => count($parts), 'nickname' => $nickname]);
             return false;
         }
         $payload = json_decode($this->base64UrlDecode($parts[1]), true);
         if (! is_array($payload)) {
+            Log::warning('SSO volunteer check: JWT payload decode failed', ['nickname' => $nickname]);
             return false;
         }
-        $roles = $payload['realm_access']['roles'] ?? [];
+        $realmRoles = $payload['realm_access']['roles'] ?? [];
+        $hasVolunteer = in_array('volunteer', $realmRoles, true);
 
-        return in_array('volunteer', $roles, true);
+        if (! $hasVolunteer) {
+            $resourceAccess = $payload['resource_access'] ?? [];
+            Log::info('SSO volunteer check: volunteer role not in realm_access.roles', [
+                'nickname' => $nickname,
+                'realm_roles' => $realmRoles,
+                'resource_access_keys' => array_keys($resourceAccess),
+                'resource_access_roles' => array_map(fn ($r) => $r['roles'] ?? [], $resourceAccess),
+            ]);
+        }
+
+        return $hasVolunteer;
     }
 
     private function base64UrlDecode(string $input): string
