@@ -10,7 +10,9 @@
         "innoge/laravel-msgraph-mail": "^1.4",
         "laravel/framework": "^12.0",
         "laravel/sanctum": "^4.2",
-        "laravel/tinker": "^2.10.1"
+        "laravel/socialite": "^5.24",
+        "laravel/tinker": "^2.10.1",
+        "socialiteproviders/keycloak": "^5.3"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",

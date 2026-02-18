@@ -49,6 +49,9 @@
               </label>
             </div>
             
+            <div v-if="ssoError" class="mb-4 p-3 bg-amber-50 text-amber-800 rounded-md text-sm">
+              {{ ssoError }}
+            </div>
             <div v-if="error" class="mb-4 p-3 bg-red-50 text-red-700 rounded-md text-sm">
               {{ error }}
             </div>
@@ -60,6 +63,13 @@
             >
               {{ loading ? 'Wird angemeldet...' : 'Anmelden' }}
             </button>
+
+            <a
+              :href="ssoRedirectUrl"
+              class="mt-3 w-full inline-block py-2 px-4 text-center border border-gray-300 bg-white text-gray-700 font-medium rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              HANDS on SSO
+            </a>
           </form>
           
           <div class="mt-4 text-center space-y-2">
@@ -219,15 +229,20 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, computed, onMounted } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import api from '@/api/client'
 
 const router = useRouter()
+const route = useRoute()
 const authStore = useAuthStore()
 
+const apiBaseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000/api'
+const ssoRedirectUrl = computed(() => `${apiBaseUrl}/auth/sso/redirect`)
+
 const mode = ref<'login' | 'register' | 'reset'>('login')
+const ssoError = ref('')
 
 // Login
 const email = ref('')
@@ -272,6 +287,31 @@ async function handleLogin() {
     loading.value = false
   }
 }
+
+async function finishSsoLogin(token: string) {
+  authStore.setToken(token)
+  const { useUserStore } = await import('@/stores/user')
+  const userStore = useUserStore()
+  await userStore.fetchUser()
+  if (userStore.user && !userStore.user.wizard_completed) {
+    router.replace('/wizard')
+  } else {
+    router.replace('/awards')
+  }
+}
+
+onMounted(() => {
+  const token = route.query.sso_token
+  const err = route.query.sso_error
+  if (typeof err === 'string' && err) {
+    ssoError.value = decodeURIComponent(err)
+    router.replace({ path: '/login', query: {} })
+  }
+  if (typeof token === 'string' && token) {
+    router.replace({ path: '/login', query: {} })
+    finishSsoLogin(token)
+  }
+})
 
 async function checkNicknameAvailability() {
   if (!regName.value) {

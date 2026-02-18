@@ -11,7 +11,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
+use Laravel\Socialite\Facades\Socialite;
 
 class AuthController extends Controller
 {
@@ -246,6 +248,63 @@ class AuthController extends Controller
         return response()->json([
             'message' => 'E-Mail-Adresse erfolgreich geändert.',
         ]);
+    }
+
+    /**
+     * Redirect to Keycloak for SSO login.
+     */
+    public function redirectToKeycloak()
+    {
+        return Socialite::driver('keycloak')->redirect();
+    }
+
+    /**
+     * Handle Keycloak callback. preferred_username is mapped to email (Keycloak usernames are required to be email addresses).
+     */
+    public function handleKeycloakCallback(Request $request)
+    {
+        $frontendUrl = rtrim(config('app.frontend_url'), '/');
+        $loginPath = '/login';
+
+        try {
+            $oauthUser = Socialite::driver('keycloak')->user();
+        } catch (\Throwable $e) {
+            return redirect($frontendUrl . $loginPath . '?sso_error=' . urlencode('SSO-Anmeldung fehlgeschlagen.'));
+        }
+
+        $email = $oauthUser->getNickname(); // preferred_username – required to be email in Keycloak
+        if (empty($email) || ! is_string($email)) {
+            return redirect($frontendUrl . $loginPath . '?sso_error=' . urlencode('Keycloak preferred_username fehlt.'));
+        }
+
+        $nameFromIdp = $oauthUser->getName() ?: $email;
+
+        $user = User::where('email', $email)->first();
+
+        if (! $user) {
+            $baseNickname = $nameFromIdp ?: $email;
+            $nickname = $baseNickname;
+            $suffix = 0;
+            while (User::where('nickname', $nickname)->exists()) {
+                $suffix++;
+                $nickname = $baseNickname . ' (' . $suffix . ')';
+            }
+            $user = User::create([
+                'email' => $email,
+                'password' => Hash::make(Str::random(64)),
+                'status' => 'active',
+                'nickname' => $nickname,
+            ]);
+        } else {
+            if ($nameFromIdp !== '' && $user->nickname !== $nameFromIdp) {
+                $user->update(['nickname' => $nameFromIdp]);
+            }
+        }
+
+        $user->update(['last_login_at' => now()]);
+        $token = $user->createToken('auth-token')->plainTextToken;
+
+        return redirect($frontendUrl . $loginPath . '?sso_token=' . urlencode($token));
     }
 }
 

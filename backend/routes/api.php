@@ -48,6 +48,9 @@ Route::prefix('auth')->group(function () {
     Route::get('/verify-email', [AuthController::class, 'verifyEmail']);
     Route::post('/reset-password', [AuthController::class, 'resetPassword']);
     Route::get('/verify-email-change', [AuthController::class, 'verifyEmailChange']);
+    // SSO (Keycloak) – redirect and callback are GET, no auth
+    Route::get('/sso/redirect', [AuthController::class, 'redirectToKeycloak']);
+    Route::get('/sso/callback', [AuthController::class, 'handleKeycloakCallback']);
 });
 
 // Authenticated routes
