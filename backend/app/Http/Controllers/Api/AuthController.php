@@ -272,6 +272,12 @@ class AuthController extends Controller
             return redirect($frontendUrl . $loginPath . '?sso_error=' . urlencode('SSO-Anmeldung fehlgeschlagen.'));
         }
 
+        // Require Keycloak realm role "volunteer"
+        $accessToken = $oauthUser->token ?? null;
+        if (! $accessToken || ! $this->keycloakUserHasVolunteerRole($accessToken)) {
+            return redirect($frontendUrl . $loginPath . '?sso_error=' . urlencode('Rolle "volunteer" in Keycloak fehlt.'));
+        }
+
         $email = $oauthUser->getNickname(); // preferred_username – required to be email in Keycloak
         if (empty($email) || ! is_string($email)) {
             return redirect($frontendUrl . $loginPath . '?sso_error=' . urlencode('Keycloak preferred_username fehlt.'));
@@ -305,6 +311,34 @@ class AuthController extends Controller
         $token = $user->createToken('auth-token')->plainTextToken;
 
         return redirect($frontendUrl . $loginPath . '?sso_token=' . urlencode($token));
+    }
+
+    /**
+     * Decode Keycloak access token (JWT) and check for realm role "volunteer".
+     */
+    private function keycloakUserHasVolunteerRole(string $accessToken): bool
+    {
+        $parts = explode('.', $accessToken);
+        if (count($parts) !== 3) {
+            return false;
+        }
+        $payload = json_decode($this->base64UrlDecode($parts[1]), true);
+        if (! is_array($payload)) {
+            return false;
+        }
+        $roles = $payload['realm_access']['roles'] ?? [];
+
+        return in_array('volunteer', $roles, true);
+    }
+
+    private function base64UrlDecode(string $input): string
+    {
+        $remainder = strlen($input) % 4;
+        if ($remainder) {
+            $input .= str_repeat('=', 4 - $remainder);
+        }
+
+        return (string) base64_decode(strtr($input, '-_', '+/'), true);
     }
 }
 

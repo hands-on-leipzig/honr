@@ -11,14 +11,14 @@
 
 Login can use Keycloak as an identity provider. Configure in `.env`:
 
-- `KEYCLOAK_BASE_URL` – Keycloak server URL (e.g. `https://keycloak.example.com`)
+- `KEYCLOAK_BASE_URL` – **Keycloak server root only** (e.g. `https://keycloak.example.com`), not the HONR app URL
 - `KEYCLOAK_REALM` – Realm name
 - `KEYCLOAK_CLIENT_ID` – Client ID
 - `KEYCLOAK_CLIENT_SECRET` – Client secret
 - `KEYCLOAK_REDIRECT_URI` – Must be exactly: `{APP_URL}/api/auth/sso/callback`
 - `FRONTEND_URL` – URL of the frontend app (where users are sent after SSO with the token)
 
-In Keycloak: create a client (e.g. confidential), set **Valid redirect URIs** to your callback URL (`APP_URL/api/auth/sso/callback`). Users are matched by **email**: Keycloak’s `preferred_username` is used as the user’s email (Keycloak usernames must be email addresses). New users are auto-created with status `active`, and existing users’ nicknames are updated from the IdP when different.
+In Keycloak: create a client (e.g. confidential), set **Valid redirect URIs** to your callback URL (`APP_URL/api/auth/sso/callback`). Only users with the realm role **volunteer** can log in. Users are matched by **email**: Keycloak’s `preferred_username` is used as the user’s email (Keycloak usernames must be email addresses). New users are auto-created with status `active`, and existing users’ nicknames are updated from the IdP when different.
 
 ---
 
