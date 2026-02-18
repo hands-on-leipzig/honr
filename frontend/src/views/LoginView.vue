@@ -59,14 +59,14 @@
             <button
               type="submit"
               :disabled="loading"
-              class="w-full py-2 px-4 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+              class="w-full py-2 px-4 border-2 border-blue-600 text-blue-600 bg-white font-medium rounded-md hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
             >
               {{ loading ? 'Wird angemeldet...' : 'Anmelden' }}
             </button>
 
             <a
               :href="ssoRedirectUrl"
-              class="mt-3 w-full inline-block py-2 px-4 text-center border border-gray-300 bg-white text-gray-700 font-medium rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              class="mt-3 w-full inline-block py-3 px-4 text-center bg-orange-500 text-white font-semibold rounded-md hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2"
             >
               HANDS on SSO
             </a>

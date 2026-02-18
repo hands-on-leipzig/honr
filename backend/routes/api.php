@@ -48,7 +48,10 @@ Route::prefix('auth')->group(function () {
     Route::get('/verify-email', [AuthController::class, 'verifyEmail']);
     Route::post('/reset-password', [AuthController::class, 'resetPassword']);
     Route::get('/verify-email-change', [AuthController::class, 'verifyEmailChange']);
-    // SSO (Keycloak) – redirect and callback are GET, no auth
+});
+
+// SSO (Keycloak) – needs web middleware for session (OAuth state)
+Route::prefix('auth')->middleware('web')->group(function () {
     Route::get('/sso/redirect', [AuthController::class, 'redirectToKeycloak']);
     Route::get('/sso/callback', [AuthController::class, 'handleKeycloakCallback']);
 });
