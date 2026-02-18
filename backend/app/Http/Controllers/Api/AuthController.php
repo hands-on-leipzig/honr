@@ -253,10 +253,11 @@ class AuthController extends Controller
 
     /**
      * Redirect to Keycloak for SSO login.
+     * Uses stateless() so we don't require session (avoids InvalidState when callback has no session cookie).
      */
     public function redirectToKeycloak()
     {
-        return Socialite::driver('keycloak')->redirect();
+        return Socialite::driver('keycloak')->stateless()->redirect();
     }
 
     /**
@@ -275,7 +276,7 @@ class AuthController extends Controller
         ]);
 
         try {
-            $oauthUser = Socialite::driver('keycloak')->user();
+            $oauthUser = Socialite::driver('keycloak')->stateless()->user();
         } catch (\Throwable $e) {
             Log::error('SSO callback: Socialite user() failed', [
                 'message' => $e->getMessage(),

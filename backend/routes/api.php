@@ -50,8 +50,8 @@ Route::prefix('auth')->group(function () {
     Route::get('/verify-email-change', [AuthController::class, 'verifyEmailChange']);
 });
 
-// SSO (Keycloak) – needs web middleware for session (OAuth state)
-Route::prefix('auth')->middleware('web')->group(function () {
+// SSO (Keycloak) – stateless, no session
+Route::prefix('auth')->group(function () {
     Route::get('/sso/redirect', [AuthController::class, 'redirectToKeycloak']);
     Route::get('/sso/callback', [AuthController::class, 'handleKeycloakCallback']);
 });
