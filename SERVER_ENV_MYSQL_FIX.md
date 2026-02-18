@@ -37,3 +37,56 @@ php artisan config:cache
 ```
 
 After that, the app should use MySQL and the error should stop.
+
+---
+
+## "Access denied for user 'honr_tst_user'@'%' to database 'honr_test'" (1044)
+
+The app is connecting as `honr_tst_user` but that user does **not** have permission to use the database named in `.env`.
+
+### 1. Check the database name in `.env`
+
+The example uses **`honr_tst`** (with **tst**), not `honr_test`:
+
+```env
+DB_DATABASE=honr_tst
+```
+
+If you have `DB_DATABASE=honr_test`, either:
+
+- **Option A:** Change to the database that actually exists (often `honr_tst`):
+  ```env
+  DB_DATABASE=honr_tst
+  ```
+- **Option B:** Keep `honr_test` and create that database + grant access (see below).
+
+### 2. Ensure the database exists and the user has access
+
+On the server (as MySQL root or admin):
+
+```sql
+-- List databases (check exact name)
+SHOW DATABASES;
+
+-- If using honr_tst:
+CREATE DATABASE IF NOT EXISTS honr_tst CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+GRANT ALL PRIVILEGES ON honr_tst.* TO 'honr_tst_user'@'%';
+FLUSH PRIVILEGES;
+
+-- Or if you want to use honr_test:
+CREATE DATABASE IF NOT EXISTS honr_test CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+GRANT ALL PRIVILEGES ON honr_test.* TO 'honr_tst_user'@'%';
+FLUSH PRIVILEGES;
+```
+
+Set `DB_DATABASE` in `.env` to the **exact** name you used (`honr_tst` or `honr_test`).
+
+### 3. Reload Laravel config
+
+```bash
+cd ~/public_html/honr-test
+php artisan config:clear
+php artisan config:cache
+```
+
+**Summary:** 1044 = wrong database name in `.env` or the user has no GRANT on that database. Use the correct name and/or run the GRANT above.
